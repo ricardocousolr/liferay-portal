@@ -42,7 +42,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.List;
@@ -77,7 +77,7 @@ public class GetFieldSettingsDDMFormContextMVCResourceCommand
 
 		List<DDMDataProviderInstance> ddmDataProviderInstances =
 			_ddmDataProviderInstanceLocalService.getDataProviderInstances(
-				PortalUtil.getCurrentAndAncestorSiteGroupIds(
+				_portal.getCurrentAndAncestorSiteGroupIds(
 					themeDisplay.getScopeGroupId()));
 
 		for (DDMDataProviderInstance ddmDataProviderInstance :
@@ -150,6 +150,7 @@ public class GetFieldSettingsDDMFormContextMVCResourceCommand
 		return ddmFormValues;
 	}
 
+	@Override
 	protected void doServeResource(
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws Exception {
@@ -185,9 +186,9 @@ public class GetFieldSettingsDDMFormContextMVCResourceCommand
 			new DDMFormRenderingContext();
 
 		ddmFormRenderingContext.setHttpServletRequest(
-			PortalUtil.getHttpServletRequest(resourceRequest));
+			_portal.getHttpServletRequest(resourceRequest));
 		ddmFormRenderingContext.setHttpServletResponse(
-			PortalUtil.getHttpServletResponse(resourceResponse));
+			_portal.getHttpServletResponse(resourceResponse));
 		ddmFormRenderingContext.setContainerId("settings");
 		ddmFormRenderingContext.setLocale(themeDisplay.getLocale());
 		ddmFormRenderingContext.setPortletNamespace(
@@ -230,5 +231,8 @@ public class GetFieldSettingsDDMFormContextMVCResourceCommand
 
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private Portal _portal;
 
 }

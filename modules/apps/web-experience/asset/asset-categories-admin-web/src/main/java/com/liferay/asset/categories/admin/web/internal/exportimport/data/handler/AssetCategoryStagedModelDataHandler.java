@@ -21,7 +21,6 @@ import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetCategoryPropertyLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
-import com.liferay.asset.kernel.service.persistence.AssetCategoryUtil;
 import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -32,7 +31,7 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.MapUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Element;
@@ -289,8 +288,8 @@ public class AssetCategoryStagedModelDataHandler
 			long vocabularyId, int count)
 		throws Exception {
 
-		AssetCategory category = AssetCategoryUtil.fetchByG_P_N_V_First(
-			groupId, parentCategoryId, name, vocabularyId, null);
+		AssetCategory category = _assetCategoryLocalService.fetchCategory(
+			groupId, parentCategoryId, name, vocabularyId);
 
 		if ((category == null) ||
 			(Validator.isNotNull(uuid) && uuid.equals(category.getUuid()))) {
@@ -314,7 +313,7 @@ public class AssetCategoryStagedModelDataHandler
 			titleMap = new HashMap<>();
 		}
 
-		titleMap.put(PortalUtil.getSiteDefaultLocale(groupId), name);
+		titleMap.put(_portal.getSiteDefaultLocale(groupId), name);
 
 		return titleMap;
 	}
@@ -344,5 +343,8 @@ public class AssetCategoryStagedModelDataHandler
 	private AssetCategoryPropertyLocalService
 		_assetCategoryPropertyLocalService;
 	private AssetVocabularyLocalService _assetVocabularyLocalService;
+
+	@Reference
+	private Portal _portal;
 
 }

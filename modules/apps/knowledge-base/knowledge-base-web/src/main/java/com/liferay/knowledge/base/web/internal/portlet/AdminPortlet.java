@@ -27,7 +27,6 @@ import com.liferay.knowledge.base.exception.NoSuchTemplateException;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.model.KBFolder;
 import com.liferay.knowledge.base.model.KBTemplate;
-import com.liferay.knowledge.base.service.util.AdminUtil;
 import com.liferay.knowledge.base.web.internal.constants.KBWebKeys;
 import com.liferay.knowledge.base.web.internal.upload.KBArticleAttachmentKBUploadHandler;
 import com.liferay.portal.kernel.exception.NoSuchSubscriptionException;
@@ -46,7 +45,7 @@ import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -77,9 +76,7 @@ import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 import javax.portlet.WindowStateException;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -197,7 +194,7 @@ public class AdminPortlet extends BaseKBPortlet {
 				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
 
 			UploadPortletRequest uploadPortletRequest =
-				PortalUtil.getUploadPortletRequest(actionRequest);
+				_portal.getUploadPortletRequest(actionRequest);
 
 			checkExceededSizeLimit(actionRequest);
 
@@ -239,120 +236,6 @@ public class AdminPortlet extends BaseKBPortlet {
 	}
 
 	@Override
-	public void render(
-			RenderRequest renderRequest, RenderResponse renderResponse)
-		throws IOException, PortletException {
-
-		try {
-			renderRequest.setAttribute(
-				KBWebKeys.DL_MIME_TYPE_DISPLAY_CONTEXT,
-				dlMimeTypeDisplayContext);
-
-			KBArticle kbArticle = null;
-
-			String cmd = ParamUtil.getString(renderRequest, Constants.CMD);
-
-			long kbArticleClassNameId = PortalUtil.getClassNameId(
-				KBArticleConstants.getClassName());
-
-			long resourceClassNameId = ParamUtil.getLong(
-				renderRequest, "resourceClassNameId", kbArticleClassNameId);
-
-			long resourcePrimKey = ParamUtil.getLong(
-				renderRequest, "resourcePrimKey");
-			int status = WorkflowConstants.STATUS_ANY;
-
-			if (Validator.isNotNull(cmd) && cmd.equals("compareVersions")) {
-				double sourceVersion = ParamUtil.getDouble(
-					renderRequest, "sourceVersion");
-				double targetVersion = ParamUtil.getDouble(
-					renderRequest, "targetVersion");
-
-				String diffHtmlResults = null;
-
-				try {
-					diffHtmlResults = AdminUtil.getKBArticleDiff(
-						resourcePrimKey, GetterUtil.getInteger(sourceVersion),
-						GetterUtil.getInteger(targetVersion), "content");
-				}
-				catch (Exception e) {
-					throw new PortletException(e);
-				}
-
-				renderRequest.setAttribute(
-					WebKeys.DIFF_HTML_RESULTS, diffHtmlResults);
-			}
-
-			if ((resourcePrimKey > 0) &&
-				(resourceClassNameId == kbArticleClassNameId)) {
-
-				kbArticle = kbArticleService.getLatestKBArticle(
-					resourcePrimKey, status);
-			}
-
-			renderRequest.setAttribute(
-				KBWebKeys.KNOWLEDGE_BASE_KB_ARTICLE, kbArticle);
-
-			KBArticle parentKBArticle = null;
-			KBFolder parentKBFolder = null;
-
-			long kbFolderClassNameId = PortalUtil.getClassNameId(
-				KBFolderConstants.getClassName());
-
-			long parentResourceClassNameId = ParamUtil.getLong(
-				renderRequest, "parentResourceClassNameId",
-				kbFolderClassNameId);
-
-			long parentResourcePrimKey = ParamUtil.getLong(
-				renderRequest, "parentResourcePrimKey");
-
-			if (parentResourcePrimKey > 0) {
-				if (parentResourceClassNameId == kbFolderClassNameId) {
-					parentKBFolder = kbFolderService.getKBFolder(
-						parentResourcePrimKey);
-				}
-				else {
-					parentKBArticle = kbArticleService.getLatestKBArticle(
-						parentResourcePrimKey, status);
-				}
-			}
-
-			renderRequest.setAttribute(
-				KBWebKeys.KNOWLEDGE_BASE_PARENT_KB_ARTICLE, parentKBArticle);
-			renderRequest.setAttribute(
-				KBWebKeys.KNOWLEDGE_BASE_PARENT_KB_FOLDER, parentKBFolder);
-
-			KBTemplate kbTemplate = null;
-
-			long kbTemplateId = ParamUtil.getLong(
-				renderRequest, "kbTemplateId");
-
-			if (kbTemplateId > 0) {
-				kbTemplate = kbTemplateService.getKBTemplate(kbTemplateId);
-			}
-
-			renderRequest.setAttribute(
-				KBWebKeys.KNOWLEDGE_BASE_KB_TEMPLATE, kbTemplate);
-
-			renderRequest.setAttribute(KBWebKeys.KNOWLEDGE_BASE_STATUS, status);
-		}
-		catch (Exception e) {
-			if (e instanceof NoSuchArticleException ||
-				e instanceof NoSuchFolderException ||
-				e instanceof NoSuchTemplateException ||
-				e instanceof PrincipalException) {
-
-				SessionErrors.add(renderRequest, e.getClass());
-			}
-			else {
-				throw new PortletException(e);
-			}
-		}
-
-		super.render(renderRequest, renderResponse);
-	}
-
-	@Override
 	public void serveResource(
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws IOException, PortletException {
@@ -360,49 +243,10 @@ public class AdminPortlet extends BaseKBPortlet {
 		String resourceID = GetterUtil.getString(
 			resourceRequest.getResourceID());
 
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
+		HttpServletRequest request = _portal.getHttpServletRequest(
 			resourceRequest);
 
-		HttpServletResponse response = PortalUtil.getHttpServletResponse(
-			resourceResponse);
-
-		if (resourceID.equals("compareVersions")) {
-			long resourcePrimKey = ParamUtil.getLong(
-				resourceRequest, "resourcePrimKey");
-			double sourceVersion = ParamUtil.getDouble(
-				resourceRequest, "filterSourceVersion");
-			double targetVersion = ParamUtil.getDouble(
-				resourceRequest, "filterTargetVersion");
-
-			String diffHtmlResults = null;
-
-			try {
-				diffHtmlResults = AdminUtil.getKBArticleDiff(
-					resourcePrimKey, GetterUtil.getInteger(sourceVersion),
-					GetterUtil.getInteger(targetVersion), "content");
-			}
-			catch (Exception e) {
-				try {
-					PortalUtil.sendError(e, request, response);
-				}
-				catch (ServletException se) {
-				}
-			}
-
-			resourceRequest.setAttribute(
-				WebKeys.DIFF_HTML_RESULTS, diffHtmlResults);
-
-			PortletSession portletSession = resourceRequest.getPortletSession();
-
-			PortletContext portletContext = portletSession.getPortletContext();
-
-			PortletRequestDispatcher portletRequestDispatcher =
-				portletContext.getRequestDispatcher(
-					"/admin/common/compare_versions_diff_html.jsp");
-
-			portletRequestDispatcher.include(resourceRequest, resourceResponse);
-		}
-		else if (resourceID.equals("infoPanel")) {
+		if (resourceID.equals("infoPanel")) {
 			try {
 				List<KBArticle> kbArticles = getKBArticles(request);
 
@@ -443,7 +287,7 @@ public class AdminPortlet extends BaseKBPortlet {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			KBWebKeys.THEME_DISPLAY);
 
-		String portletId = PortalUtil.getPortletId(actionRequest);
+		String portletId = _portal.getPortletId(actionRequest);
 
 		kbArticleService.subscribeGroupKBArticles(
 			themeDisplay.getScopeGroupId(), portletId);
@@ -456,7 +300,7 @@ public class AdminPortlet extends BaseKBPortlet {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			KBWebKeys.THEME_DISPLAY);
 
-		String portletId = PortalUtil.getPortletId(actionRequest);
+		String portletId = _portal.getPortletId(actionRequest);
 
 		kbArticleService.unsubscribeGroupKBArticles(
 			themeDisplay.getScopeGroupId(), portletId);
@@ -520,7 +364,7 @@ public class AdminPortlet extends BaseKBPortlet {
 		else if (cmd.equals(Constants.UPDATE)) {
 			kbFolderService.updateKBFolder(
 				parentResourceClassNameId, parentResourcePrimKey, kbFolderId,
-				name, description);
+				name, description, serviceContext);
 		}
 	}
 
@@ -528,7 +372,7 @@ public class AdminPortlet extends BaseKBPortlet {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		String portletId = PortalUtil.getPortletId(actionRequest);
+		String portletId = _portal.getPortletId(actionRequest);
 
 		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
 
@@ -613,6 +457,95 @@ public class AdminPortlet extends BaseKBPortlet {
 		}
 	}
 
+	@Override
+	protected void doRender(
+			RenderRequest renderRequest, RenderResponse renderResponse)
+		throws IOException, PortletException {
+
+		try {
+			renderRequest.setAttribute(
+				KBWebKeys.DL_MIME_TYPE_DISPLAY_CONTEXT,
+				dlMimeTypeDisplayContext);
+
+			KBArticle kbArticle = null;
+
+			long kbArticleClassNameId = _portal.getClassNameId(
+				KBArticleConstants.getClassName());
+
+			long resourceClassNameId = ParamUtil.getLong(
+				renderRequest, "resourceClassNameId", kbArticleClassNameId);
+
+			long resourcePrimKey = ParamUtil.getLong(
+				renderRequest, "resourcePrimKey");
+			int status = WorkflowConstants.STATUS_ANY;
+
+			if ((resourcePrimKey > 0) &&
+				(resourceClassNameId == kbArticleClassNameId)) {
+
+				kbArticle = kbArticleService.getLatestKBArticle(
+					resourcePrimKey, status);
+			}
+
+			renderRequest.setAttribute(
+				KBWebKeys.KNOWLEDGE_BASE_KB_ARTICLE, kbArticle);
+
+			KBArticle parentKBArticle = null;
+			KBFolder parentKBFolder = null;
+
+			long kbFolderClassNameId = _portal.getClassNameId(
+				KBFolderConstants.getClassName());
+
+			long parentResourceClassNameId = ParamUtil.getLong(
+				renderRequest, "parentResourceClassNameId",
+				kbFolderClassNameId);
+
+			long parentResourcePrimKey = ParamUtil.getLong(
+				renderRequest, "parentResourcePrimKey");
+
+			if (parentResourcePrimKey > 0) {
+				if (parentResourceClassNameId == kbFolderClassNameId) {
+					parentKBFolder = kbFolderService.getKBFolder(
+						parentResourcePrimKey);
+				}
+				else {
+					parentKBArticle = kbArticleService.getLatestKBArticle(
+						parentResourcePrimKey, status);
+				}
+			}
+
+			renderRequest.setAttribute(
+				KBWebKeys.KNOWLEDGE_BASE_PARENT_KB_ARTICLE, parentKBArticle);
+			renderRequest.setAttribute(
+				KBWebKeys.KNOWLEDGE_BASE_PARENT_KB_FOLDER, parentKBFolder);
+
+			KBTemplate kbTemplate = null;
+
+			long kbTemplateId = ParamUtil.getLong(
+				renderRequest, "kbTemplateId");
+
+			if (kbTemplateId > 0) {
+				kbTemplate = kbTemplateService.getKBTemplate(kbTemplateId);
+			}
+
+			renderRequest.setAttribute(
+				KBWebKeys.KNOWLEDGE_BASE_KB_TEMPLATE, kbTemplate);
+
+			renderRequest.setAttribute(KBWebKeys.KNOWLEDGE_BASE_STATUS, status);
+		}
+		catch (Exception e) {
+			if (e instanceof NoSuchArticleException ||
+				e instanceof NoSuchFolderException ||
+				e instanceof NoSuchTemplateException ||
+				e instanceof PrincipalException) {
+
+				SessionErrors.add(renderRequest, e.getClass());
+			}
+			else {
+				throw new PortletException(e);
+			}
+		}
+	}
+
 	protected List<KBArticle> getKBArticles(HttpServletRequest request)
 		throws Exception {
 
@@ -667,5 +600,8 @@ public class AdminPortlet extends BaseKBPortlet {
 	)
 	protected void setRelease(Release release) {
 	}
+
+	@Reference
+	private Portal _portal;
 
 }

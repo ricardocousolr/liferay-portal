@@ -151,13 +151,10 @@ AUI.add(
 					_getDocumentLibrarySelectorURL: function() {
 						var instance = this;
 
-						var scopeGroupId = Liferay.ThemeDisplay.getScopeGroupId();
-
 						var portletNamespace = instance.get('portletNamespace');
 
-						var portletURL = Liferay.PortletURL.createURL(themeDisplay.getURLControlPanel());
+						var portletURL = Liferay.PortletURL.createURL(themeDisplay.getSiteAdminURL());
 
-						portletURL.setDoAsGroupId(scopeGroupId);
 						portletURL.setParameter('criteria', 'com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion');
 						portletURL.setParameter('itemSelectedEventName', portletNamespace + 'selectDocumentLibrary');
 
@@ -184,11 +181,8 @@ AUI.add(
 					_getUploadURL: function() {
 						var instance = this;
 
-						var scopeGroupId = Liferay.ThemeDisplay.getScopeGroupId();
+						var portletURL = Liferay.PortletURL.createURL(themeDisplay.getSiteAdminURL());
 
-						var portletURL = Liferay.PortletURL.createURL(themeDisplay.getURLControlPanel());
-
-						portletURL.setDoAsGroupId(scopeGroupId);
 						portletURL.setLifecycle(Liferay.PortletURL.ACTION_PHASE);
 						portletURL.setParameter('cmd', 'add_temp');
 						portletURL.setParameter('javax.portlet.action', '/document_library/upload_file_entry');
@@ -508,7 +502,11 @@ AUI.add(
 				valueFn: function() {
 					var instance = this;
 
-					var name = LiferayFormBuilderUtil.normalizeKey(instance.get('label')) + instance._randomString(4);
+					var label = LiferayFormBuilderUtil.normalizeKey(instance.get('label'));
+
+					label = label.replace(/[^a-z0-9]/gi, '');
+
+					var name = label + instance._randomString(4);
 
 					while (UNIQUE_FIELD_NAMES_MAP.has(name)) {
 						name = A.FormBuilderField.buildFieldName(name);
@@ -1032,7 +1030,14 @@ AUI.add(
 								calendar: {
 									locale: Liferay.ThemeDisplay.getLanguageId()
 								},
-								trigger: instance.get('templateNode')
+								on: {
+									selectionChange: function(event) {
+										var date = event.newSelection;
+
+										instance.setValue(A.Date.format(date));
+									}
+								},
+								trigger: instance.get('templateNode').one('input')
 							}
 						).render();
 

@@ -22,9 +22,10 @@ import com.liferay.calendar.social.CalendarActivityKeys;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.ClassResourceBundleLoader;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
+import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.social.kernel.model.BaseSocialActivityInterpreter;
@@ -52,12 +53,23 @@ public class CalendarActivityInterpreter extends BaseSocialActivityInterpreter {
 		return _CLASS_NAMES;
 	}
 
+	@Reference(
+		target = "(bundle.symbolic.name=com.liferay.calendar.web)", unbind = "-"
+	)
+	public void setResourceBundleLoader(
+		ResourceBundleLoader resourceBundleLoader) {
+
+		_resourceBundleLoader = new AggregateResourceBundleLoader(
+			resourceBundleLoader,
+			ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
+	}
+
 	@Override
 	protected String getPath(
 			SocialActivity activity, ServiceContext serviceContext)
 		throws Exception {
 
-		long plid = PortalUtil.getPlidFromPortletId(
+		long plid = _portal.getPlidFromPortletId(
 			serviceContext.getScopeGroupId(), CalendarPortletKeys.CALENDAR);
 
 		PortletURL portletURL = PortletURLFactoryUtil.create(
@@ -146,8 +158,10 @@ public class CalendarActivityInterpreter extends BaseSocialActivityInterpreter {
 		{CalendarBooking.class.getName()};
 
 	private CalendarBookingLocalService _calendarBookingLocalService;
-	private final ResourceBundleLoader _resourceBundleLoader =
-		new ClassResourceBundleLoader(
-			"content.Language", CalendarActivityInterpreter.class);
+
+	@Reference
+	private Portal _portal;
+
+	private ResourceBundleLoader _resourceBundleLoader;
 
 }

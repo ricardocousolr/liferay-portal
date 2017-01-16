@@ -51,10 +51,11 @@ import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -160,7 +161,7 @@ public class RolesAdminPortlet extends MVCPortlet {
 
 		SessionMessages.add(actionRequest, "permissionDeleted");
 
-		String redirect = PortalUtil.escapeRedirect(
+		String redirect = _portal.escapeRedirect(
 			ParamUtil.getString(actionRequest, "redirect"));
 
 		if (Validator.isNotNull(redirect)) {
@@ -210,9 +211,23 @@ public class RolesAdminPortlet extends MVCPortlet {
 
 			// Add role
 
-			return _roleService.addRole(
+			Role role = _roleService.addRole(
 				null, 0, name, titleMap, descriptionMap, type, subtype,
 				serviceContext);
+
+			String redirect = ParamUtil.getString(actionRequest, "redirect");
+
+			redirect = HttpUtil.setParameter(
+				redirect, actionResponse.getNamespace() + "roleId",
+				role.getRoleId());
+
+			actionRequest.setAttribute(WebKeys.REDIRECT, redirect);
+
+			SessionMessages.add(actionRequest, "roleCreated");
+
+			actionResponse.sendRedirect(redirect);
+
+			return role;
 		}
 		else {
 
@@ -411,7 +426,7 @@ public class RolesAdminPortlet extends MVCPortlet {
 
 		SessionMessages.add(actionRequest, "permissionsUpdated");
 
-		String redirect = PortalUtil.escapeRedirect(
+		String redirect = _portal.escapeRedirect(
 			ParamUtil.getString(actionRequest, "redirect"));
 
 		if (Validator.isNotNull(redirect)) {
@@ -686,6 +701,10 @@ public class RolesAdminPortlet extends MVCPortlet {
 	private GroupService _groupService;
 	private PanelAppRegistry _panelAppRegistry;
 	private PanelCategoryRegistry _panelCategoryRegistry;
+
+	@Reference
+	private Portal _portal;
+
 	private ResourceBlockLocalService _resourceBlockLocalService;
 	private ResourceBlockService _resourceBlockService;
 	private ResourcePermissionService _resourcePermissionService;

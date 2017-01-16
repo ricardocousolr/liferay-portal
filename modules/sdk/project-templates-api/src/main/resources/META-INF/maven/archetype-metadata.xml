@@ -8,7 +8,7 @@
 				<include>**/*.java</include>
 			</includes>
 		</fileSet>
-		<fileSet filtered="true">
+		<fileSet packaged="true">
 			<directory>src/main/resources</directory>
 			<includes>
 				<include>**/*</include>
@@ -24,6 +24,8 @@
 		</fileSet>
 	</fileSets>
 	<requiredProperties>
+		<requiredProperty key="author">
+		</requiredProperty>
 		<requiredProperty key="className">
 		</requiredProperty>
 		<requiredProperty key="projectType">

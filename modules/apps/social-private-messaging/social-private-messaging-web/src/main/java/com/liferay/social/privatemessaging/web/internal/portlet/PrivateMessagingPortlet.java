@@ -43,7 +43,7 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StreamUtil;
@@ -224,7 +224,7 @@ public class PrivateMessagingPortlet extends MVCPortlet {
 		throws Exception {
 
 		UploadPortletRequest uploadPortletRequest =
-			PortalUtil.getUploadPortletRequest(actionRequest);
+			_portal.getUploadPortletRequest(actionRequest);
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -482,6 +482,13 @@ public class PrivateMessagingPortlet extends MVCPortlet {
 					themeDisplay.getCompanyId(), recipient);
 			}
 			catch (NoSuchUserException nsue) {
+
+				// LPS-52675
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(nsue, nsue);
+				}
+
 				failedRecipients.add(recipient);
 			}
 		}
@@ -515,6 +522,9 @@ public class PrivateMessagingPortlet extends MVCPortlet {
 
 	@Reference
 	private MBMessageLocalService _mBMessageLocalService;
+
+	@Reference
+	private Portal _portal;
 
 	private PrivateMessagingConfiguration _privateMessagingConfiguration;
 

@@ -24,10 +24,14 @@ import com.liferay.project.templates.internal.util.Validator;
 import com.liferay.project.templates.internal.util.WorkspaceUtil;
 
 import java.io.File;
+import java.io.IOException;
 
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermissions;
 
 import java.util.ArrayList;
@@ -87,7 +91,7 @@ public class ProjectTemplates {
 				while (enumeration.hasMoreElements()) {
 					JarEntry jarEntry = enumeration.nextElement();
 
-					if (!jarEntry.isDirectory()) {
+					if (jarEntry.isDirectory()) {
 						continue;
 					}
 
@@ -189,7 +193,21 @@ public class ProjectTemplates {
 			Files.deleteIfExists(templateDirPath.resolve("settings.gradle"));
 		}
 
-		Files.delete(templateDirPath.resolve("pom.xml"));
+		Files.walkFileTree(
+			templateDirPath,
+			new SimpleFileVisitor<Path>() {
+
+				@Override
+				public FileVisitResult preVisitDirectory(
+						Path dirPath, BasicFileAttributes basicFileAttributes)
+					throws IOException {
+
+					Files.deleteIfExists(dirPath.resolve("pom.xml"));
+
+					return FileVisitResult.CONTINUE;
+				}
+
+			});
 	}
 
 	private static void _printHelp(JCommander jCommander) throws Exception {
@@ -238,9 +256,21 @@ public class ProjectTemplates {
 	}
 
 	private void _checkArgs(ProjectTemplatesArgs projectTemplatesArgs) {
+		if (Validator.isNull(projectTemplatesArgs.getAuthor())) {
+			throw new IllegalArgumentException("Author is required");
+		}
+
+		String template = projectTemplatesArgs.getTemplate();
+
+		if (Validator.isNull(projectTemplatesArgs.getTemplate())) {
+			throw new IllegalArgumentException("Template is required");
+		}
+
 		String name = projectTemplatesArgs.getName();
 
-		if (Validator.isNull(name)) {
+		if (Validator.isNull(name) &&
+			!template.equals(WorkspaceUtil.WORKSPACE)) {
+
 			throw new IllegalArgumentException("Name is required");
 		}
 
@@ -250,9 +280,13 @@ public class ProjectTemplates {
 			throw new IllegalArgumentException("Destination dir is required");
 		}
 
-		File dir = new File(destinationDir, name);
+		File dir = destinationDir;
 
-		if (dir.exists()) {
+		if (Validator.isNotNull(name)) {
+			dir = new File(dir, name);
+		}
+
+		if (!projectTemplatesArgs.isForce() && dir.exists()) {
 			String[] fileNames = dir.list();
 
 			if ((fileNames == null) || (fileNames.length > 0)) {
@@ -261,15 +295,9 @@ public class ProjectTemplates {
 			}
 		}
 
-		String template = projectTemplatesArgs.getTemplate();
-
-		if (Validator.isNull(projectTemplatesArgs.getTemplate())) {
-			throw new IllegalArgumentException("Template is required");
-		}
-
 		String className = projectTemplatesArgs.getClassName();
 
-		if (Validator.isNull(className)) {
+		if (Validator.isNull(className) && Validator.isNotNull(name)) {
 			className = _getClassName(name);
 		}
 
@@ -278,15 +306,23 @@ public class ProjectTemplates {
 		}
 		else if ((template.equals("mvc-portlet") ||
 				  template.equals("portlet")) &&
-				 className.endsWith("Portlet")) {
+				 (className.length() > 7) && className.endsWith("Portlet")) {
 
 			className = className.substring(0, className.length() - 7);
 		}
 
 		projectTemplatesArgs.setClassName(className);
 
-		if (Validator.isNull(projectTemplatesArgs.getPackageName())) {
+		if (Validator.isNull(projectTemplatesArgs.getPackageName()) &&
+			Validator.isNotNull(name)) {
+
 			projectTemplatesArgs.setPackageName(_getPackageName(name));
+		}
+
+		String contributorType = projectTemplatesArgs.getContributorType();
+
+		if (Validator.isNull(contributorType)) {
+			projectTemplatesArgs.setContributorType(name);
 		}
 	}
 

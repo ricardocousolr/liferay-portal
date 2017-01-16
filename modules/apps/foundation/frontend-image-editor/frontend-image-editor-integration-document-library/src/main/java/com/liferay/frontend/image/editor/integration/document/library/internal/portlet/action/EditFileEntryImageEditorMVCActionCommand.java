@@ -24,6 +24,8 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -37,7 +39,7 @@ import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.upload.UploadRequestSizeException;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -104,6 +106,13 @@ public class EditFileEntryImageEditorMVCActionCommand
 			throw new SystemException(ioe);
 		}
 		catch (PortalException pe) {
+
+			// LPS-52675
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(pe, pe);
+			}
+
 			handleUploadException(actionRequest, actionResponse);
 		}
 	}
@@ -133,7 +142,7 @@ public class EditFileEntryImageEditorMVCActionCommand
 			WebKeys.THEME_DISPLAY);
 
 		UploadPortletRequest uploadPortletRequest =
-			PortalUtil.getUploadPortletRequest(actionRequest);
+			_portal.getUploadPortletRequest(actionRequest);
 
 		long fileEntryId = ParamUtil.getLong(
 			uploadPortletRequest, "fileEntryId");
@@ -176,11 +185,17 @@ public class EditFileEntryImageEditorMVCActionCommand
 		return fileEntry;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditFileEntryImageEditorMVCActionCommand.class);
+
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
 
 	@Reference
 	private DLAppService _dlAppService;
+
+	@Reference
+	private Portal _portal;
 
 	@Reference(
 		target = "(bundle.symbolic.name=com.liferay.frontend.image.editor.integration.document.library)",

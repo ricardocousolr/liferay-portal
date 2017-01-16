@@ -20,14 +20,13 @@ import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.dynamic.data.mapping.web.internal.exportimport.content.processor.DDMTemplateExportImportContentProcessor;
-import com.liferay.exportimport.content.processor.ExportImportContentProcessorController;
-import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataException;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelModifiedDateComparator;
+import com.liferay.exportimport.lar.BaseStagedModelDataHandler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -40,7 +39,7 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
@@ -162,7 +161,7 @@ public class DDMTemplateStagedModelDataHandler
 
 		groupId = MapUtil.getLong(groupIds, groupId);
 
-		long classNameId = PortalUtil.getClassNameId(
+		long classNameId = _portal.getClassNameId(
 			referenceElement.attributeValue("referenced-class-name"));
 		String templateKey = referenceElement.attributeValue("template-key");
 		boolean preloaded = GetterUtil.getBoolean(
@@ -198,7 +197,7 @@ public class DDMTemplateStagedModelDataHandler
 		if (template.isSmallImage()) {
 			if (Validator.isNotNull(template.getSmallImageURL())) {
 				String smallImageURL =
-					_exportImportContentProcessorController.
+					_ddmTemplateExportImportContentProcessor.
 						replaceExportContentReferences(
 							portletDataContext, template,
 							template.getSmallImageURL() + StringPool.SPACE,
@@ -243,7 +242,7 @@ public class DDMTemplateStagedModelDataHandler
 		}
 
 		String script =
-			_exportImportContentProcessorController.
+			_ddmTemplateExportImportContentProcessor.
 				replaceExportContentReferences(
 					portletDataContext, template, template.getScript(),
 					portletDataContext.getBooleanParameter(
@@ -262,7 +261,7 @@ public class DDMTemplateStagedModelDataHandler
 		if (template.getResourceClassNameId() > 0) {
 			templateElement.addAttribute(
 				"resource-class-name",
-				PortalUtil.getClassName(template.getResourceClassNameId()));
+				_portal.getClassName(template.getResourceClassNameId()));
 		}
 
 		portletDataContext.addClassedModel(
@@ -288,7 +287,7 @@ public class DDMTemplateStagedModelDataHandler
 
 		groupId = MapUtil.getLong(groupIds, groupId);
 
-		long classNameId = PortalUtil.getClassNameId(
+		long classNameId = _portal.getClassNameId(
 			referenceElement.attributeValue("referenced-class-name"));
 		String templateKey = referenceElement.attributeValue("template-key");
 		boolean preloaded = GetterUtil.getBoolean(
@@ -344,7 +343,7 @@ public class DDMTemplateStagedModelDataHandler
 
 				if (Validator.isNotNull(template.getSmallImageURL())) {
 					String smallImageURL =
-						_exportImportContentProcessorController.
+						_ddmTemplateExportImportContentProcessor.
 							replaceImportContentReferences(
 								portletDataContext, template,
 								template.getSmallImageURL());
@@ -365,7 +364,7 @@ public class DDMTemplateStagedModelDataHandler
 			}
 
 			String script =
-				_exportImportContentProcessorController.
+				_ddmTemplateExportImportContentProcessor.
 					replaceImportContentReferences(
 						portletDataContext, template, template.getScript());
 
@@ -378,7 +377,7 @@ public class DDMTemplateStagedModelDataHandler
 					"resource-class-name");
 
 				if (Validator.isNotNull(resourceClassName)) {
-					resourceClassNameId = PortalUtil.getClassNameId(
+					resourceClassNameId = _portal.getClassNameId(
 						resourceClassName);
 				}
 			}
@@ -423,13 +422,12 @@ public class DDMTemplateStagedModelDataHandler
 				}
 				else {
 					importedTemplate = _ddmTemplateLocalService.updateTemplate(
-						userId, existingTemplate.getTemplateId(),
-						template.getClassPK(), template.getNameMap(),
-						template.getDescriptionMap(), template.getType(),
-						template.getMode(), template.getLanguage(),
-						template.getScript(), template.isCacheable(),
-						template.isSmallImage(), template.getSmallImageURL(),
-						smallFile, serviceContext);
+						userId, existingTemplate.getTemplateId(), classPK,
+						template.getNameMap(), template.getDescriptionMap(),
+						template.getType(), template.getMode(),
+						template.getLanguage(), template.getScript(),
+						template.isCacheable(), template.isSmallImage(),
+						template.getSmallImageURL(), smallFile, serviceContext);
 				}
 			}
 			else {
@@ -483,13 +481,13 @@ public class DDMTemplateStagedModelDataHandler
 		_ddmStructureLocalService = ddmStructureLocalService;
 	}
 
-	/**
-	 * @deprecated As of 1.0.0
-	 */
-	@Deprecated
+	@Reference(unbind = "-")
 	protected void setDDMTemplateExportImportContentProcessor(
 		DDMTemplateExportImportContentProcessor
 			ddmTemplateExportImportContentProcessor) {
+
+		_ddmTemplateExportImportContentProcessor =
+			ddmTemplateExportImportContentProcessor;
 	}
 
 	@Reference(unbind = "-")
@@ -513,13 +511,14 @@ public class DDMTemplateStagedModelDataHandler
 		DDMTemplateStagedModelDataHandler.class);
 
 	private DDMStructureLocalService _ddmStructureLocalService;
+	private DDMTemplateExportImportContentProcessor
+		_ddmTemplateExportImportContentProcessor;
 	private DDMTemplateLocalService _ddmTemplateLocalService;
+	private ImageLocalService _imageLocalService;
 
 	@Reference
-	private ExportImportContentProcessorController
-		_exportImportContentProcessorController;
+	private Portal _portal;
 
-	private ImageLocalService _imageLocalService;
 	private UserLocalService _userLocalService;
 
 }

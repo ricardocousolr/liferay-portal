@@ -703,6 +703,18 @@ public class WebDriverHelper {
 		return text.contains(value);
 	}
 
+	public static boolean isPartialTextAceEditor(
+		WebDriver webDriver, String locator, String value) {
+
+		WebElement webElement = getWebElement(webDriver, locator, "1");
+
+		String text = webElement.getText();
+
+		text = text.replace("\n", "");
+
+		return text.contains(value);
+	}
+
 	public static boolean isSelectedLabel(
 		WebDriver webDriver, String selectLocator, String pattern) {
 
@@ -1103,10 +1115,10 @@ public class WebDriverHelper {
 		sb.append("return false;}");
 		sb.append("return true;");
 
-		Boolean isObscured = (Boolean)javascriptExecutor.executeScript(
+		Boolean obscured = (Boolean)javascriptExecutor.executeScript(
 			sb.toString(), webElement);
 
-		return isObscured.booleanValue();
+		return obscured.booleanValue();
 	}
 
 	protected static void scrollWebElementIntoView(

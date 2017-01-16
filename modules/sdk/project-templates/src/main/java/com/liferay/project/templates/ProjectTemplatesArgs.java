@@ -24,11 +24,20 @@ import java.io.File;
 public class ProjectTemplatesArgs {
 
 	public ProjectTemplatesArgs() {
+		_author = System.getProperty("user.name");
 		_destinationDir = new File(System.getProperty("user.dir"));
+	}
+
+	public String getAuthor() {
+		return _author;
 	}
 
 	public String getClassName() {
 		return _className;
+	}
+
+	public String getContributorType() {
+		return _contributorType;
 	}
 
 	public File getDestinationDir() {
@@ -59,12 +68,24 @@ public class ProjectTemplatesArgs {
 		return _template;
 	}
 
+	public boolean isForce() {
+		return _force;
+	}
+
 	public void setClassName(String className) {
 		_className = className;
 	}
 
+	public void setContributorType(String contributorType) {
+		_contributorType = contributorType;
+	}
+
 	public void setDestinationDir(File destinationDir) {
 		_destinationDir = destinationDir;
+	}
+
+	public void setForce(boolean force) {
+		_force = force;
 	}
 
 	public void setHostBundleSymbolicName(String hostBundleSymbolicName) {
@@ -100,16 +121,34 @@ public class ProjectTemplatesArgs {
 	}
 
 	@Parameter(
+		description = "The name of the user associated with the code.",
+		names = "--author"
+	)
+	private String _author;
+
+	@Parameter(
 		description = "If a class is generated, provide the name of the class to be generated. If not provided, defaults to the project name.",
 		names = "--class-name"
 	)
 	private String _className;
 
 	@Parameter(
+		description = "Used to identify your module as a Theme Contributor. Also, used to add the Liferay-Theme-Contributor-Type and Web-ContextPath bundle headers.",
+		names = "--contributor-type"
+	)
+	private String _contributorType;
+
+	@Parameter(
 		description = "The directory where to create the new project.",
 		names = "--destination"
 	)
 	private File _destinationDir;
+
+	@Parameter(
+		description = "Forces creation of new project even if target directory contains files.",
+		names = "--force"
+	)
+	private boolean _force;
 
 	@Parameter(
 		description = "Print this message.", help = true,

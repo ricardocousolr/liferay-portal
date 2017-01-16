@@ -148,6 +148,12 @@
 	}
 
 	.edit-entry {
+		.alloy-editor-placeholder:before {
+			display: block;
+			text-align: inherit;
+			width: 100%;
+		}
+
 		.entry-title h1 p {
 			line-height: 80px;
 		}
@@ -259,6 +265,14 @@
 		}
 	}
 
+	.info-bar-container.affix + .entry-body {
+		margin-top: 47px;
+
+		@include sm() {
+			margin-top: 59px;
+		}
+	}
+
 	.nameplate-content {
 		padding-left: 0;
 		vertical-align: middle;
@@ -314,7 +328,7 @@
 	margin-left: 2em;
 }
 
-/* Skin */
+/* ---------- Skin ---------- */
 
 .portlet-blogs {
 	.border-top {

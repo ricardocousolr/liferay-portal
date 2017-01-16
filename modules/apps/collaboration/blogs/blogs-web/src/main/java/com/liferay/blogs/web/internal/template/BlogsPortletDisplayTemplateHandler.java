@@ -15,7 +15,7 @@
 package com.liferay.blogs.web.internal.template;
 
 import com.liferay.blogs.configuration.BlogsConfiguration;
-import com.liferay.blogs.kernel.model.BlogsEntry;
+import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
 import com.liferay.blogs.service.BlogsEntryService;
 import com.liferay.blogs.web.constants.BlogsPortletKeys;
@@ -26,7 +26,7 @@ import com.liferay.portal.kernel.portletdisplaytemplate.BasePortletDisplayTempla
 import com.liferay.portal.kernel.portletdisplaytemplate.PortletDisplayTemplateManager;
 import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.template.TemplateVariableGroup;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringPool;
 
 import java.util.HashMap;
@@ -37,6 +37,7 @@ import java.util.Map;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Juan Fernández
@@ -55,6 +56,7 @@ public class BlogsPortletDisplayTemplateHandler
 		return BlogsEntry.class.getName();
 	}
 
+	@Override
 	public Map<String, Object> getCustomContextObjects() {
 		Map<String, Object> customContextObjects = new HashMap<>(1);
 
@@ -65,7 +67,7 @@ public class BlogsPortletDisplayTemplateHandler
 
 	@Override
 	public String getName(Locale locale) {
-		String portletTitle = PortalUtil.getPortletTitle(
+		String portletTitle = _portal.getPortletTitle(
 			BlogsPortletKeys.BLOGS, locale);
 
 		return portletTitle.concat(StringPool.SPACE).concat(
@@ -133,5 +135,8 @@ public class BlogsPortletDisplayTemplateHandler
 	}
 
 	private volatile BlogsConfiguration _blogsConfiguration;
+
+	@Reference
+	private Portal _portal;
 
 }

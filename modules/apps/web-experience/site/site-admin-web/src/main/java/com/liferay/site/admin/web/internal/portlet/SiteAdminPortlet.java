@@ -37,6 +37,8 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.RemoteOptionsException;
 import com.liferay.portal.kernel.exception.RequiredGroupException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Layout;
@@ -79,7 +81,7 @@ import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -228,7 +230,7 @@ public class SiteAdminPortlet extends MVCPortlet {
 				SiteAdminPortletKeys.SITE_SETTINGS + "requestProcessed");
 		}
 
-		PortletURL siteAdministrationURL = PortalUtil.getControlPanelPortletURL(
+		PortletURL siteAdministrationURL = portal.getControlPanelPortletURL(
 			actionRequest, group, SiteAdminPortletKeys.SITE_SETTINGS, 0, 0,
 			PortletRequest.RENDER_PHASE);
 
@@ -392,6 +394,12 @@ public class SiteAdminPortlet extends MVCPortlet {
 			refererGroupId = refererLayout.getGroupId();
 		}
 		catch (NoSuchLayoutException nsle) {
+
+			// LPS-52675
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(nsle, nsle);
+			}
 		}
 
 		return refererGroupId;
@@ -583,7 +591,7 @@ public class SiteAdminPortlet extends MVCPortlet {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		long userId = PortalUtil.getUserId(actionRequest);
+		long userId = portal.getUserId(actionRequest);
 
 		long liveGroupId = ParamUtil.getLong(actionRequest, "liveGroupId");
 
@@ -919,12 +927,19 @@ public class SiteAdminPortlet extends MVCPortlet {
 	protected LayoutSetService layoutSetService;
 	protected MembershipRequestLocalService membershipRequestLocalService;
 	protected MembershipRequestService membershipRequestService;
+
+	@Reference
+	protected Portal portal;
+
 	protected RoleLocalService roleLocalService;
 	protected TeamLocalService teamLocalService;
 	protected UserLocalService userLocalService;
 	protected UserService userService;
 
 	private static final int _LAYOUT_SET_VISIBILITY_PRIVATE = 1;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SiteAdminPortlet.class);
 
 	private static final TransactionConfig _transactionConfig =
 		TransactionConfig.Factory.create(

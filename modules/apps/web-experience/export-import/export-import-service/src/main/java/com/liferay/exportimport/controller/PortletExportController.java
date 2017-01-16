@@ -84,7 +84,7 @@ import com.liferay.portal.kernel.util.DateRange;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -343,6 +343,14 @@ public class PortletExportController implements ExportController {
 				PortletKeys.PREFS_PLID_SHARED, portlet.getRootPortletId(),
 				portletElement);
 
+			// Group embedded portlets
+
+			exportPortletPreferences(
+				portletDataContext, portletDataContext.getScopeGroupId(),
+				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, false, layout,
+				PortletKeys.PREFS_PLID_SHARED, portlet.getPortletId(),
+				portletElement);
+
 			// Layout
 
 			exportPortletPreferences(
@@ -391,6 +399,12 @@ public class PortletExportController implements ExportController {
 					PortletKeys.PREFS_PLID_SHARED, portletElement);
 			}
 			catch (NoSuchPortletPreferencesException nsppe) {
+
+				// LPS-52675
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(nsppe, nsppe);
+				}
 			}
 		}
 
@@ -737,7 +751,7 @@ public class PortletExportController implements ExportController {
 			"available-locales",
 			StringUtil.merge(
 				LanguageUtil.getAvailableLocales(
-					PortalUtil.getSiteGroupId(
+					_portal.getSiteGroupId(
 						portletDataContext.getScopeGroupId()))));
 		headerElement.addAttribute(
 			"build-number", String.valueOf(ReleaseInfo.getBuildNumber()));
@@ -1101,6 +1115,13 @@ public class PortletExportController implements ExportController {
 				ownerId, ownerType, plid, portletId);
 		}
 		catch (NoSuchPortletPreferencesException nsppe) {
+
+			// LPS-52675
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(nsppe, nsppe);
+			}
+
 			return;
 		}
 
@@ -1167,7 +1188,7 @@ public class PortletExportController implements ExportController {
 				"'last-publish-date']");
 
 		for (Node node : nodes) {
-			document.remove(node);
+			node.detach();
 		}
 
 		Element serviceElement = parentElement.addElement("service");
@@ -1194,6 +1215,13 @@ public class PortletExportController implements ExportController {
 				ownerId, ownerType, LayoutConstants.DEFAULT_PLID, serviceName);
 		}
 		catch (NoSuchPortletPreferencesException nsppe) {
+
+			// LPS-52675
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(nsppe, nsppe);
+			}
+
 			return;
 		}
 
@@ -1210,7 +1238,7 @@ public class PortletExportController implements ExportController {
 
 		sb.append(ExportImportPathUtil.getRootPath(portletDataContext));
 		sb.append("/locks/");
-		sb.append(PortalUtil.getClassNameId(className));
+		sb.append(_portal.getClassNameId(className));
 		sb.append(CharPool.FORWARD_SLASH);
 		sb.append(key);
 		sb.append(CharPool.FORWARD_SLASH);
@@ -1356,6 +1384,9 @@ public class PortletExportController implements ExportController {
 	private LayoutLocalService _layoutLocalService;
 	private final PermissionExporter _permissionExporter =
 		PermissionExporter.getInstance();
+
+	@Reference
+	private Portal _portal;
 
 	@Reference
 	private PortletDataHandlerProvider _portletDataHandlerProvider;

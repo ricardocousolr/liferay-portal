@@ -15,6 +15,36 @@
 		<execute macro="Button#clickSave" />
 	</command>
 
+	<command name="configureAudienceTargetingAnalytics">
+		<execute macro="Panel#expandPanel">
+			<var name="panelHeading" value="Audience Targeting Analytics" />
+		</execute>
+
+		<if>
+			<isset var="enableAnalyticsList" />
+			<then>
+				<for list="${enableAnalyticsList}" param="enableAnalytics">
+					<execute function="Check#checkToggleSwitch" locator1="ToggleSwitch#ANY_TOGGLE_SWITCH">
+						<var name="key_toggleSwitchLabel" value="${enableAnalytics}" />
+					</execute>
+				</for>
+			</then>
+		</if>
+
+		<if>
+			<isset var="disableAnalyticsList" />
+			<then>
+				<for list="${disableAnalyticsList}" param="disableAnalytics">
+					<execute function="Uncheck#uncheckToggleSwitch" locator1="ToggleSwitch#ANY_TOGGLE_SWITCH">
+						<var name="key_toggleSwitchLabel" value="${disableAnalytics}" />
+					</execute>
+				</for>
+			</then>
+		</if>
+
+		<execute macro="PortletEntry#save" />
+	</command>
+
 	<command name="configureContentSharingAcrossSitesCP">
 		<execute macro="Panel#expandPanel">
 			<var name="panelHeading" value="Content Sharing" />
@@ -110,8 +140,8 @@
 	</command>
 
 	<command name="configureCurrentLanguagesCP">
-		<execute macro="Navigator#gotoTab">
-			<var name="tab" value="Miscellaneous" />
+		<execute macro="Navigator#gotoNavTab">
+			<var name="navTab" value="Miscellaneous" />
 		</execute>
 
 		<if>
@@ -161,9 +191,18 @@
 		<execute macro="PortletEntry#save" />
 	</command>
 
+	<command name="configureOpenSSO">
+		<execute function="Check" locator1="PortalSettingsAuthentication#AUTHENTICATION_OPEN_SSO_ENABLED_CHECKBOX" />
+		<execute function="Type" locator1="PortalSettingsAuthentication#AUTHENTICATION_OPEN_SSO_LOGIN_URL_FIELD" value1="${OpenSSOLoginURL}" />
+		<execute function="Type" locator1="PortalSettingsAuthentication#AUTHENTICATION_OPEN_SSO_LOGOUT_URL_FIELD" value1="${OpenSSOLogoutURL}" />
+		<execute function="Type" locator1="PortalSettingsAuthentication#AUTHENTICATION_OPEN_SSO_SERVICE_URL_FIELD" value1="${OpenSSOServiceURL}" />
+
+		<execute macro="PortletEntry#save" />
+	</command>
+
 	<command name="configureTimeZone">
-		<execute macro="Navigator#gotoTab">
-			<var name="tab" value="Miscellaneous" />
+		<execute macro="Navigator#gotoNavTab">
+			<var name="navTab" value="Miscellaneous" />
 		</execute>
 
 		<execute function="Select" locator1="Select#TIME_ZONE" value1="${timeZone}" />
@@ -194,14 +233,25 @@
 		<execute function="Type" locator1="PortalSettingsAuthentication#AUTHENTICATION_CAS_LOGIN_URL_FIELD" value1="${casLoginURL}" />
 		<execute function="Type" locator1="PortalSettingsAuthentication#AUTHENTICATION_CAS_LOGOUT_URL_FIELD" value1="${casLogoutURL}" />
 		<execute function="Type" locator1="PortalSettingsAuthentication#AUTHENTICATION_CAS_SERVER_URL_FIELD" value1="${casServerURL}" />
+		<execute function="Type" locator1="PortalSettingsAuthentication#AUTHENTICATION_CAS_SERVICE_URL_FIELD" value1="${casServiceURL}" />
 
 		<execute function="AssertClick" locator1="PortalSettingsAuthentication#AUTHENTICATION_CAS_TEST_CAS_CONFIGURATION_BUTTON" value1="Test CAS Configuration" />
 
-		<execute function="AssertTextEquals" locator1="Message#LOGIN_URL_SUCCESS" value1="Pass" />
-		<execute function="AssertTextEquals" locator1="Message#LOGOUT_URL_SUCCESS" value1="Pass" />
-		<execute function="AssertTextEquals" locator1="Message#SERVER_URL_SUCCESS" value1="Pass" />
+		<execute function="AssertElementNotPresent" locator1="//span[.='Unreachable']" />
 
 		<execute function="Click" locator1="Icon#CLOSE" />
+
+		<execute macro="PortletEntry#save" />
+	</command>
+
+	<command name="editConfigurationAuthenticationFacebook">
+		<execute function="Check" locator1="PortalSettingsAuthentication#AUTHENTICATION_FACEBOOK_ENABLED_CHECKBOX" />
+		<execute function="Type" locator1="PortalSettingsAuthentication#AUTHENTICATION_FACEBOOK_APPLICATION_ID" value1="${facebookApplicationID}" />
+		<execute function="Type" locator1="PortalSettingsAuthentication#AUTHENTICATION_FACEBOOK_APPLICATION_SECRET" value1="${facebookApplicationSecret}" />
+		<execute function="Type" locator1="PortalSettingsAuthentication#AUTHENTICATION_FACEBOOK_GRAPH_URL" value1="https://graph.facebook.com" />
+		<execute function="Type" locator1="PortalSettingsAuthentication#AUTHENTICATION_FACEBOOK_OAUTH_AUTHENTICATION_URL" value1="https://graph.facebook.com/oauth/authorize" />
+		<execute function="Type" locator1="PortalSettingsAuthentication#AUTHENTICATION_FACEBOOK_OAUTH_TOKEN_URL" value1="https://graph.facebook.com/oauth/access_token" />
+		<execute function="Type" locator1="PortalSettingsAuthentication#AUTHENTICATION_FACEBOOK_REDIRECT_URL" value1="http://localhost:8080/c/portal/facebook_connect_oauth" />
 
 		<execute macro="PortletEntry#save" />
 	</command>
@@ -263,7 +313,7 @@
 
 		<execute function="AssertTextEquals#assertPartialText" locator1="PortalSettingsUsers#DEFAULT_USER_ASSOCIATIONS_ROLES_HEADER" value1="Roles" />
 
-		<execute function="Type" locator1="PortalSettingsUsers#DEFAULT_USER_ASSOCIATIONS_ROLES_FIELD" value1="${roleName}" />
+		<execute function="Type" locator1="PortalSettingsUsers#DEFAULT_USER_ASSOCIATIONS_ROLES_FIELD" value1="${roleTitle}" />
 
 		<execute macro="PortletEntry#save" />
 
@@ -273,7 +323,7 @@
 
 		<execute function="AssertClick" locator1="NavTab#DEFAULT_USER_ASSOCIATIONS" value1="Default User Associations" />
 
-		<execute function="Type#clickAtType" locator1="PortalSettingsUsers#DEFAULT_USER_ASSOCIATIONS_ROLES_FIELD" value1="${roleName}" />
+		<execute function="Type#clickAtType" locator1="PortalSettingsUsers#DEFAULT_USER_ASSOCIATIONS_ROLES_FIELD" value1="${roleTitle}" />
 	</command>
 
 	<command name="editConfigurationUsersDefaultUserAssociationsSitesCP">
@@ -371,6 +421,14 @@
 		<execute function="AssertTextEquals" locator1="PortalSettings#VIRTUAL_HOST_FIELD" value1="${virtualHostName}" />
 	</command>
 
+	<command name="enableGoogleSSOCP">
+		<execute function="Check" locator1="PortalSettingsAuthentication#AUTHENTICATION_GOOGLE_ENABLED_CHECKBOX" />
+		<execute function="Type" locator1="PortalSettingsAuthentication#AUTHENTICATION_GOOGLE_CLIENT_ID" value1="${googleClientID}" />
+		<execute function="Type" locator1="PortalSettingsAuthentication#AUTHENTICATION_GOOGLE_CLIENT_SECRET" value1="${googleClientSecret}" />
+
+		<execute macro="PortletEntry#save" />
+	</command>
+
 	<command name="enableImportLDAPCP">
 		<execute macro="PortalSettingsNavigator#gotoLDAP" />
 
@@ -387,6 +445,20 @@
 		<execute function="Check" locator1="PortalSettingsAuthentication#AUTHENTICATION_LDAP_${enableCheckboxKey}_CHECKBOX" />
 
 		<execute macro="PortletEntry#save" />
+	</command>
+
+	<command name="enableOpenIDCP">
+		<execute function="Check" locator1="PortalSettingsAuthentication#AUTHENTICATION_OPEN_ID_ENABLED_CHECKBOX" />
+
+		<execute macro="PortletEntry#save" />
+
+		<execute macro="Panel#expandPanel">
+			<var name="panelHeading" value="Authentication" />
+		</execute>
+
+		<execute function="AssertClick" locator1="NavTab#OPENID" value1="OpenID" />
+
+		<execute function="AssertChecked" locator1="PortalSettingsAuthentication#AUTHENTICATION_OPEN_ID_ENABLED_CHECKBOX" />
 	</command>
 
 	<command name="enterReservedEmailAddressCP">
@@ -510,6 +582,16 @@
 		<execute function="Click" locator1="Button#CLOSE_MODAL" />
 	</command>
 
+	<command name="testOpenSSOConnection">
+		<execute function="AssertClick" locator1="PortalSettingsAuthentication#AUTHENTICATION_OPEN_SSO_TEST_OPEN_SSO_CONFIGURATION_BUTTON" value1="Test OpenSSO Configuration" />
+
+		<execute function="AssertTextEquals" locator1="Modal#BODY" value1="Liferay has successfully connected to the OpenSSO server." />
+
+		<var name="key_modalTitle" value="OpenSSO" />
+
+		<execute function="Click" locator1="Button#CLOSE_MODAL" />
+	</command>
+
 	<command name="viewAuthenticationCASCP">
 		<execute macro="Panel#expandPanel">
 			<var name="panelHeading" value="Authentication" />
@@ -603,8 +685,7 @@
 			<var name="panelHeading" value="Authentication" />
 		</execute>
 
-		<execute function="AssertClick" locator1="NavTab#OPEN_ID" value1="OpenID" />
-
+		<execute function="AssertClick" locator1="NavTab#OPENID" value1="OpenID" />
 		<execute function="AssertElementPresent" locator1="PortalSettingsAuthentication#AUTHENTICATION_OPEN_ID_ENABLED_CHECKBOX" />
 	</command>
 
@@ -613,8 +694,7 @@
 			<var name="panelHeading" value="Authentication" />
 		</execute>
 
-		<execute function="AssertClick" locator1="NavTab#OPEN_SSO" value1="OpenSSO" />
-
+		<execute function="AssertClick" locator1="NavTab#OPENSSO" value1="OpenSSO" />
 		<execute function="AssertElementPresent" locator1="PortalSettingsAuthentication#AUTHENTICATION_OPEN_SSO_ENABLED_CHECKBOX" />
 		<execute function="AssertElementPresent" locator1="PortalSettingsAuthentication#AUTHENTICATION_OPEN_SSO_IMPORT_FROM_LDAP_CHECKBOX" />
 		<execute function="AssertTextEquals#assertPartialText" locator1="PortalSettingsAuthentication#AUTHENTICATION_OPEN_SSO_LOGIN_URL_HEADER" value1="Login URL" />
@@ -651,7 +731,7 @@
 
 		<execute function="AssertClick" locator1="NavTab#DEFAULT_USER_ASSOCIATIONS" value1="Default User Associations" />
 
-		<execute function="Type#clickAtType" locator1="PortalSettingsUsers#DEFAULT_USER_ASSOCIATIONS_ROLES_FIELD" value1="${roleName}" />
+		<execute function="Type#clickAtType" locator1="PortalSettingsUsers#DEFAULT_USER_ASSOCIATIONS_ROLES_FIELD" value1="${roleTitle}" />
 	</command>
 
 	<command name="viewConfigurationUsersDefaultUserAssociationsSitesCP">
@@ -675,16 +755,16 @@
 	</command>
 
 	<command name="viewCurrentDefaultPortalLanguageCP">
-		<execute macro="Navigator#gotoTab">
-			<var name="tab" value="Miscellaneous" />
+		<execute macro="Navigator#gotoNavTab">
+			<var name="navTab" value="Miscellaneous" />
 		</execute>
 
 		<execute function="AssertSelectedLabel" locator1="PortalSettingsDisplaySettings#DEFAULT_LANGUAGE_SELECT" value1="${defaultPortalLanguage}" />
 	</command>
 
 	<command name="viewDefaultLanguageCP">
-		<execute macro="Navigator#gotoTab">
-			<var name="tab" value="Miscellaneous" />
+		<execute macro="Navigator#gotoNavTab">
+			<var name="navTab" value="Miscellaneous" />
 		</execute>
 
 		<execute function="AssertSelectedLabel" locator1="PortalSettingsDisplaySettings#DEFAULT_LANGUAGE_SELECT" value1="${defaultPortalLanguage}" />

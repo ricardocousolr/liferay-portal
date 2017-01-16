@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.exception.NoSuchUserException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ContactConstants;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.User;
@@ -41,7 +43,7 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Time;
 
@@ -60,9 +62,9 @@ import org.osgi.service.component.annotations.Reference;
  * @author Peter Fellwock
  */
 @Component(
-	configurationPid = "ccom.liferay.chat.configuration.ChatConfiguration",
-	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
-	property = {"javax.portlet.name=" + ChatPortletKeys.CHAT},
+	configurationPid = "com.liferay.chat.configuration.ChatConfiguration",
+	configurationPolicy = ConfigurationPolicy.OPTIONAL, enabled = false,
+	immediate = true, property = {"javax.portlet.name=" + ChatPortletKeys.CHAT},
 	service = PollerProcessor.class
 )
 public class ChatPollerProcessor extends BasePollerProcessor {
@@ -139,13 +141,19 @@ public class ChatPollerProcessor extends BasePollerProcessor {
 					groupId, false);
 
 				if (layoutSet.getPageCount() > 0) {
-					displayURL = PortalUtil.getLayoutSetDisplayURL(
+					displayURL = _portal.getLayoutSetDisplayURL(
 						layoutSet, false);
 
 					displayURL = HttpUtil.removeDomain(displayURL);
 				}
 			}
 			catch (NoSuchLayoutSetException nslse) {
+
+				// LPS-52675
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(nslse, nslse);
+				}
 			}
 
 			curUserJSONObject.put("displayURL", displayURL);
@@ -217,6 +225,13 @@ public class ChatPollerProcessor extends BasePollerProcessor {
 						"fromPortraitId", fromUser.getPortraitId());
 				}
 				catch (NoSuchUserException nsue) {
+
+					// LPS-52675
+
+					if (_log.isDebugEnabled()) {
+						_log.debug(nsue, nsue);
+					}
+
 					continue;
 				}
 			}
@@ -288,8 +303,15 @@ public class ChatPollerProcessor extends BasePollerProcessor {
 		}
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		ChatPollerProcessor.class);
+
 	private ChatGroupServiceConfiguration _chatGroupServiceConfiguration;
 	private LayoutSetLocalService _layoutSetLocalService;
+
+	@Reference
+	private Portal _portal;
+
 	private UserLocalService _userLocalService;
 
 }

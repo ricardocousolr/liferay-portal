@@ -49,6 +49,8 @@ import com.liferay.portal.kernel.exception.WebsiteURLException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Contact;
@@ -79,7 +81,7 @@ import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -210,6 +212,12 @@ public class ContactsCenterPortlet extends MVCPortlet {
 					themeDisplay.getUserId(), userId, type);
 			}
 			catch (NoSuchRelationException nsre) {
+
+				// LPS-52675
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(nsre, nsre);
+				}
 			}
 		}
 	}
@@ -308,6 +316,12 @@ public class ContactsCenterPortlet extends MVCPortlet {
 				jsonArray.put(userJSONObject);
 			}
 			catch (NoSuchUserException nsue) {
+
+				// LPS-52675
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(nsue, nsue);
+				}
 			}
 		}
 
@@ -404,7 +418,7 @@ public class ContactsCenterPortlet extends MVCPortlet {
 
 			JSONObject extraDataJSONObject = JSONFactoryUtil.createJSONObject();
 
-			String portletId = PortalUtil.getPortletId(actionRequest);
+			String portletId = portal.getPortletId(actionRequest);
 
 			extraDataJSONObject.put(
 				"portletId", PortletConstants.getRootPortletId(portletId));
@@ -1223,6 +1237,9 @@ public class ContactsCenterPortlet extends MVCPortlet {
 	protected EntryLocalService entryLocalService;
 
 	@Reference
+	protected Portal portal;
+
+	@Reference
 	protected RoleLocalService roleLocalService;
 
 	@Reference
@@ -1240,5 +1257,8 @@ public class ContactsCenterPortlet extends MVCPortlet {
 
 	@Reference
 	protected UserService userService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ContactsCenterPortlet.class);
 
 }

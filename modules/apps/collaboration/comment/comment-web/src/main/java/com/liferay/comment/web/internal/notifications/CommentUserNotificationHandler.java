@@ -21,12 +21,14 @@ import com.liferay.message.boards.kernel.service.MBDiscussionLocalService;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.notifications.BaseModelUserNotificationHandler;
 import com.liferay.portal.kernel.notifications.UserNotificationDefinition;
 import com.liferay.portal.kernel.notifications.UserNotificationHandler;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringPool;
 
 import org.osgi.service.component.annotations.Component;
@@ -55,6 +57,13 @@ public class CommentUserNotificationHandler
 			return _mbDiscussionLocalService.fetchDiscussion(classPK);
 		}
 		catch (SystemException se) {
+
+			// LPS-52675
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(se, se);
+			}
+
 			return null;
 		}
 	}
@@ -117,7 +126,7 @@ public class CommentUserNotificationHandler
 				serviceContext.getLocale(), message,
 				new String[] {
 					HtmlUtil.escape(
-						PortalUtil.getUserName(
+						_portal.getUserName(
 							jsonObject.getLong("userId"), StringPool.BLANK)),
 					HtmlUtil.escape(
 						assetRenderer.getTitle(serviceContext.getLocale()))
@@ -129,7 +138,7 @@ public class CommentUserNotificationHandler
 				serviceContext.getLocale(), message,
 				new String[] {
 					HtmlUtil.escape(
-						PortalUtil.getUserName(
+						_portal.getUserName(
 							jsonObject.getLong("userId"), StringPool.BLANK))
 				},
 				false);
@@ -145,6 +154,12 @@ public class CommentUserNotificationHandler
 		_mbDiscussionLocalService = mbDiscussionLocalService;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		CommentUserNotificationHandler.class);
+
 	private MBDiscussionLocalService _mbDiscussionLocalService;
+
+	@Reference
+	private Portal _portal;
 
 }

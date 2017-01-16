@@ -35,7 +35,6 @@ import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.storage.StorageEngine;
 import com.liferay.dynamic.data.mapping.util.DDMBeanTranslatorUtil;
-import com.liferay.exportimport.content.processor.ExportImportContentProcessorController;
 import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
@@ -60,7 +59,7 @@ import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.MapUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
@@ -212,7 +211,7 @@ public class FileEntryStagedModelDataHandler
 			portletDataContext.addClassedModel(
 				fileEntryElement, fileEntryPath, fileEntry);
 
-			long portletRepositoryClassNameId = PortalUtil.getClassNameId(
+			long portletRepositoryClassNameId = _portal.getClassNameId(
 				PortletRepository.class.getName());
 
 			if (repository.getClassNameId() != portletRepositoryClassNameId) {
@@ -373,7 +372,7 @@ public class FileEntryStagedModelDataHandler
 				if (_log.isWarnEnabled()) {
 					_log.warn(
 						"No file found for file entry " +
-						fileEntry.getFileEntryId());
+							fileEntry.getFileEntryId());
 				}
 
 				return;
@@ -644,7 +643,7 @@ public class FileEntryStagedModelDataHandler
 				dlFileEntryMetadata.getDDMStorageId());
 
 		ddmFormValues =
-			_exportImportContentProcessorController.
+			_ddmFormValuesExportImportContentProcessor.
 				replaceExportContentReferences(
 					portletDataContext, fileEntry, ddmFormValues, false, false);
 
@@ -683,22 +682,9 @@ public class FileEntryStagedModelDataHandler
 		}
 	}
 
-	/**
-	 * @deprecated As of 1.1.0
-	 */
-	@Deprecated
 	protected DDMFormValues getImportDDMFormValues(
 			PortletDataContext portletDataContext,
 			Element structureFieldsElement, DDMStructure ddmStructure)
-		throws Exception {
-
-		return null;
-	}
-
-	protected DDMFormValues getImportDDMFormValues(
-			PortletDataContext portletDataContext,
-			Element structureFieldsElement, DDMStructure ddmStructure,
-			FileEntry fileEntry)
 		throws Exception {
 
 		String ddmFormValuesPath = structureFieldsElement.attributeValue(
@@ -713,9 +699,9 @@ public class FileEntryStagedModelDataHandler
 				serializedDDMFormValues);
 
 		ddmFormValues =
-			_exportImportContentProcessorController.
+			_ddmFormValuesExportImportContentProcessor.
 				replaceImportContentReferences(
-					portletDataContext, fileEntry, ddmFormValues);
+					portletDataContext, ddmStructure, ddmFormValues);
 
 		return DDMBeanTranslatorUtil.translate(ddmFormValues);
 	}
@@ -764,8 +750,7 @@ public class FileEntryStagedModelDataHandler
 			}
 
 			DDMFormValues ddmFormValues = getImportDDMFormValues(
-				portletDataContext, structureFieldsElement, ddmStructure,
-				fileEntry);
+				portletDataContext, structureFieldsElement, ddmStructure);
 
 			serviceContext.setAttribute(
 				DDMFormValues.class.getName() + ddmStructure.getStructureId(),
@@ -773,13 +758,13 @@ public class FileEntryStagedModelDataHandler
 		}
 	}
 
-	/**
-	 * @deprecated As of 1.1.0
-	 */
-	@Deprecated
+	@Reference(unbind = "-")
 	protected void setDDMFormValuesExportImportContentProcessor(
 		DDMFormValuesExportImportContentProcessor
 			ddmFormValuesExportImportContentProcessor) {
+
+		_ddmFormValuesExportImportContentProcessor =
+			ddmFormValuesExportImportContentProcessor;
 	}
 
 	@Reference(unbind = "-")
@@ -919,6 +904,8 @@ public class FileEntryStagedModelDataHandler
 	private static final Log _log = LogFactoryUtil.getLog(
 		FileEntryStagedModelDataHandler.class);
 
+	private DDMFormValuesExportImportContentProcessor
+		_ddmFormValuesExportImportContentProcessor;
 	private DDMFormValuesJSONDeserializer _ddmFormValuesJSONDeserializer;
 	private DDMFormValuesJSONSerializer _ddmFormValuesJSONSerializer;
 	private DLAppLocalService _dlAppLocalService;
@@ -930,8 +917,7 @@ public class FileEntryStagedModelDataHandler
 	private DLTrashService _dlTrashService;
 
 	@Reference
-	private ExportImportContentProcessorController
-		_exportImportContentProcessorController;
+	private Portal _portal;
 
 	private RepositoryLocalService _repositoryLocalService;
 	private StorageEngine _storageEngine;

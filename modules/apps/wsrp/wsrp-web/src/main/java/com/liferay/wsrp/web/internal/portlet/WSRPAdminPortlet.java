@@ -15,6 +15,8 @@
 package com.liferay.wsrp.web.internal.portlet;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -23,7 +25,7 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.wsrp.constants.WSRPPortletKeys;
@@ -112,6 +114,13 @@ public class WSRPAdminPortlet extends MVCPortlet {
 			doRestartConsumer(actionRequest, actionResponse);
 		}
 		catch (PortalException pe) {
+
+			// LPS-52675
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(pe, pe);
+			}
+
 			SessionErrors.add(actionRequest, "restartConsumer");
 		}
 	}
@@ -124,6 +133,13 @@ public class WSRPAdminPortlet extends MVCPortlet {
 			doUpdateServiceDescription(actionRequest, actionResponse);
 		}
 		catch (PortalException pe) {
+
+			// LPS-52675
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(pe, pe);
+			}
+
 			SessionErrors.add(actionRequest, "updateServiceDescription");
 		}
 	}
@@ -221,7 +237,7 @@ public class WSRPAdminPortlet extends MVCPortlet {
 		long wsrpConsumerId = ParamUtil.getLong(
 			actionRequest, "wsrpConsumerId");
 
-		String adminPortletId = PortalUtil.getPortletId(actionRequest);
+		String adminPortletId = _portal.getPortletId(actionRequest);
 		String name = ParamUtil.getString(actionRequest, "name");
 		String url = ParamUtil.getString(actionRequest, "url");
 		String forwardCookies = ParamUtil.getString(
@@ -281,7 +297,7 @@ public class WSRPAdminPortlet extends MVCPortlet {
 		long wsrpConsumerId = ParamUtil.getLong(
 			actionRequest, "wsrpConsumerId");
 
-		String adminPortletId = PortalUtil.getPortletId(actionRequest);
+		String adminPortletId = _portal.getPortletId(actionRequest);
 
 		boolean inbandRegistration = ParamUtil.getBoolean(
 			actionRequest, "inbandRegistration");
@@ -364,9 +380,15 @@ public class WSRPAdminPortlet extends MVCPortlet {
 		_wSRPProducerLocalService = wSRPProducerLocalService;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		WSRPAdminPortlet.class);
+
 	private static WSRPConsumerLocalService _wSRPConsumerLocalService;
 	private static WSRPConsumerPortletLocalService
 		_wSRPConsumerPortletLocalService;
 	private static WSRPProducerLocalService _wSRPProducerLocalService;
+
+	@Reference
+	private Portal _portal;
 
 }

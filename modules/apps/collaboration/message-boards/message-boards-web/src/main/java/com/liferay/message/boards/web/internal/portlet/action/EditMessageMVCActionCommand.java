@@ -26,7 +26,10 @@ import com.liferay.message.boards.kernel.exception.MessageBodyException;
 import com.liferay.message.boards.kernel.exception.MessageSubjectException;
 import com.liferay.message.boards.kernel.exception.NoSuchMessageException;
 import com.liferay.message.boards.kernel.exception.RequiredMessageException;
+import com.liferay.message.boards.kernel.model.MBCategory;
+import com.liferay.message.boards.kernel.model.MBCategoryConstants;
 import com.liferay.message.boards.kernel.model.MBMessage;
+import com.liferay.message.boards.kernel.service.MBCategoryService;
 import com.liferay.message.boards.kernel.service.MBMessageService;
 import com.liferay.message.boards.kernel.service.MBThreadLocalService;
 import com.liferay.message.boards.kernel.service.MBThreadService;
@@ -53,7 +56,7 @@ import com.liferay.portal.kernel.upload.UploadRequestSizeException;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -178,7 +181,7 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 					sendRedirect(actionRequest, actionResponse, redirect);
 				}
 				else {
-					String redirect = PortalUtil.escapeRedirect(
+					String redirect = _portal.escapeRedirect(
 						ParamUtil.getString(actionRequest, "redirect"));
 
 					if (Validator.isNotNull(redirect)) {
@@ -296,6 +299,11 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 	}
 
 	@Reference(unbind = "-")
+	protected void setMBCategoryService(MBCategoryService mbCategoryService) {
+		_mbCategoryService = mbCategoryService;
+	}
+
+	@Reference(unbind = "-")
 	protected void setMBMessageService(MBMessageService mbMessageService) {
 		_mbMessageService = mbMessageService;
 	}
@@ -369,7 +377,7 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 
 		try {
 			UploadPortletRequest uploadPortletRequest =
-				PortalUtil.getUploadPortletRequest(actionRequest);
+				_portal.getUploadPortletRequest(actionRequest);
 
 			for (int i = 1; i <= 5; i++) {
 				String fileName = uploadPortletRequest.getFileName(
@@ -388,6 +396,18 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 			}
 
 			boolean question = ParamUtil.getBoolean(actionRequest, "question");
+
+			if (categoryId != MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID) {
+				MBCategory category = _mbCategoryService.getCategory(
+					categoryId);
+
+				String displayStyle = category.getDisplayStyle();
+
+				if (displayStyle.equals("question")) {
+					question = true;
+				}
+			}
+
 			boolean anonymous = ParamUtil.getBoolean(
 				actionRequest, "anonymous");
 			double priority = ParamUtil.getDouble(actionRequest, "priority");
@@ -486,8 +506,12 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
+	private MBCategoryService _mbCategoryService;
 	private MBMessageService _mbMessageService;
 	private MBThreadLocalService _mbThreadLocalService;
 	private MBThreadService _mbThreadService;
+
+	@Reference
+	private Portal _portal;
 
 }

@@ -25,7 +25,7 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.IOException;
@@ -66,6 +66,7 @@ public class EditWithImageEditorPortletConfigurationIcon
 			"edit-with-image-editor");
 	}
 
+	@Override
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
@@ -98,7 +99,7 @@ public class EditWithImageEditorPortletConfigurationIcon
 	@Override
 	public boolean isShow(PortletRequest portletRequest) {
 		try {
-			HttpServletRequest request = PortalUtil.getHttpServletRequest(
+			HttpServletRequest request = _portal.getHttpServletRequest(
 				portletRequest);
 
 			FileVersion fileVersion = getFileVersion(request);
@@ -158,5 +159,8 @@ public class EditWithImageEditorPortletConfigurationIcon
 	}
 
 	private DLAppService _dlAppService;
+
+	@Reference
+	private Portal _portal;
 
 }

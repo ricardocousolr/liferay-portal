@@ -14,7 +14,7 @@
 
 package com.liferay.blogs.internal.trash;
 
-import com.liferay.blogs.kernel.model.BlogsEntry;
+import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
 import com.liferay.blogs.service.permission.BlogsEntryPermission;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -26,7 +26,7 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.trash.BaseTrashHandler;
 import com.liferay.portal.kernel.trash.TrashHandler;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.PortletRequest;
@@ -41,7 +41,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Zsolt Berentey
  */
 @Component(
-	property = {"model.class.name=com.liferay.blogs.kernel.model.BlogsEntry"},
+	property = {"model.class.name=com.liferay.blogs.model.BlogsEntry"},
 	service = TrashHandler.class
 )
 public class BlogsEntryTrashHandler extends BaseTrashHandler {
@@ -115,14 +115,13 @@ public class BlogsEntryTrashHandler extends BaseTrashHandler {
 		String portletId = PortletProviderUtil.getPortletId(
 			BlogsEntry.class.getName(), PortletProvider.Action.VIEW);
 
-		long plid = PortalUtil.getPlidFromPortletId(
-			entry.getGroupId(), portletId);
+		long plid = _portal.getPlidFromPortletId(entry.getGroupId(), portletId);
 
 		if (plid == LayoutConstants.DEFAULT_PLID) {
 			portletId = PortletProviderUtil.getPortletId(
 				BlogsEntry.class.getName(), PortletProvider.Action.MANAGE);
 
-			portletURL = PortalUtil.getControlPanelPortletURL(
+			portletURL = _portal.getControlPanelPortletURL(
 				portletRequest, portletId, PortletRequest.RENDER_PHASE);
 		}
 		else {
@@ -155,5 +154,8 @@ public class BlogsEntryTrashHandler extends BaseTrashHandler {
 	}
 
 	private BlogsEntryLocalService _blogsEntryLocalService;
+
+	@Reference
+	private Portal _portal;
 
 }

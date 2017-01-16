@@ -41,7 +41,7 @@ import com.liferay.portal.kernel.servlet.taglib.ui.URLMenuItem;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.ArrayList;
@@ -91,7 +91,7 @@ public class BookmarksPortletToolbarContributor
 
 		urlMenuItem.setLabel(
 			LanguageUtil.get(
-				PortalUtil.getHttpServletRequest(portletRequest), "bookmark"));
+				_portal.getHttpServletRequest(portletRequest), "bookmark"));
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
@@ -102,7 +102,7 @@ public class BookmarksPortletToolbarContributor
 		portletURL.setParameter(
 			"mvcRenderCommandName", "/bookmarks/edit_entry");
 		portletURL.setParameter(
-			"redirect", PortalUtil.getCurrentURL(portletRequest));
+			"redirect", _portal.getCurrentURL(portletRequest));
 		portletURL.setParameter("folderId", String.valueOf(folderId));
 
 		urlMenuItem.setURL(portletURL.toString());
@@ -129,7 +129,7 @@ public class BookmarksPortletToolbarContributor
 
 		urlMenuItem.setLabel(
 			LanguageUtil.get(
-				PortalUtil.getHttpServletRequest(portletRequest),
+				_portal.getHttpServletRequest(portletRequest),
 				(folder != null) ? "subfolder" : "folder"));
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
@@ -141,7 +141,7 @@ public class BookmarksPortletToolbarContributor
 		portletURL.setParameter(
 			"mvcRenderCommandName", "/bookmarks/edit_folder");
 		portletURL.setParameter(
-			"redirect", PortalUtil.getCurrentURL(portletRequest));
+			"redirect", _portal.getCurrentURL(portletRequest));
 		portletURL.setParameter("parentFolderId", String.valueOf(folderId));
 
 		urlMenuItem.setURL(portletURL.toString());
@@ -158,6 +158,13 @@ public class BookmarksPortletToolbarContributor
 				permissionChecker, groupId, folderId, actionId);
 		}
 		catch (PortalException pe) {
+
+			// LPS-52675
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(pe, pe);
+			}
+
 			return false;
 		}
 
@@ -238,7 +245,8 @@ public class BookmarksPortletToolbarContributor
 		catch (ConfigurationException ce) {
 			_log.error(
 				"Unable to obtain bookmarks root folder ID for group " +
-					themeDisplay.getScopeGroupId());
+					themeDisplay.getScopeGroupId(),
+				ce);
 		}
 
 		long folderId = BeanParamUtil.getLong(
@@ -274,5 +282,8 @@ public class BookmarksPortletToolbarContributor
 
 	private BaseModelPermissionChecker _baseModelPermissionChecker;
 	private BookmarksFolderService _bookmarksFolderService;
+
+	@Reference
+	private Portal _portal;
 
 }

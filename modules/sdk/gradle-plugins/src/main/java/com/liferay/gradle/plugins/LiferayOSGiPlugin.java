@@ -22,6 +22,7 @@ import com.liferay.gradle.plugins.extensions.LiferayExtension;
 import com.liferay.gradle.plugins.extensions.LiferayOSGiExtension;
 import com.liferay.gradle.plugins.internal.AlloyTaglibDefaultsPlugin;
 import com.liferay.gradle.plugins.internal.CSSBuilderDefaultsPlugin;
+import com.liferay.gradle.plugins.internal.DBSupportDefaultsPlugin;
 import com.liferay.gradle.plugins.internal.EclipseDefaultsPlugin;
 import com.liferay.gradle.plugins.internal.IdeaDefaultsPlugin;
 import com.liferay.gradle.plugins.internal.JSModuleConfigGeneratorDefaultsPlugin;
@@ -61,7 +62,6 @@ import com.liferay.gradle.util.Validator;
 import groovy.lang.Closure;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.OutputStream;
 
 import java.nio.charset.StandardCharsets;
@@ -87,7 +87,6 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.UncheckedIOException;
 import org.gradle.api.file.CopySpec;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.SourceDirectorySet;
@@ -112,6 +111,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.internal.Factory;
+import org.gradle.util.GUtil;
 
 /**
  * @author Andrea Di Giorgi
@@ -304,6 +304,27 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 					File jarFile = jar.getArchivePath();
 
 					jarFile.renameTo(directDeployTask.getWebAppFile());
+				}
+
+			});
+
+		directDeployTask.doLast(
+			new Action<Task>() {
+
+				@Override
+				public void execute(Task task) {
+					Logger logger = task.getLogger();
+					Project project = task.getProject();
+
+					project.delete("liferay/logs");
+
+					File liferayDir = project.file("liferay");
+
+					boolean deleted = liferayDir.delete();
+
+					if (!deleted && logger.isInfoEnabled()) {
+						logger.info("Unable to delete " + liferayDir);
+					}
 				}
 
 			});
@@ -591,6 +612,7 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 
 		AlloyTaglibDefaultsPlugin.INSTANCE.apply(project);
 		CSSBuilderDefaultsPlugin.INSTANCE.apply(project);
+		DBSupportDefaultsPlugin.INSTANCE.apply(project);
 		EclipseDefaultsPlugin.INSTANCE.apply(project);
 		IdeaDefaultsPlugin.INSTANCE.apply(project);
 		JSModuleConfigGeneratorDefaultsPlugin.INSTANCE.apply(project);
@@ -635,26 +657,23 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 
 		bundleExtension.setFailOnError(true);
 
-		Map<String, String> bundleInstructions = _getBundleInstructions(
-			bundleExtension);
+		File file = project.file("bnd.bnd");
 
-		Properties bundleProperties = null;
+		if (file.exists()) {
+			Map<String, String> bundleInstructions = _getBundleInstructions(
+				bundleExtension);
 
-		try {
-			bundleProperties = FileUtil.readProperties(project, "bnd.bnd");
-		}
-		catch (IOException ioe) {
-			throw new UncheckedIOException(ioe);
-		}
+			Properties properties = GUtil.loadProperties(file);
 
-		Enumeration<Object> keys = bundleProperties.keys();
+			Enumeration<Object> keys = properties.keys();
 
-		while (keys.hasMoreElements()) {
-			String key = (String)keys.nextElement();
+			while (keys.hasMoreElements()) {
+				String key = (String)keys.nextElement();
 
-			String value = bundleProperties.getProperty(key);
+				String value = properties.getProperty(key);
 
-			bundleInstructions.put(key, value);
+				bundleInstructions.put(key, value);
+			}
 		}
 	}
 

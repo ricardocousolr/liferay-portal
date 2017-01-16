@@ -32,7 +32,7 @@ import com.liferay.portal.kernel.servlet.taglib.ui.URLMenuItem;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -88,7 +88,7 @@ public class WikiPortletToolbarContributor
 		urlMenuItem.setIcon("icon-plus-sign-2");
 		urlMenuItem.setLabel(
 			LanguageUtil.get(
-				PortalUtil.getHttpServletRequest(portletRequest), "add-page"));
+				_portal.getHttpServletRequest(portletRequest), "add-page"));
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
@@ -98,7 +98,7 @@ public class WikiPortletToolbarContributor
 
 		portletURL.setParameter("mvcRenderCommandName", "/wiki/edit_page");
 		portletURL.setParameter(
-			"redirect", PortalUtil.getCurrentURL(portletRequest));
+			"redirect", _portal.getCurrentURL(portletRequest));
 		portletURL.setParameter("nodeId", String.valueOf(node.getNodeId()));
 		portletURL.setParameter("title", StringPool.BLANK);
 		portletURL.setParameter("editTitle", "1");
@@ -117,6 +117,13 @@ public class WikiPortletToolbarContributor
 				permissionChecker, groupId, nodeId, actionId);
 		}
 		catch (PortalException pe) {
+
+			// LPS-52675
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(pe, pe);
+			}
+
 			return false;
 		}
 
@@ -189,7 +196,8 @@ public class WikiPortletToolbarContributor
 		catch (ConfigurationException ce) {
 			_log.error(
 				"Unable to get initial node name for group " +
-					themeDisplay.getScopeGroupId());
+					themeDisplay.getScopeGroupId(),
+				ce);
 		}
 
 		String name = BeanParamUtil.getString(
@@ -215,6 +223,10 @@ public class WikiPortletToolbarContributor
 		WikiPortletToolbarContributor.class);
 
 	private BaseModelPermissionChecker _baseModelPermissionChecker;
+
+	@Reference
+	private Portal _portal;
+
 	private WikiNodeService _wikiNodeService;
 
 }

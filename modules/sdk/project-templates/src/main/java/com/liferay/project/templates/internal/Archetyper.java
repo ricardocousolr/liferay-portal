@@ -72,15 +72,19 @@ public class Archetyper {
 		throws Exception {
 
 		String artifactId = projectTemplatesArgs.getName();
+		String author = projectTemplatesArgs.getAuthor();
 		String className = projectTemplatesArgs.getClassName();
+		String contributorType = projectTemplatesArgs.getContributorType();
 		String hostBundleSymbolicName =
 			projectTemplatesArgs.getHostBundleSymbolicName();
 		String hostBundleVersion = projectTemplatesArgs.getHostBundleVersion();
 		String packageName = projectTemplatesArgs.getPackageName();
 
+		File workspaceDir = WorkspaceUtil.getWorkspaceDir(destinationDir);
+
 		String projectType = "standalone";
 
-		if (WorkspaceUtil.isWorkspace(destinationDir)) {
+		if (workspaceDir != null) {
 			projectType = WorkspaceUtil.WORKSPACE;
 		}
 
@@ -107,8 +111,33 @@ public class Archetyper {
 
 		Properties properties = new Properties();
 
+		if (template.equals("service-builder")) {
+			String apiPath = ":" + artifactId + "-api";
+
+			if (workspaceDir != null) {
+				Path destinationDirPath = destinationDir.toPath();
+				Path workspaceDirPath = workspaceDir.toPath();
+
+				destinationDirPath = destinationDirPath.toAbsolutePath();
+				workspaceDirPath = workspaceDirPath.toAbsolutePath();
+
+				Path relativePath = workspaceDirPath.relativize(
+					destinationDirPath);
+
+				String path = relativePath.toString();
+
+				path = path.replace(File.separatorChar, ':');
+
+				apiPath = ":" + path + ":" + artifactId + apiPath;
+			}
+
+			_setProperty(properties, "apiPath", apiPath);
+		}
+
+		_setProperty(properties, "author", author);
 		_setProperty(properties, "buildType", "gradle");
 		_setProperty(properties, "className", className);
+		_setProperty(properties, "contributorType", contributorType);
 		_setProperty(
 			properties, "hostBundleSymbolicName", hostBundleSymbolicName);
 		_setProperty(properties, "hostBundleVersion", hostBundleVersion);

@@ -533,7 +533,7 @@ public class ServiceBuilder {
 		_tplBadTableNames = _getTplProperty(
 			"bad_table_names", _tplBadTableNames);
 		_tplBlobModel = _getTplProperty("blob_model", _tplBlobModel);
-		_tplEjbPk = _getTplProperty("ejb_pk", _tplEjbPk);
+		_tplEjbPK = _getTplProperty("ejb_pk", _tplEjbPK);
 		_tplException = _getTplProperty("exception", _tplException);
 		_tplExtendedModel = _getTplProperty(
 			"extended_model", _tplExtendedModel);
@@ -2007,7 +2007,7 @@ public class ServiceBuilder {
 
 		// Content
 
-		String content = _processTemplate(_tplEjbPk, context);
+		String content = _processTemplate(_tplEjbPK, context);
 
 		// Write file
 
@@ -2377,9 +2377,34 @@ public class ServiceBuilder {
 	}
 
 	private void _createHbmXml() throws Exception {
+		File xmlFile = new File(_hbmFileName);
+
+		List<Entity> entities = new ArrayList<>();
+
+		boolean hasDeprecated = false;
+
+		for (Entity entity : _ejbList) {
+			if (entity.hasColumns()) {
+				if (entity.isDeprecated()) {
+					hasDeprecated = true;
+				}
+				else {
+					entities.add(entity);
+				}
+			}
+		}
+
+		if (entities.isEmpty()) {
+			if (!hasDeprecated) {
+				xmlFile.delete();
+			}
+
+			return;
+		}
+
 		Map<String, Object> context = _getContext();
 
-		context.put("entities", _ejbList);
+		context.put("entities", entities);
 
 		// Content
 
@@ -2392,8 +2417,6 @@ public class ServiceBuilder {
 		String imports = content.substring(0, lastImportEnd);
 
 		content = content.substring(lastImportEnd + 1);
-
-		File xmlFile = new File(_hbmFileName);
 
 		if (!xmlFile.exists()) {
 			StringBundler sb = new StringBundler(5);
@@ -2543,8 +2566,8 @@ public class ServiceBuilder {
 
 		Map<String, Object> context = _getContext();
 
-		context.put("entity", entity);
 		context.put("cacheFields", _getCacheFields(modelImplJavaClass));
+		context.put("entity", entity);
 
 		context = _putDeprecatedKeys(context, modelImplJavaClass);
 
@@ -2681,8 +2704,8 @@ public class ServiceBuilder {
 
 		Map<String, Object> context = _getContext();
 
-		context.put("entity", entity);
 		context.put("cacheFields", _getCacheFields(modelImplJavaClass));
+		context.put("entity", entity);
 
 		context = _putDeprecatedKeys(context, modelImplJavaClass);
 
@@ -3019,8 +3042,8 @@ public class ServiceBuilder {
 
 		context.put("entity", entity);
 		context.put("methods", methods);
-		context.put("sessionTypeName", _getSessionTypeName(sessionType));
 		context.put("referenceList", _mergeReferenceList(entity));
+		context.put("sessionTypeName", _getSessionTypeName(sessionType));
 
 		context = _putDeprecatedKeys(context, javaClass);
 
@@ -3199,8 +3222,8 @@ public class ServiceBuilder {
 		Map<String, Object> context = _getContext();
 
 		context.put("entity", entity);
-		context.put("methods", _getMethods(javaClass));
 		context.put("hasHttpMethods", _hasHttpMethods(javaClass));
+		context.put("methods", _getMethods(javaClass));
 
 		context = _putDeprecatedKeys(context, javaClass);
 
@@ -3504,6 +3527,10 @@ public class ServiceBuilder {
 				continue;
 			}
 
+			if (entity.isDeprecated()) {
+				continue;
+			}
+
 			List<EntityFinder> finderList = entity.getFinderList();
 
 			for (int j = 0; j < finderList.size(); j++) {
@@ -3747,6 +3774,10 @@ public class ServiceBuilder {
 			}
 
 			if (!entity.isDefaultDataSource()) {
+				continue;
+			}
+
+			if (entity.isDeprecated()) {
 				continue;
 			}
 
@@ -5433,7 +5464,11 @@ public class ServiceBuilder {
 	private Map<String, Object> _putDeprecatedKeys(
 		Map<String, Object> context, JavaClass javaClass) {
 
-		context.put("classDeprecated", false);
+		Entity entity = (Entity)context.get("entity");
+
+		context.put("classDeprecated", entity.isDeprecated());
+
+		context.put("classDeprecatedComment", "");
 
 		if (javaClass != null) {
 			DocletTag tag = javaClass.getTagByName("deprecated");
@@ -5773,7 +5808,7 @@ public class ServiceBuilder {
 	private String _tplBadColumnNames = _TPL_ROOT + "bad_column_names.txt";
 	private String _tplBadTableNames = _TPL_ROOT + "bad_table_names.txt";
 	private String _tplBlobModel = _TPL_ROOT + "blob_model.ftl";
-	private String _tplEjbPk = _TPL_ROOT + "ejb_pk.ftl";
+	private String _tplEjbPK = _TPL_ROOT + "ejb_pk.ftl";
 	private String _tplException = _TPL_ROOT + "exception.ftl";
 	private String _tplExtendedModel = _TPL_ROOT + "extended_model.ftl";
 	private String _tplExtendedModelBaseImpl =
