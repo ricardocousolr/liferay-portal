@@ -162,8 +162,9 @@ public class DDMIndexerImpl implements DDMIndexer {
 
 						String type = field.getType();
 
-						if (type.equals(DDMImpl.TYPE_DDM_DATE)
-								&& Validator.isBlank(valueString)) {
+						if (type.equals(DDMImpl.TYPE_DDM_DATE) &&
+							Validator.isBlank(valueString)) {
+
 							continue;
 						}
 						else if (type.equals(DDMFormFieldType.GEOLOCATION)) {
