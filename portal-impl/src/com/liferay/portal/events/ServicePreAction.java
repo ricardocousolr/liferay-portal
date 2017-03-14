@@ -215,12 +215,16 @@ public class ServicePreAction extends Action {
 		int companyLogoHeight = 0;
 		int companyLogoWidth = 0;
 
-		Image companyLogoImage = ImageLocalServiceUtil.getCompanyLogo(
-			company.getLogoId());
+		long companyLogoId = company.getLogoId();
 
-		if (companyLogoImage != null) {
-			companyLogoHeight = companyLogoImage.getHeight();
-			companyLogoWidth = companyLogoImage.getWidth();
+		if (companyLogoId > 0) {
+			Image companyLogoImage = ImageLocalServiceUtil.getCompanyLogo(
+				companyLogoId);
+
+			if (companyLogoImage != null) {
+				companyLogoHeight = companyLogoImage.getHeight();
+				companyLogoWidth = companyLogoImage.getWidth();
+			}
 		}
 
 		String realCompanyLogo = companyLogo;
@@ -924,7 +928,7 @@ public class ServicePreAction extends Action {
 				themeDisplay.setShowPageSettingsIcon(true);
 			}
 
-			if (group.hasStagingGroup() && !group.isStagingGroup()) {
+			if (group.hasStagingGroup()) {
 				themeDisplay.setShowLayoutTemplatesIcon(false);
 				themeDisplay.setURLPublishToLive(null);
 			}
@@ -1013,7 +1017,7 @@ public class ServicePreAction extends Action {
 			themeDisplay.setShowPageCustomizationIcon(false);
 		}
 
-		if (group.hasStagingGroup() && !group.isStagingGroup()) {
+		if (group.hasStagingGroup()) {
 			themeDisplay.setShowLayoutTemplatesIcon(false);
 			themeDisplay.setShowPageCustomizationIcon(false);
 		}
