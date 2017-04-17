@@ -64,7 +64,7 @@ public class BatchBuild extends BaseBuild {
 
 		String result = getResult();
 
-		if (result.equals("ABORTED")) {
+		if (result.equals("ABORTED") && (getDownstreamBuildCount(null) == 0)) {
 			return messageElement;
 		}
 
@@ -159,7 +159,7 @@ public class BatchBuild extends BaseBuild {
 			Matcher axisBuildURLMatcher = null;
 
 			if (fromArchive) {
-				axisBuildURLMatcher = AxisBuild.buildURLPattern.matcher(
+				axisBuildURLMatcher = AxisBuild.archiveBuildURLPattern.matcher(
 					axisBuildURL);
 			}
 			else {
@@ -193,7 +193,9 @@ public class BatchBuild extends BaseBuild {
 	}
 
 	@Override
-	protected List<String> findDownstreamBuildsInConsoleText() {
+	protected List<String> findDownstreamBuildsInConsoleText(
+		String consoleText) {
+
 		return Collections.emptyList();
 	}
 

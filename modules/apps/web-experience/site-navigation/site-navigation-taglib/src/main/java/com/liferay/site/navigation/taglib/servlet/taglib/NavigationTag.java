@@ -14,7 +14,7 @@
 
 package com.liferay.site.navigation.taglib.servlet.taglib;
 
-import com.liferay.dynamic.data.mapping.kernel.DDMTemplate;
+import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -23,10 +23,12 @@ import com.liferay.portal.kernel.portletdisplaytemplate.PortletDisplayTemplateMa
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.NavItem;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portlet.display.template.PortletDisplayTemplate;
+import com.liferay.site.navigation.taglib.internal.portlet.display.template.PortletDisplayTemplateUtil;
+import com.liferay.site.navigation.taglib.internal.servlet.NavItemClassNameIdUtil;
 import com.liferay.site.navigation.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.taglib.util.IncludeTag;
 
@@ -49,11 +51,18 @@ public class NavigationTag extends IncludeTag {
 
 	@Override
 	public int processEndTag() throws Exception {
+		PortletDisplayTemplate portletDisplayTemplate =
+			PortletDisplayTemplateUtil.getPortletDisplayTemplate();
+
+		if (portletDisplayTemplate == null) {
+			return EVAL_PAGE;
+		}
+
 		DDMTemplate portletDisplayDDMTemplate =
-			PortletDisplayTemplateManagerUtil.getDDMTemplate(
+			portletDisplayTemplate.getPortletDisplayTemplateDDMTemplate(
 				getDisplayStyleGroupId(),
-				PortalUtil.getClassNameId(NavItem.class), getDisplayStyle(),
-				true);
+				NavItemClassNameIdUtil.getNavItemClassNameId(),
+				getDisplayStyle(), true);
 
 		if (portletDisplayDDMTemplate == null) {
 			return EVAL_PAGE;
@@ -83,9 +92,9 @@ public class NavigationTag extends IncludeTag {
 		contextObjects.put("rootLayoutLevel", _rootLayoutLevel);
 		contextObjects.put("rootLayoutType", _rootLayoutType);
 
-		String result = PortletDisplayTemplateManagerUtil.renderDDMTemplate(
-			request, response, portletDisplayDDMTemplate.getTemplateId(),
-			navItems, contextObjects);
+		String result = portletDisplayTemplate.renderDDMTemplate(
+			request, response, portletDisplayDDMTemplate, navItems,
+			contextObjects);
 
 		JspWriter jspWriter = pageContext.getOut();
 

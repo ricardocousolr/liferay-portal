@@ -1777,11 +1777,13 @@ public class ServiceBuilder {
 
 		if (returnTypeGenericsName.contains(
 				"com.liferay.portal.kernel.search.") ||
-			returnTypeGenericsName.contains("com.liferay.portal.kernel.model.Theme") ||
+			returnTypeGenericsName.contains(
+				"com.liferay.portal.kernel.model.Theme") ||
 			returnTypeGenericsName.contains(
 				"com.liferay.social.kernel.model.SocialActivityDefinition") ||
 			returnTypeGenericsName.equals("java.util.List<java.lang.Object>") ||
-			returnValueName.equals("com.liferay.portal.kernel.lock.model.Lock") ||
+			returnValueName.equals(
+				"com.liferay.portal.kernel.lock.model.Lock") ||
 			returnValueName.equals(
 				"com.liferay.message.boards.kernel.model.MBMessageDisplay") ||
 			returnValueName.startsWith("java.io") ||
@@ -2704,8 +2706,21 @@ public class ServiceBuilder {
 
 		Map<String, Object> context = _getContext();
 
+		boolean hasClassNameCacheField = false;
+
+		JavaField[] cacheFields = _getCacheFields(modelImplJavaClass);
+
+		for (JavaField javaField : cacheFields) {
+			if ("_className".equals(javaField.getName())) {
+				hasClassNameCacheField = true;
+
+				break;
+			}
+		}
+
 		context.put("cacheFields", _getCacheFields(modelImplJavaClass));
 		context.put("entity", entity);
+		context.put("hasClassNameCacheField", hasClassNameCacheField);
 
 		context = _putDeprecatedKeys(context, modelImplJavaClass);
 

@@ -3,7 +3,7 @@
 The Node Gradle plugin lets you run [Node.js](https://nodejs.org/) and
 [NPM](https://www.npmjs.com/) as part of your build.
 
-The plugin has been successfully tested with Gradle 2.5 up to 3.2.1.
+The plugin has been successfully tested with Gradle 2.5 up to 3.3.
 
 ## Usage
 
@@ -12,7 +12,7 @@ To use the plugin, include it in your build script:
 ```gradle
 buildscript {
 	dependencies {
-		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.node", version: "1.5.1"
+		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.node", version: "2.1.0"
 	}
 
 	repositories {
@@ -95,7 +95,7 @@ This is the base task to run Node.js in a Gradle build. All tasks of type
 
 Property Name | Type | Default Value | Description
 ------------- | ---- | ------------- | -----------
-`args` | `List<String>` | `[]` | The arguments for the Node.js invocation.
+`args` | `List<Object>` | `[]` | The arguments for the Node.js invocation.
 `command` | `String` | `"node"` | The file name of the executable to invoke.
 `inheritProxy` | `boolean` | `true` | Whether to set the `http_proxy`, `https_proxy`, and `no_proxy` environment variables in the Node.js invocation based on the values of the system properties `https.proxyHost`, `https.proxyPort`, `https.proxyUser`, `https.proxyPassword`, `https.nonProxyHosts`, `https.proxyHost`, `https.proxyPort`, `https.proxyUser`, `https.proxyPassword`, and `https.nonProxyHosts`. If these environment variables are already set, their values will not be overwritten.
 `nodeDir` | `File` | <p>**If [`node.download`](#download) is `true`:** [`node.nodeDir`](#nodedir)</p><p>**Otherwise:** `null`</p> | The directory that contains the executable to invoke. If `null`, the executable must be available in the system `PATH`.
@@ -145,6 +145,7 @@ Property Name | Default Value
 Property Name | Type | Default Value | Description
 ------------- | ---- | ------------- | -----------
 `cacheDir` | `File` | <p>**If `nodeDir` is `null`:** `null`</p><p>**Otherwise:** `"${nodeDir}/.cache"` | The location of NPM's cache directory. It sets the [`--cache`](https://docs.npmjs.com/misc/config#cache) argument. Leave the property `null` to keep the default value.
+`logLevel` | `String` | Value to mirror the log level set in the task's [`logger`](https://docs.gradle.org/current/dsl/org.gradle.api.Task.html#org.gradle.api.Task:logger) object. | The NPM log level. It sets the [--loglevel](https://docs.npmjs.com/misc/config#loglevel) argument.
 `progress` | `boolean` | `true` | Whether to show a progress bar during the NPM invocation. It sets the [`--progress`](https://docs.npmjs.com/misc/config#progress) argument.
 <a name="registry"></a>`registry` | `String` | `null` | The base URL of the NPM package registry. It sets the [`--registry`](https://docs.npmjs.com/misc/config#registry) argument. Leave the property `null` or empty to keep the default value.
 

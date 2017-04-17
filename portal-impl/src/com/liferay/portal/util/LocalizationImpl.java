@@ -40,6 +40,7 @@ import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.language.LanguageResources;
 import com.liferay.util.ContentUtil;
+import com.liferay.util.xml.XMLUtil;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -205,14 +206,14 @@ public class LocalizationImpl implements Localization {
 			return defaultValue;
 		}
 
-		String systemDefaultLanguageId = LocaleUtil.toLanguageId(
-			LocaleUtil.getSiteDefault());
-
 		String value = _getCachedValue(xml, requestedLanguageId, useDefault);
 
 		if (value != null) {
 			return value;
 		}
+
+		String systemDefaultLanguageId = LocaleUtil.toLanguageId(
+			LocaleUtil.getSiteDefault());
 
 		String priorityLanguageId = null;
 
@@ -1120,11 +1121,13 @@ public class LocalizationImpl implements Localization {
 					_LANGUAGE_ID, requestedLanguageId);
 			}
 
+			String safeValue = XMLUtil.stripInvalidChars(value);
+
 			if (cdata) {
-				xmlStreamWriter.writeCData(value);
+				xmlStreamWriter.writeCData(safeValue);
 			}
 			else {
-				xmlStreamWriter.writeCharacters(value);
+				xmlStreamWriter.writeCharacters(safeValue);
 			}
 
 			xmlStreamWriter.writeEndElement();
@@ -1278,6 +1281,10 @@ public class LocalizationImpl implements Localization {
 
 	private String _getRootAttributeValue(
 		String xml, String name, String defaultValue) {
+
+		if (!Validator.isXml(xml)) {
+			return defaultValue;
+		}
 
 		String value = null;
 

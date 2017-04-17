@@ -14,8 +14,6 @@
 
 package com.liferay.source.formatter;
 
-import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
@@ -23,9 +21,14 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.ImportsFormatter;
 import com.liferay.portal.tools.ToolsUtil;
+import com.liferay.source.formatter.checks.FTLEmptyLinesCheck;
+import com.liferay.source.formatter.checks.FTLIfStatementCheck;
+import com.liferay.source.formatter.checks.FTLWhitespaceCheck;
+import com.liferay.source.formatter.checks.SourceCheck;
 
 import java.io.File;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,28 +37,6 @@ import java.util.regex.Pattern;
  * @author Hugo Huijser
  */
 public class FTLSourceProcessor extends BaseSourceProcessor {
-
-	@Override
-	public String[] getIncludes() {
-		return _INCLUDES;
-	}
-
-	protected void checkIfStatement(
-		String line, String fileName, int lineCount) {
-
-		if ((!line.startsWith("<#elseif ") && !line.startsWith("<#if ")) ||
-			!line.endsWith(">") || line.contains("?")) {
-
-			return;
-		}
-
-		int pos = line.indexOf(StringPool.SPACE);
-
-		String ifClause =
-			"if (" + line.substring(pos + 1, line.length() - 1) + ") {";
-
-		checkIfClauseParentheses(ifClause, fileName, lineCount);
-	}
 
 	@Override
 	protected String doFormat(
@@ -149,15 +130,7 @@ public class FTLSourceProcessor extends BaseSourceProcessor {
 
 		ImportsFormatter importsFormatter = new FTLImportsFormatter();
 
-		content = importsFormatter.format(content, null, null);
-
-		content = fixEmptyLinesInNestedTags(content);
-
-		content = fixEmptyLinesBetweenTags(content);
-
-		content = formatFTL(fileName, content);
-
-		return StringUtil.replace(content, "\n\n\n", "\n\n");
+		return importsFormatter.format(content, null, null);
 	}
 
 	@Override
@@ -168,6 +141,11 @@ public class FTLSourceProcessor extends BaseSourceProcessor {
 		};
 
 		return getFileNames(excludes, getIncludes());
+	}
+
+	@Override
+	protected String[] doGetIncludes() {
+		return _INCLUDES;
 	}
 
 	protected String formatAssignTags(String content) {
@@ -208,48 +186,6 @@ public class FTLSourceProcessor extends BaseSourceProcessor {
 		}
 
 		return content;
-	}
-
-	protected String formatFTL(String fileName, String content)
-		throws Exception {
-
-		StringBundler sb = new StringBundler();
-
-		try (UnsyncBufferedReader unsyncBufferedReader =
-				new UnsyncBufferedReader(new UnsyncStringReader(content))) {
-
-			int lineCount = 0;
-
-			String line = null;
-
-			while ((line = unsyncBufferedReader.readLine()) != null) {
-				lineCount++;
-
-				line = trimLine(line, false);
-
-				String trimmedLine = StringUtil.trimLeading(line);
-
-				if (trimmedLine.startsWith("<#assign ")) {
-					line = formatWhitespace(line, trimmedLine, true);
-
-					line = formatIncorrectSyntax(line, "=[", "= [", false);
-					line = formatIncorrectSyntax(line, "+[", "+ [", false);
-				}
-
-				checkIfStatement(trimmedLine, fileName, lineCount);
-
-				sb.append(line);
-				sb.append("\n");
-			}
-		}
-
-		String newContent = sb.toString();
-
-		if (newContent.endsWith("\n")) {
-			newContent = newContent.substring(0, newContent.length() - 1);
-		}
-
-		return newContent;
 	}
 
 	protected String formatStringRelationalOperations(String content) {
@@ -304,6 +240,19 @@ public class FTLSourceProcessor extends BaseSourceProcessor {
 			content, match, replacement, matcher.start());
 	}
 
+	@Override
+	protected List<SourceCheck> getSourceChecks() {
+		return _sourceChecks;
+	}
+
+	@Override
+	protected void populateSourceChecks() {
+		_sourceChecks.add(new FTLWhitespaceCheck());
+
+		_sourceChecks.add(new FTLEmptyLinesCheck());
+		_sourceChecks.add(new FTLIfStatementCheck());
+	}
+
 	protected String sortLiferayVariables(String content) {
 		Matcher matcher = _liferayVariablesPattern.matcher(content);
 
@@ -349,6 +298,7 @@ public class FTLSourceProcessor extends BaseSourceProcessor {
 		"\n(\t*)<@.+=.+=.+/>");
 	private final Pattern _singleParameterTagPattern = Pattern.compile(
 		"(<@[\\w\\.]+ \\w+)( )?=([^=]+?)/>");
+	private final List<SourceCheck> _sourceChecks = new ArrayList<>();
 	private final Pattern _stringRelationalOperationPattern = Pattern.compile(
 		"(\\W)([\\w.]+) ([!=]=) \"(\\w*)\"(.)");
 

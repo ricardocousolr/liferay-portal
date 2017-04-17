@@ -17,6 +17,7 @@ package com.liferay.document.library.web.internal.display.context;
 import com.liferay.document.library.display.context.DLDisplayContextFactory;
 import com.liferay.document.library.display.context.DLEditFileEntryDisplayContext;
 import com.liferay.document.library.display.context.DLMimeTypeDisplayContext;
+import com.liferay.document.library.display.context.DLViewFileEntryHistoryDisplayContext;
 import com.liferay.document.library.display.context.DLViewFileVersionDisplayContext;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.dynamic.data.mapping.storage.StorageEngine;
@@ -94,6 +95,39 @@ public class DLDisplayContextProvider {
 		return dlEditFileEntryDisplayContext;
 	}
 
+	public DLViewFileEntryHistoryDisplayContext
+		getDLViewFileEntryHistoryDisplayContext(
+			HttpServletRequest request, HttpServletResponse response,
+			FileVersion fileVersion) {
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		ResourceBundle resourceBundle =
+			_resourceBundleLoader.loadResourceBundle(
+				themeDisplay.getLanguageId());
+
+		DLViewFileEntryHistoryDisplayContext
+			dlViewFileEntryHistoryDisplayContext =
+				new DefaultDLViewFileEntryHistoryDisplayContext(
+					request, fileVersion, resourceBundle);
+
+		if (fileVersion == null) {
+			return dlViewFileEntryHistoryDisplayContext;
+		}
+
+		for (DLDisplayContextFactory dlDisplayContextFactory :
+				_dlDisplayContextFactories) {
+
+			dlViewFileEntryHistoryDisplayContext =
+				dlDisplayContextFactory.getDLViewFileEntryHistoryDisplayContext(
+					dlViewFileEntryHistoryDisplayContext, request, response,
+					fileVersion);
+		}
+
+		return dlViewFileEntryHistoryDisplayContext;
+	}
+
 	public DLViewFileVersionDisplayContext
 		getDLViewFileVersionDisplayContext(
 			HttpServletRequest request, HttpServletResponse response,
@@ -105,7 +139,7 @@ public class DLDisplayContextProvider {
 
 			ResourceBundle resourceBundle =
 				_resourceBundleLoader.loadResourceBundle(
-					themeDisplay.getLanguageId());
+					themeDisplay.getLocale());
 
 			DLViewFileVersionDisplayContext dlViewFileVersionDisplayContext =
 				new DefaultDLViewFileVersionDisplayContext(
@@ -141,8 +175,7 @@ public class DLDisplayContextProvider {
 			WebKeys.THEME_DISPLAY);
 
 		ResourceBundle resourceBundle =
-			_resourceBundleLoader.loadResourceBundle(
-				themeDisplay.getLanguageId());
+			_resourceBundleLoader.loadResourceBundle(themeDisplay.getLocale());
 
 		DLViewFileVersionDisplayContext dlViewFileVersionDisplayContext =
 			new DefaultDLViewFileVersionDisplayContext(

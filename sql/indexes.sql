@@ -219,6 +219,7 @@ create index IX_63ED2532 on LayoutPrototype (uuid_[$COLUMN_LENGTH:75$], companyI
 
 create index IX_43E8286A on LayoutRevision (head, plid);
 create index IX_E10AC39 on LayoutRevision (layoutSetBranchId, head, plid);
+create index IX_38C5DF14 on LayoutRevision (layoutSetBranchId, layoutBranchId, head, plid);
 create index IX_13984800 on LayoutRevision (layoutSetBranchId, layoutBranchId, plid);
 create index IX_4A84AF43 on LayoutRevision (layoutSetBranchId, parentLayoutRevisionId, plid);
 create index IX_70DA9ECB on LayoutRevision (layoutSetBranchId, plid, status);
@@ -444,11 +445,6 @@ create index IX_CC86A444 on SocialRequest (userId, classNameId, classPK, type_, 
 create index IX_AB5906A8 on SocialRequest (userId, status);
 create index IX_8D42897C on SocialRequest (uuid_[$COLUMN_LENGTH:75$], companyId);
 create unique index IX_4F973EFE on SocialRequest (uuid_[$COLUMN_LENGTH:75$], groupId);
-
-create index IX_786D171A on Subscription (companyId, classNameId, classPK);
-create unique index IX_2E1A92D4 on Subscription (companyId, userId, classNameId, classPK);
-create index IX_1290B81 on Subscription (groupId, userId);
-create index IX_E8F34171 on Subscription (userId, classNameId);
 
 create index IX_FFCBB747 on SystemEvent (groupId, classNameId, classPK, type_);
 create index IX_A19C89FF on SystemEvent (groupId, systemEventSetKey);
