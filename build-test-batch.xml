@@ -345,8 +345,8 @@ mariadb.executable=${mariadb.executable}]]></echo>
 					<include name="**/com/liferay/**" />
 				</patternset>
 				<fileset dir="@{portal.bundle.dir}">
-					 <include name="**/*.jar" />
-					 <include name="**/*.war" />
+					<include name="**/*.jar" />
+					<include name="**/*.war" />
 				</fileset>
 			</unzip>
 
@@ -437,39 +437,6 @@ app.server.type=@{app.server.type}]]></echo>
 
 			<antcall inheritAll="false" target="compile-test" />
 
-			<echo file="${project.dir}/.gitignore">/.ivy/
-/app.server.*.properties
-/build.*.properties
-/release.*.properties
-/sql/sql.*.properties
-/test.*.properties
-/tools/maven/*.asc
-/tools/node*
-/tools/selenium/*.exe
-/tools/selenium/extensions/ide.*.js
-/tools/tck
-/tools/zip_tmpl/license</echo>
-
-			<delete file="${project.dir}/lib/.gitignore" />
-
-			<echo file="${project.dir}/modules/.gitignore">tmp
-/*/*/ivy.xml.MD5
-/*/*/javadoc
-/*/*/lib
-/*/*/tmp
-/*/*/*/build/node
-/*/*/*/ivy.xml.MD5
-/*/*/*/javadoc
-/*/*/*/lib
-/*/*/*/node_modules
-/*/*/*/tmp
-/*/*/*/*/build/node
-/*/*/*/*/ivy.xml.MD5
-/*/*/*/*/javadoc
-/*/*/*/*/lib
-/*/*/*/*/node_modules
-/*/*/*/*/tmp</echo>
-
 			<delete>
 				<fileset dir="bundles" includes="*.zip" />
 			</delete>
@@ -477,13 +444,12 @@ app.server.type=@{app.server.type}]]></echo>
 			<if>
 				<contains string="@{app.server.type}" substring="tomcat" />
 				<then>
-					<execute>
-						<![CDATA[
-							git add -A
-
-							git diff --cached --name-only -z | grep -E -v -z '^\.gitignore|bundles/|^modules/\.gitignore' | xargs -0 -n 1000 zip -v liferay-portal-source.zip
-						]]>
-					</execute>
+					<zip
+						basedir="${project.dir}"
+						destfile="liferay-portal-source.zip"
+						excludes="${test.batch.dist.source.excludes}"
+						includes="${test.batch.dist.source.includes}"
+					/>
 
 					<prepare-liferay-classes if:true="${test.batch.code.coverage}" merged.jar="${project.dir}/jacoco/merged.jar" portal.bundle.dir="bundles" />
 				</then>
@@ -520,15 +486,19 @@ app.server.type=@{app.server.type}]]></echo>
 		<attribute default="tomcat" name="app.server.type" />
 
 		<sequential>
+			<antcall inheritAll="false" target="setup-sdk" />
+
+			<unzip dest="." src="liferay-portal-source.zip" />
+
 			<execute>
 				<![CDATA[
-					unzip -oq liferay-portal-source.zip
-
 					unzip -oq liferay-portal-bundle-@{app.server.type}.zip
 
 					chmod -R a+x bundles
 				]]>
 			</execute>
+
+			<setup-libs />
 
 			<antcall inheritAll="false" target="install-portal-snapshots" />
 
@@ -653,7 +623,6 @@ app.server.type=@{app.server.type}]]></echo>
 									</ant>
 								</finally>
 							</trycatch>
-
 						</test-action>
 					</database-test-run-test>
 				</test-action>
@@ -2116,7 +2085,7 @@ app.server.type=@{app.server.type}]]></echo>
 	</target>
 
 	<target name="functional-smoke-jboss70-mysql56-jdk8">
-		<run-functional-test app.server.type="jboss" database.type="mysql" test.portal.log.assert="false" />
+		<run-functional-test app.server.type="jboss" database.type="mysql" test.portal.log.assert="true" />
 	</target>
 
 	<target name="functional-smoke-resin40-mysql56-jdk8">
@@ -2160,11 +2129,11 @@ app.server.type=@{app.server.type}]]></echo>
 	</target>
 
 	<target name="functional-smoke-websphere85-mysql56-jdk8">
-		<run-functional-test app.server.type="websphere" database.type="mysql" test.portal.log.assert="false" />
+		<run-functional-test app.server.type="websphere" database.type="mysql" test.portal.log.assert="true" />
 	</target>
 
 	<target name="functional-smoke-wildfly100-mariadb100-jdk8">
-		<run-functional-test app.server.type="wildfly" database.type="mariadb" test.portal.log.assert="false" />
+		<run-functional-test app.server.type="wildfly" database.type="mariadb" test.portal.log.assert="true" />
 	</target>
 
 	<target name="functional-tomcat80-hypersonic20-jdk8">
@@ -2614,6 +2583,55 @@ ${output.content}</echo>
 		</run-batch-test>
 	</target>
 
+	<target name="portal-license-jdk8">
+		<run-batch-test>
+			<test-action>
+				<sequential>
+					<execute>
+						<![CDATA[
+							git diff --name-only ${liferay.portal.branch}...HEAD > ${project.dir}/git.diff
+						]]>
+					</execute>
+
+					<print-file file.name="${project.dir}/git.diff" />
+
+					<copy file="${project.dir}/git.diff" todir="${release.tool.dir}" />
+
+					<print-file file.name="${release.tool.dir}/git.diff" />
+
+					<execute dir="${release.tool.dir}">
+						<![CDATA[
+							ant dist -f build-release-license.xml
+						]]>
+					</execute>
+				</sequential>
+			</test-action>
+
+			<test-tear-down>
+				<if>
+					<available file="${project.dir}/git.diff" />
+					<then>
+						<delete file="${project.dir}/git.diff" />
+					</then>
+				</if>
+
+				<if>
+					<available file="${release.tool.dir}/git.diff" />
+					<then>
+						<delete file="${release.tool.dir}/git.diff" />
+					</then>
+				</if>
+
+				<if>
+					<available file="../bundles" type="dir" />
+					<then>
+						<delete dir="../bundles" />
+					</then>
+				</if>
+			</test-tear-down>
+		</run-batch-test>
+	</target>
+
 	<target name="portal-startup-space-in-path-jdk8">
 		<sequential>
 			<run-batch-test>
@@ -2638,8 +2656,7 @@ ${output.content}</echo>
 								</try>
 							</trycatch>
 
-								<antcall inheritall="false" target="stop-app-server" />
-
+							<antcall inheritall="false" target="stop-app-server" />
 						</test-action>
 					</database-test-run-test>
 				</test-action>
@@ -2649,7 +2666,6 @@ ${output.content}</echo>
 						<isset property="env.DIST_PATH" />
 						<then>
 							<sequential>
-
 								<propertyfile file="app.server.${env.HOSTNAME}.properties">
 									<entry key="app.server.parent.dir" value="${project.dir}/bun dles" />
 								</propertyfile>
@@ -2661,14 +2677,12 @@ ${output.content}</echo>
 								<prepare-test-environment />
 
 								<move file="bundles" tofile="bun dles" />
-
 							</sequential>
 						</then>
 						<else>
 							<prepare-test-build />
 						</else>
 					</if>
-
 				</test-set-up>
 			</run-batch-test>
 		</sequential>

@@ -15,6 +15,7 @@
 package com.liferay.portal.kernel.util;
 
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
+import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.highlight.HighlightUtil;
@@ -2206,11 +2207,13 @@ public class StringUtil {
 	/**
 	 * Pseudorandomly permutes the characters of the string.
 	 *
+	 * @deprecated As of 7.0.0, replaced by {@link RandomUtil#shuffle(String)}
 	 * @param  s the string whose characters are to be randomized
 	 * @return a string of the same length as the string whose characters
 	 *         represent a pseudorandom permutation of the characters of the
 	 *         string
 	 */
+	@Deprecated
 	public static String randomize(String s) {
 		return RandomUtil.shuffle(s);
 	}
@@ -5229,35 +5232,46 @@ public class StringUtil {
 
 		StringBundler sb = new StringBundler();
 
-		for (String s : splitLines(text)) {
-			if (s.length() == 0) {
-				sb.append(lineSeparator);
+		try (UnsyncBufferedReader unsyncBufferedReader =
+				new UnsyncBufferedReader(new UnsyncStringReader(text))) {
 
-				continue;
-			}
+			String s = StringPool.BLANK;
 
-			int lineLength = 0;
+			while ((s = unsyncBufferedReader.readLine()) != null) {
+				if (s.length() == 0) {
+					sb.append(lineSeparator);
 
-			String[] tokens = s.split(StringPool.SPACE);
+					continue;
+				}
 
-			for (String token : tokens) {
-				if ((lineLength + token.length() + 1) > width) {
-					if (lineLength > 0) {
-						sb.append(lineSeparator);
-					}
+				int lineLength = 0;
 
-					if (token.length() > width) {
-						int pos = token.indexOf(CharPool.OPEN_PARENTHESIS);
+				String[] tokens = s.split(StringPool.SPACE);
 
-						if (pos != -1) {
-							sb.append(token.substring(0, pos + 1));
+				for (String token : tokens) {
+					if ((lineLength + token.length() + 1) > width) {
+						if (lineLength > 0) {
 							sb.append(lineSeparator);
+						}
 
-							token = token.substring(pos + 1);
+						if (token.length() > width) {
+							int pos = token.indexOf(CharPool.OPEN_PARENTHESIS);
 
-							sb.append(token);
+							if (pos != -1) {
+								sb.append(token.substring(0, pos + 1));
+								sb.append(lineSeparator);
 
-							lineLength = token.length();
+								token = token.substring(pos + 1);
+
+								sb.append(token);
+
+								lineLength = token.length();
+							}
+							else {
+								sb.append(token);
+
+								lineLength = token.length();
+							}
 						}
 						else {
 							sb.append(token);
@@ -5266,25 +5280,20 @@ public class StringUtil {
 						}
 					}
 					else {
+						if (lineLength > 0) {
+							sb.append(StringPool.SPACE);
+
+							lineLength++;
+						}
+
 						sb.append(token);
 
-						lineLength = token.length();
+						lineLength += token.length();
 					}
 				}
-				else {
-					if (lineLength > 0) {
-						sb.append(StringPool.SPACE);
 
-						lineLength++;
-					}
-
-					sb.append(token);
-
-					lineLength += token.length();
-				}
+				sb.append(lineSeparator);
 			}
-
-			sb.append(lineSeparator);
 		}
 
 		return sb.toString();
