@@ -17,7 +17,6 @@ package com.liferay.portal.cluster.multiple.internal.jgroups;
 import com.liferay.portal.cluster.multiple.internal.ClusterChannel;
 import com.liferay.portal.cluster.multiple.internal.ClusterChannelFactory;
 import com.liferay.portal.cluster.multiple.internal.ClusterReceiver;
-import com.liferay.portal.cluster.multiple.internal.constants.ClusterPropsKeys;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.CharPool;
@@ -25,7 +24,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.SocketUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.IOException;
@@ -48,11 +46,12 @@ public class JGroupsClusterChannelFactory implements ClusterChannelFactory {
 
 	@Override
 	public ClusterChannel createClusterChannel(
-		String channelProperties, String clusterName,
+		String channleLogicName, String channelProperties, String clusterName,
 		ClusterReceiver clusterReceiver) {
 
 		return new JGroupsClusterChannel(
-			channelProperties, clusterName, clusterReceiver, _bindInetAddress);
+			channleLogicName, channelProperties, clusterName, clusterReceiver,
+			_bindInetAddress);
 	}
 
 	@Override
@@ -74,31 +73,12 @@ public class JGroupsClusterChannelFactory implements ClusterChannelFactory {
 			return;
 		}
 
-		String[] channelSystemPropertiesArray = null;
+		initSystemProperties(
+			_props.getArray(PropsKeys.CLUSTER_LINK_CHANNEL_SYSTEM_PROPERTIES));
 
-		String channelSystemProperties = GetterUtil.getString(
-			properties.get(ClusterPropsKeys.CHANNEL_SYSTEM_PROPERTIES));
-
-		if (Validator.isNull(channelSystemProperties)) {
-			channelSystemPropertiesArray = _props.getArray(
-				PropsKeys.CLUSTER_LINK_CHANNEL_SYSTEM_PROPERTIES);
-		}
-		else {
-			channelSystemPropertiesArray = StringUtil.split(
-				channelSystemProperties);
-		}
-
-		initSystemProperties(channelSystemPropertiesArray);
-
-		String autodetectAddress = GetterUtil.getString(
-			properties.get(ClusterPropsKeys.AUTODETECT_ADDRESS));
-
-		if (Validator.isNull(autodetectAddress)) {
-			autodetectAddress = GetterUtil.getString(
-				_props.get(PropsKeys.CLUSTER_LINK_AUTODETECT_ADDRESS));
-		}
-
-		initBindAddress(autodetectAddress);
+		initBindAddress(
+			GetterUtil.getString(
+				_props.get(PropsKeys.CLUSTER_LINK_AUTODETECT_ADDRESS)));
 	}
 
 	protected void initBindAddress(String autodetectAddress) {

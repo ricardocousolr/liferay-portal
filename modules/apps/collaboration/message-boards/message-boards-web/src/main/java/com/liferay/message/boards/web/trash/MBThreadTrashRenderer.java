@@ -36,8 +36,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * @author Zsolt Berentey
+ * @author     Zsolt Berentey
+ * @deprecated As of 1.3.0, with no direct replacement
  */
+@Deprecated
 public class MBThreadTrashRenderer extends BaseJSPTrashRenderer {
 
 	public static final String TYPE = "message_thread";

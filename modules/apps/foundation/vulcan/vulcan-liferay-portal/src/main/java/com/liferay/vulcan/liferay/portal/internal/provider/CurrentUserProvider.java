@@ -34,6 +34,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Alejandro Hernández
  * @author Carlos Sierra Andrés
  * @author Jorge Ferrer
+ * @review
  */
 @Component(immediate = true)
 public class CurrentUserProvider implements Provider<CurrentUser> {
@@ -46,7 +47,7 @@ public class CurrentUserProvider implements Provider<CurrentUser> {
 			}
 			catch (PortalException pe) {
 				throw new ForbiddenException(
-					"Couldn't found any logged user", pe);
+					"Unable to get authenticated user", pe);
 			}
 		};
 	}

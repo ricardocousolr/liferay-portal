@@ -41,8 +41,6 @@ import com.liferay.portal.search.summary.Summary;
 import com.liferay.portal.search.summary.SummaryBuilder;
 import com.liferay.portal.search.summary.SummaryBuilderFactory;
 
-import java.util.List;
-
 import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -53,8 +51,7 @@ import javax.servlet.http.HttpServletRequest;
 public class JournalContentSearchDisplayContext {
 
 	public JournalContentSearchDisplayContext(
-		HttpServletRequest request,
-		LiferayPortletRequest liferayPortletRequest,
+		HttpServletRequest request, LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
 		JournalContentSearchPortletInstanceConfiguration
 			journalContentSearchPortletInstanceConfiguration) {
@@ -123,13 +120,16 @@ public class JournalContentSearchDisplayContext {
 		renderURL.setParameter("mvcPath", "/search.jsp");
 		renderURL.setParameter("keywords", getKeywords());
 
+		String originalKeywords = ParamUtil.getString(
+			_request, "keywords", getKeywords());
+
 		_searchContainer = new SearchContainer(
 			_liferayPortletRequest, null, null,
 			SearchContainer.DEFAULT_CUR_PARAM, SearchContainer.DEFAULT_DELTA,
 			renderURL, null,
 			LanguageUtil.format(
 				_request, "no-pages-were-found-that-matched-the-keywords-x",
-				"<strong>" + HtmlUtil.escape(getKeywords()) + "</strong>",
+				"<strong>" + HtmlUtil.escape(originalKeywords) + "</strong>",
 				false));
 
 		Hits hits = getHits();
@@ -160,10 +160,9 @@ public class JournalContentSearchDisplayContext {
 		Indexer<JournalArticle> indexer = IndexerRegistryUtil.getIndexer(
 			JournalArticle.class);
 
-		com.liferay.portal.kernel.search.Summary summary =
-			indexer.getSummary(
-				document, StringPool.BLANK, _liferayPortletRequest,
-				_liferayPortletResponse);
+		com.liferay.portal.kernel.search.Summary summary = indexer.getSummary(
+			document, StringPool.BLANK, _liferayPortletRequest,
+			_liferayPortletResponse);
 
 		SummaryBuilder summaryBuilder = _summaryBuilderFactory.newInstance();
 

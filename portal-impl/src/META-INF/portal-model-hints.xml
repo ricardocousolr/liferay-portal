@@ -11,6 +11,9 @@
 	<hint-collection name="EMAIL-ADDRESS">
 		<hint name="max-length">254</hint>
 	</hint-collection>
+	<hint-collection name="HOSTNAME">
+		<hint name="max-length">200</hint>
+	</hint-collection>
 	<hint-collection name="SEARCHABLE-DATE">
 		<hint name="month-nullable">true</hint>
 		<hint name="day-nullable">true</hint>
@@ -288,15 +291,6 @@
 		</field>
 		<field name="lastPublishDate" type="Date" />
 	</model>
-	<model name="com.liferay.document.library.kernel.model.DLFileRank">
-		<field name="fileRankId" type="long" />
-		<field name="groupId" type="long" />
-		<field name="companyId" type="long" />
-		<field name="userId" type="long" />
-		<field name="createDate" type="Date" />
-		<field name="fileEntryId" type="long" />
-		<field name="active" type="boolean" />
-	</model>
 	<model name="com.liferay.document.library.kernel.model.DLFileShortcut">
 		<field name="uuid" type="String" />
 		<field name="fileShortcutId" type="long" />
@@ -391,14 +385,6 @@
 		<field name="statusByUserId" type="long" />
 		<field name="statusByUserName" type="String" />
 		<field name="statusDate" type="Date" />
-	</model>
-	<model name="com.liferay.document.library.kernel.model.DLSyncEvent">
-		<field name="syncEventId" type="long" />
-		<field name="companyId" type="long" />
-		<field name="modifiedTime" type="long" />
-		<field name="event" type="String" />
-		<field name="type" type="String" />
-		<field name="typePK" type="long" />
 	</model>
 	<model name="com.liferay.expando.kernel.model.ExpandoColumn">
 		<field name="columnId" type="long" />
@@ -712,6 +698,7 @@
 			<hint-collection name="CLOB" />
 		</field>
 		<field name="mx" type="String">
+			<hint-collection name="HOSTNAME" />
 			<validator name="required" />
 		</field>
 		<field name="homeURL" type="String">
@@ -1706,6 +1693,7 @@
 		<field name="companyId" type="long" />
 		<field name="layoutSetId" type="long" />
 		<field name="hostname" type="String">
+			<hint-collection name="HOSTNAME" />
 			<validator name="required" />
 		</field>
 	</model>

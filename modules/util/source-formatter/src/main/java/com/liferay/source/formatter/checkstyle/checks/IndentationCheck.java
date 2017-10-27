@@ -20,7 +20,6 @@ import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.source.formatter.checkstyle.util.DetailASTUtil;
 
-import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.FileContents;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
@@ -32,7 +31,7 @@ import java.util.Set;
 /**
  * @author Hugo Huijser
  */
-public class IndentationCheck extends AbstractCheck {
+public class IndentationCheck extends BaseCheck {
 
 	@Override
 	public int[] getDefaultTokens() {
@@ -79,7 +78,7 @@ public class IndentationCheck extends AbstractCheck {
 	}
 
 	@Override
-	public void visitToken(DetailAST detailAST) {
+	protected void doVisitToken(DetailAST detailAST) {
 
 		// Only check types at the beginning of the line. We can skip if/while
 		// statements since we have logic in BaseSourceProcessor in place to
@@ -420,7 +419,41 @@ public class IndentationCheck extends AbstractCheck {
 				if (line.endsWith("(") &&
 					(parentAST.getLineNo() < methodCallLineCount)) {
 
-					tabCount--;
+					DetailAST rparenAST = null;
+
+					DetailAST methodCallAST = _findDetailAST(
+						parentAST, parentAST.getLineNo(),
+						TokenTypes.METHOD_CALL);
+
+					if (methodCallAST != null) {
+						rparenAST = methodCallAST.findFirstToken(
+							TokenTypes.RPAREN);
+					}
+					else {
+						DetailAST lparenAST = _findDetailAST(
+							parentAST, parentAST.getLineNo(),
+							TokenTypes.LPAREN);
+
+						DetailAST nextSibling = lparenAST.getNextSibling();
+
+						while (true) {
+							if ((nextSibling == null) ||
+								(nextSibling.getType() == TokenTypes.RPAREN)) {
+
+								rparenAST = nextSibling;
+
+								break;
+							}
+
+							nextSibling = nextSibling.getNextSibling();
+						}
+					}
+
+					if ((rparenAST != null) &&
+						(rparenAST.getLineNo() < detailAST.getLineNo())) {
+
+						tabCount--;
+					}
 
 					checkChaining = false;
 				}
@@ -483,6 +516,25 @@ public class IndentationCheck extends AbstractCheck {
 
 			parentAST = parentAST.getParent();
 		}
+	}
+
+	private DetailAST _findDetailAST(
+		DetailAST parentAST, int lineNo, int type) {
+
+		if (parentAST.getType() == type) {
+			return parentAST;
+		}
+
+		List<DetailAST> methodCallASTList = DetailASTUtil.getAllChildTokens(
+			parentAST, true, type);
+
+		for (DetailAST methodCallAST : methodCallASTList) {
+			if (methodCallAST.getLineNo() == lineNo) {
+				return methodCallAST;
+			}
+		}
+
+		return null;
 	}
 
 	private DetailAST _findParent(DetailAST detailAST, int type) {

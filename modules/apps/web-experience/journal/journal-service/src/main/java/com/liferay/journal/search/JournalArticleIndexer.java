@@ -32,9 +32,12 @@ import com.liferay.journal.util.JournalConverter;
 import com.liferay.journal.util.impl.JournalUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
+import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -203,16 +206,24 @@ public class JournalArticleIndexer
 
 		boolean head = GetterUtil.getBoolean(
 			searchContext.getAttribute("head"), Boolean.TRUE);
+		boolean latest = GetterUtil.getBoolean(
+			searchContext.getAttribute("latest"));
 		boolean relatedClassName = GetterUtil.getBoolean(
 			searchContext.getAttribute("relatedClassName"));
 		boolean showNonindexable = GetterUtil.getBoolean(
 			searchContext.getAttribute("showNonindexable"));
 
-		if (head && !relatedClassName && !showNonindexable) {
+		if (latest && !relatedClassName && !showNonindexable) {
+			contextBooleanFilter.addRequiredTerm("latest", Boolean.TRUE);
+		}
+		else if (head && !relatedClassName && !showNonindexable) {
 			contextBooleanFilter.addRequiredTerm("head", Boolean.TRUE);
 		}
 
-		if (!relatedClassName && showNonindexable) {
+		if (latest && !relatedClassName && showNonindexable) {
+			contextBooleanFilter.addRequiredTerm("latest", Boolean.TRUE);
+		}
+		else if (!relatedClassName && showNonindexable) {
 			contextBooleanFilter.addRequiredTerm("headListable", Boolean.TRUE);
 		}
 	}
@@ -273,17 +284,37 @@ public class JournalArticleIndexer
 				_indexerRegistry.nullSafeGetIndexer(JournalArticle.class);
 
 			final ActionableDynamicQuery actionableDynamicQuery =
-				_journalArticleLocalService.getActionableDynamicQuery();
+				_journalArticleResourceLocalService.getActionableDynamicQuery();
 
 			actionableDynamicQuery.setAddCriteriaMethod(
 				new ActionableDynamicQuery.AddCriteriaMethod() {
 
 					@Override
 					public void addCriteria(DynamicQuery dynamicQuery) {
+						Class<?> clazz = getClass();
+
+						DynamicQuery journalArticleDynamicQuery =
+							DynamicQueryFactoryUtil.forClass(
+								JournalArticle.class, "journalArticle",
+								clazz.getClassLoader());
+
+						journalArticleDynamicQuery.setProjection(
+							ProjectionFactoryUtil.property("resourcePrimKey"));
+
+						journalArticleDynamicQuery.add(
+							RestrictionsFactoryUtil.eqProperty(
+								"journalArticle.resourcePrimKey",
+								"this.resourcePrimKey"));
+
+						journalArticleDynamicQuery.add(
+							RestrictionsFactoryUtil.eqProperty(
+								"journalArticle.groupId", "this.groupId"));
+
 						Property ddmStructureKey = PropertyFactoryUtil.forName(
 							"DDMStructureKey");
 
-						dynamicQuery.add(ddmStructureKey.in(ddmStructureKeys));
+						journalArticleDynamicQuery.add(
+							ddmStructureKey.in(ddmStructureKeys));
 
 						if (!isIndexAllArticleVersions()) {
 							Property statusProperty =
@@ -294,17 +325,25 @@ public class JournalArticleIndexer
 								WorkflowConstants.STATUS_IN_TRASH
 							};
 
-							dynamicQuery.add(statusProperty.in(statuses));
+							journalArticleDynamicQuery.add(
+								statusProperty.in(statuses));
 						}
+
+						Property resourcePrimKeyProperty =
+							PropertyFactoryUtil.forName("resourcePrimKey");
+
+						dynamicQuery.add(
+							resourcePrimKeyProperty.in(
+								journalArticleDynamicQuery));
 					}
 
 				});
 			actionableDynamicQuery.setPerformActionMethod(
 				new ActionableDynamicQuery.
-					PerformActionMethod<JournalArticle>() {
+					PerformActionMethod<JournalArticleResource>() {
 
 					@Override
-					public void performAction(JournalArticle article)
+					public void performAction(JournalArticleResource article)
 						throws PortalException {
 
 						try {
@@ -523,6 +562,10 @@ public class JournalArticleIndexer
 		boolean headListable = JournalUtil.isHeadListable(journalArticle);
 
 		document.addKeyword("headListable", headListable);
+
+		boolean latestArticle = JournalUtil.isLatestArticle(journalArticle);
+
+		document.addKeyword("latest", latestArticle);
 
 		// Scheduled listable articles should be visible in asset browser
 
@@ -753,7 +796,17 @@ public class JournalArticleIndexer
 				LocaleUtil.toLanguageId(snippetLocale), 1, portletRequestModel,
 				themeDisplay);
 
-			content = HtmlUtil.stripHtml(articleDisplay.getDescription());
+			String description = document.get(
+				snippetLocale,
+				Field.SNIPPET + StringPool.UNDERLINE + Field.DESCRIPTION,
+				Field.DESCRIPTION);
+
+			if (Validator.isNull(description)) {
+				content = HtmlUtil.stripHtml(articleDisplay.getDescription());
+			}
+			else {
+				content = _stripAndHighlight(description);
+			}
 
 			content = HtmlUtil.replaceNewLine(content);
 
@@ -938,6 +991,24 @@ public class JournalArticleIndexer
 	protected void setJournalConverter(JournalConverter journalConverter) {
 		_journalConverter = journalConverter;
 	}
+
+	private String _stripAndHighlight(String text) {
+		text = StringUtil.replace(
+			text, _HIGHLIGHT_TAGS, _ESCAPE_SAFE_HIGHLIGHTS);
+
+		text = HtmlUtil.stripHtml(text);
+
+		text = StringUtil.replace(
+			text, _ESCAPE_SAFE_HIGHLIGHTS, _HIGHLIGHT_TAGS);
+
+		return text;
+	}
+
+	private static final String[] _ESCAPE_SAFE_HIGHLIGHTS =
+		{"[@HIGHLIGHT1@]", "[@HIGHLIGHT2@]"};
+
+	private static final String[] _HIGHLIGHT_TAGS =
+		{HighlightUtil.HIGHLIGHT_TAG_OPEN, HighlightUtil.HIGHLIGHT_TAG_CLOSE};
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		JournalArticleIndexer.class);

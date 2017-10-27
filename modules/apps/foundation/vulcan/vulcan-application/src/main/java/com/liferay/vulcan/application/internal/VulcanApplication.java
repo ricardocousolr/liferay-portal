@@ -28,6 +28,7 @@ import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.osgi.framework.ServiceReference;
@@ -41,9 +42,13 @@ import org.osgi.service.component.annotations.Reference;
  * @author Alejandro Hernández
  * @author Carlos Sierra
  * @author Jorge Ferrer
+ * @review
  */
 @ApplicationPath("/")
-@Component(immediate = true, service = Application.class)
+@Component(
+	immediate = true, property = "liferay.vulcan.application=true",
+	service = Application.class
+)
 public class VulcanApplication extends Application {
 
 	@Override
@@ -52,8 +57,12 @@ public class VulcanApplication extends Application {
 
 		singletons.add(_rootEndpoint);
 
+		singletons.addAll(_messageBodyReaders);
+
 		singletons.addAll(_messageBodyWriters);
+
 		singletons.addAll(_containerResponseFilters);
+
 		singletons.addAll(_exceptionMappers);
 
 		return singletons;
@@ -79,6 +88,17 @@ public class VulcanApplication extends Application {
 		ExceptionMapper exceptionMapper) {
 
 		_exceptionMappers.add(exceptionMapper);
+	}
+
+	@Reference(
+		cardinality = MULTIPLE, policyOption = GREEDY,
+		target = "(liferay.vulcan.message.body.reader=true)"
+	)
+	public <T> void setMessageBodyReader(
+		ServiceReference<MessageBodyReader<T>> serviceReference,
+		MessageBodyReader<T> messageBodyReader) {
+
+		_messageBodyReaders.add(messageBodyReader);
 	}
 
 	@Reference(
@@ -109,6 +129,14 @@ public class VulcanApplication extends Application {
 	}
 
 	@SuppressWarnings("unused")
+	public <T> void unsetMessageBodyReader(
+		ServiceReference<MessageBodyReader<T>> serviceReference,
+		MessageBodyReader<T> messageBodyReader) {
+
+		_messageBodyReaders.remove(messageBodyReader);
+	}
+
+	@SuppressWarnings("unused")
 	public <T> void unsetMessageBodyWriter(
 		ServiceReference<MessageBodyWriter<T>> serviceReference,
 		MessageBodyWriter<T> messageBodyWriter) {
@@ -119,6 +147,8 @@ public class VulcanApplication extends Application {
 	private final List<ContainerResponseFilter> _containerResponseFilters =
 		new ArrayList<>();
 	private final List<ExceptionMapper> _exceptionMappers = new ArrayList<>();
+	private final List<MessageBodyReader> _messageBodyReaders =
+		new ArrayList<>();
 	private final List<MessageBodyWriter> _messageBodyWriters =
 		new ArrayList<>();
 

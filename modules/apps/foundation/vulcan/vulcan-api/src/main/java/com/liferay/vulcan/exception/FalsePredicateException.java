@@ -15,12 +15,17 @@
 package com.liferay.vulcan.exception;
 
 /**
+ * Defines the exception returned inside {@link com.liferay.vulcan.result.Try}
+ * when {@link
+ * com.liferay.vulcan.result.Try#filter(java.util.function.Predicate)} returns
+ * {@code false}.
+ *
  * @author Alejandro Hernández
  */
 public class FalsePredicateException extends Exception {
 
 	public FalsePredicateException(Object value) {
-		super("Predicate does not match for " + value.toString());
+		super("Predicate does not match for " + value);
 	}
 
 }

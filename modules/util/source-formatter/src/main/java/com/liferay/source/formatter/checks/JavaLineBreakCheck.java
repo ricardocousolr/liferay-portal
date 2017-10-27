@@ -67,7 +67,7 @@ public class JavaLineBreakCheck extends LineBreakCheck {
 
 				if (!line.startsWith("import ") &&
 					!line.startsWith("package ") &&
-					!line.matches("\\s*\\*.*") &&
+					!trimmedLine.startsWith(StringPool.STAR) &&
 					(lineLength <= getMaxLineLength())) {
 
 					_checkLineBreaks(line, previousLine, fileName, lineCount);
@@ -144,6 +144,24 @@ public class JavaLineBreakCheck extends LineBreakCheck {
 		if (trimmedLine.startsWith("},") && !trimmedLine.equals("},")) {
 			addMessage(
 				fileName, "There should be a line break after '},'", lineCount);
+		}
+
+		for (int x = 0;;) {
+			x = trimmedLine.indexOf("}", x + 1);
+
+			if (x == -1) {
+				break;
+			}
+
+			if (!ToolsUtil.isInsideQuotes(trimmedLine, x) &&
+				(getLevel(trimmedLine.substring(0, x + 1), "{", "}") < 0)) {
+
+				addMessage(
+					fileName,
+					"There should be a line break after '" +
+						trimmedLine.substring(0, x) + "'",
+					lineCount);
+			}
 		}
 
 		if (previousLine.endsWith(StringPool.PERIOD)) {
@@ -273,7 +291,10 @@ public class JavaLineBreakCheck extends LineBreakCheck {
 			if (!ToolsUtil.isInsideQuotes(trimmedLine, x)) {
 				String linePart = trimmedLine.substring(0, x + 1);
 
-				if (getLevel(linePart) < 0) {
+				if ((getLevel(linePart) < 0) ||
+					(previousLine.endsWith(">") &&
+					 Validator.isVariableName(trimmedLine.substring(0, x)))) {
+
 					addMessage(
 						fileName,
 						"There should be a line break after '" + linePart + "'",

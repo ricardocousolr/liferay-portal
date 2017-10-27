@@ -42,6 +42,7 @@ import javax.portlet.EventRequest;
 import javax.portlet.PortletRequest;
 
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -194,7 +195,13 @@ public class PortletServletRequest extends HttpServletRequestWrapper {
 
 	@Override
 	public long getDateHeader(String name) {
-		return GetterUtil.getLong(getHeader(name), -1);
+		String header = getHeader(name);
+
+		if (header == null) {
+			return -1;
+		}
+
+		return GetterUtil.getLongStrict(getHeader(name));
 	}
 
 	@Override
@@ -234,7 +241,13 @@ public class PortletServletRequest extends HttpServletRequestWrapper {
 
 	@Override
 	public int getIntHeader(String name) {
-		return GetterUtil.getInteger(getHeader(name));
+		String header = getHeader(name);
+
+		if (header == null) {
+			return -1;
+		}
+
+		return GetterUtil.getIntegerStrict(header);
 	}
 
 	@Override
@@ -308,7 +321,13 @@ public class PortletServletRequest extends HttpServletRequestWrapper {
 
 	@Override
 	public String getPathTranslated() {
-		return _request.getPathTranslated();
+		ServletContext servletContext = _request.getServletContext();
+
+		if ((_pathInfo != null) && (servletContext != null)) {
+			return servletContext.getRealPath(_pathInfo);
+		}
+
+		return null;
 	}
 
 	@Override

@@ -14,12 +14,15 @@
 
 package com.liferay.portlet;
 
+import com.liferay.petra.encryptor.Encryptor;
+import com.liferay.petra.encryptor.EncryptorException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.PortletApp;
+import com.liferay.portal.kernel.model.PortletURLListener;
 import com.liferay.portal.kernel.model.PublicRenderParameter;
 import com.liferay.portal.kernel.portlet.FriendlyURLMapper;
 import com.liferay.portal.kernel.portlet.LiferayPortletConfig;
@@ -52,8 +55,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.xml.QName;
 import com.liferay.portal.security.lang.DoPrivilegedUtil;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.util.Encryptor;
-import com.liferay.util.EncryptorException;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -71,11 +72,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+import javax.portlet.PortletException;
 import javax.portlet.PortletMode;
 import javax.portlet.PortletModeException;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletSecurityException;
 import javax.portlet.PortletURL;
+import javax.portlet.PortletURLGenerationListener;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceURL;
 import javax.portlet.WindowState;
@@ -411,8 +414,10 @@ public class PortletURLImpl
 			!mappedCacheability.equals(PORTLET)) {
 
 			throw new IllegalArgumentException(
-				"Cacheability " + cacheability + " is not FULL, " + FULL +
-					", PAGE, " + PAGE + ", or PORTLET, " + PORTLET);
+				StringBundler.concat(
+					"Cacheability ", cacheability, " is not FULL, ",
+					String.valueOf(FULL), ", PAGE, ", PAGE, ", or PORTLET, ",
+					String.valueOf(PORTLET)));
 		}
 
 		if (_portletRequest instanceof ResourceRequest) {
@@ -751,7 +756,7 @@ public class PortletURLImpl
 
 	/**
 	 * @deprecated As of 7.0.0, replaced by {@link
-	 *             #PortletURLImpl(PortletRequest, String, PortletRequest,
+	 *             #PortletURLImpl(HttpServletRequest, String, PortletRequest,
 	 *             Layout, String)}
 	 */
 	@Deprecated
@@ -858,16 +863,9 @@ public class PortletURLImpl
 			});
 
 		if (_doAsUserId > 0) {
-			try {
-				Company company = PortalUtil.getCompany(_request);
-
-				sb.append("doAsUserId=");
-				sb.append(processValue(company.getKeyObj(), _doAsUserId));
-				sb.append(StringPool.AMPERSAND);
-			}
-			catch (Exception e) {
-				_log.error("Unable to get company", e);
-			}
+			sb.append("doAsUserId=");
+			sb.append(processValue(key, _doAsUserId));
+			sb.append(StringPool.AMPERSAND);
 		}
 		else {
 			String doAsUserId = themeDisplay.getDoAsUserId();
@@ -954,8 +952,6 @@ public class PortletURLImpl
 			renderParams = _mergeWithRenderParameters(renderParams);
 		}
 
-		int previousSbIndex = sb.index();
-
 		for (Map.Entry<String, String[]> entry : renderParams.entrySet()) {
 			String name = entry.getKey();
 			String[] values = entry.getValue();
@@ -980,14 +976,23 @@ public class PortletURLImpl
 			}
 		}
 
-		if (sb.index() > previousSbIndex) {
+		if (_encrypt) {
+			sb.append(WebKeys.ENCRYPT);
+			sb.append("=1");
+		}
+		else {
 			sb.setIndex(sb.index() - 1);
 		}
 
-		if (_encrypt) {
-			sb.append(StringPool.AMPERSAND);
-			sb.append(WebKeys.ENCRYPT);
-			sb.append("=1");
+		String result = sb.toString();
+
+		if (!CookieKeys.hasSessionId(_request)) {
+			result = PortalUtil.getURLWithSessionId(
+				result, _request.getSession().getId());
+		}
+
+		if (!_escapeXml) {
+			result = HttpUtil.shortenURL(result);
 		}
 
 		if (PropsValues.PORTLET_URL_ANCHOR_ENABLE) {
@@ -998,46 +1003,20 @@ public class PortletURLImpl
 				!_windowStateString.equals(
 					LiferayWindowState.POP_UP.toString())) {
 
-				String lastString = sb.stringAt(sb.index() - 1);
+				sb.setIndex(0);
 
-				char lastChar = lastString.charAt(lastString.length() - 1);
-
-				if ((lastChar != CharPool.AMPERSAND) &&
-					(lastChar != CharPool.QUESTION)) {
-
-					sb.append(StringPool.AMPERSAND);
-				}
-
+				sb.append(result);
 				sb.append("#p_");
 				sb.append(URLCodec.encodeURL(_portlet.getPortletId()));
+
+				result = sb.toString();
 			}
-		}
-
-		String lastString = sb.stringAt(sb.index() - 1);
-
-		char lastChar = lastString.charAt(lastString.length() - 1);
-
-		if ((lastChar == CharPool.AMPERSAND) ||
-			(lastChar == CharPool.QUESTION)) {
-
-			sb.setStringAt(
-				lastString.substring(0, lastString.length() - 1),
-				sb.index() - 1);
-		}
-
-		String result = sb.toString();
-
-		if (!CookieKeys.hasSessionId(_request)) {
-			result = PortalUtil.getURLWithSessionId(
-				result, _request.getSession().getId());
 		}
 
 		if (_escapeXml) {
 			result = HtmlUtil.escape(result);
-		}
 
-		if (result.length() > Http.URL_MAXIMUM_LENGTH) {
-			result = HttpUtil.shortenURL(result, 2);
+			result = HttpUtil.shortenURL(result);
 		}
 
 		return result;
@@ -1320,6 +1299,32 @@ public class PortletURLImpl
 		sb.append(URLCodec.encodeURL(name));
 	}
 
+	private void _callPortletURLGenerationListener() {
+		PortletApp portletApp = _portlet.getPortletApp();
+
+		for (PortletURLListener portletURLListener :
+				portletApp.getPortletURLListeners()) {
+
+			try {
+				PortletURLGenerationListener portletURLGenerationListener =
+					PortletURLListenerFactory.create(portletURLListener);
+
+				if (_lifecycle.equals(PortletRequest.ACTION_PHASE)) {
+					portletURLGenerationListener.filterActionURL(this);
+				}
+				else if (_lifecycle.equals(PortletRequest.RENDER_PHASE)) {
+					portletURLGenerationListener.filterRenderURL(this);
+				}
+				else if (_lifecycle.equals(PortletRequest.RESOURCE_PHASE)) {
+					portletURLGenerationListener.filterResourceURL(this);
+				}
+			}
+			catch (PortletException pe) {
+				_log.error(pe, pe);
+			}
+		}
+	}
+
 	private Key _getKey() {
 		try {
 			if (_encrypt) {
@@ -1428,6 +1433,8 @@ public class PortletURLImpl
 
 		@Override
 		public String run() {
+			_callPortletURLGenerationListener();
+
 			if (_wsrp) {
 				return generateWSRPToString();
 			}

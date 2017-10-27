@@ -29,6 +29,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Alejandro Hernández
  * @author Carlos Sierra Andrés
  * @author Jorge Ferrer
+ * @review
  */
 @Component(immediate = true)
 public class PaginationProvider implements Provider<Pagination> {
@@ -51,7 +52,13 @@ public class PaginationProvider implements Provider<Pagination> {
 		return stringTry.map(
 			Integer::parseInt
 		).filter(
-			integer -> integer > 0
+			integer -> {
+				if (integer > 0) {
+					return true;
+				}
+
+				return false;
+			}
 		).orElse(
 			defaultValue
 		);

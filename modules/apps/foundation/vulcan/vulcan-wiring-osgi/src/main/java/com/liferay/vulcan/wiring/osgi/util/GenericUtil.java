@@ -25,47 +25,86 @@ import java.lang.reflect.Type;
  * @author Alejandro Hernández
  * @author Carlos Sierra Andrés
  * @author Jorge Ferrer
+ * @review
  */
 public class GenericUtil {
 
 	/**
-	 * Given a type denoted by {@code T<S>} returns S class or an exception, if
-	 * the class couldn't be get.
+	 * Returns the {@code Class} of the {@code TypeArgument} located in the
+	 * first position of a {@code Class}.
 	 *
-	 * @param  clazz class of the actual instance.
-	 * @param  interfaceClass class of type T.
-	 * @return class of type S, or an exception, if the class couldn't be get.
+	 * @param  clazz the class from which we want to extract the {@code
+	 *         TypeArgument}.
+	 * @return the {@code Class} of the {@code TypeArgument} located in the
+	 *         first position of a {@code Class}.
+	 * @review
 	 */
-	public static <T, S> Try<Class<S>> getGenericClassTry(
-		Class<?> clazz, Class<T> interfaceClass) {
+	public static <S> Try<Class<S>> getFirstGenericTypeArgumentTry(
+		Class<?> clazz) {
+
+		return getGenericTypeArgumentTry(clazz, 0);
+	}
+
+	/**
+	 * Returns the {@code Class} of the {@code TypeArgument} located in the
+	 * first position of a {@code Type}.
+	 *
+	 * @param  type the type from which we want to extract the {@code
+	 *         TypeArgument}.
+	 * @return the {@code Class} of the {@code TypeArgument} located in the
+	 *         first position of a {@code Type}.
+	 * @review
+	 */
+	public static <S> Try<Class<S>> getFirstGenericTypeArgumentTry(Type type) {
+		return getGenericTypeArgumentTry(type, 0);
+	}
+
+	/**
+	 * Returns the {@code Class} of the {@code TypeArgument} located in the nth
+	 * position of a {@code Class}.
+	 *
+	 * @param  clazz the class from which we want to extract the {@code
+	 *         TypeArgument}.
+	 * @param  position the {@code TypeArgument} position that we want to
+	 *         obtain.
+	 * @return the {@code Class} of the {@code TypeArgument} located in the nth
+	 *         position of a {@code Class}.
+	 * @review
+	 */
+	public static <S> Try<Class<S>> getGenericTypeArgumentTry(
+		Class<?> clazz, int position) {
 
 		Type[] genericInterfaces = clazz.getGenericInterfaces();
 
 		Try<Class<S>> classTry = Try.fail(
 			new IllegalArgumentException(
-				"Class " + clazz + " does not implement any interfaces."));
+				"Class " + clazz + " does not implement any interfaces"));
 
 		for (Type genericInterface : genericInterfaces) {
 			classTry = classTry.recoverWith(
-				throwable -> getGenericClassTry(
-					genericInterface, interfaceClass));
+				throwable -> getGenericTypeArgumentTry(
+					genericInterface, position));
 		}
 
 		return classTry.recoverWith(
-			throwable -> getGenericClassTry(
-				clazz.getSuperclass(), interfaceClass));
+			throwable -> getGenericTypeArgumentTry(
+				clazz.getSuperclass(), position));
 	}
 
 	/**
-	 * Given a type denoted by {@code T<S>} returns S class or an exception, if
-	 * the class couldn't be get.
+	 * Returns the {@code Class} of the {@code TypeArgument} located in the nth
+	 * position of a {@code Type}.
 	 *
-	 * @param  type type of the actual instance.
-	 * @param  clazz class of type T.
-	 * @return class of type S, or an exception, if the class couldn't be get.
+	 * @param  type the type from which we want to extract the {@code
+	 *         TypeArgument}.
+	 * @param  position the {@code TypeArgument} position that we want to
+	 *         obtain.
+	 * @return the {@code Class} of the {@code TypeArgument} located in the nth
+	 *         position of a {@code Type}.
+	 * @review
 	 */
-	public static <T, S> Try<Class<S>> getGenericClassTry(
-		Type type, Class<T> clazz) {
+	public static <S> Try<Class<S>> getGenericTypeArgumentTry(
+		Type type, int position) {
 
 		Try<Type> typeTry = Try.success(type);
 
@@ -73,23 +112,25 @@ public class GenericUtil {
 			ParameterizedType.class::isInstance
 		).map(
 			ParameterizedType.class::cast
-		).filter(
-			parameterizedType ->
-				parameterizedType.getRawType().equals(clazz)
 		).map(
 			ParameterizedType::getActualTypeArguments
 		).filter(
-			typeArguments -> typeArguments.length == 1
+			typeArguments -> {
+				if (typeArguments.length >= 1) {
+					return true;
+				}
+
+				return false;
+			}
 		).map(
-			typeArguments -> typeArguments[0]
+			typeArguments -> typeArguments[position]
 		).map(
 			typeArgument -> {
 				if (typeArgument instanceof ParameterizedType) {
 					return ((ParameterizedType)typeArgument).getRawType();
 				}
-				else {
-					return typeArgument;
-				}
+
+				return typeArgument;
 			}
 		).map(
 			typeArgument -> (Class<S>)typeArgument
