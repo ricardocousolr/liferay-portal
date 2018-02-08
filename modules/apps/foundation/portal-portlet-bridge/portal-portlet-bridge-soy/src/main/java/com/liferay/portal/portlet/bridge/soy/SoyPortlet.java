@@ -14,6 +14,8 @@
 
 package com.liferay.portal.portlet.bridge.soy;
 
+import com.liferay.osgi.util.service.OSGiServiceUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -24,7 +26,6 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCCommandCache;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
-import com.liferay.portal.kernel.servlet.MultiSessionMessages;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
@@ -41,7 +42,6 @@ import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnsyncPrintWriterPool;
 import com.liferay.portal.kernel.util.Validator;
@@ -53,12 +53,14 @@ import com.liferay.portal.template.soy.utils.SoyContext;
 import com.liferay.portal.template.soy.utils.SoyTemplateResourcesProvider;
 import com.liferay.portlet.ActionRequestImpl;
 import com.liferay.portlet.ActionResponseImpl;
+import com.liferay.portlet.PortletRequestImpl;
 import com.liferay.portlet.RenderRequestImpl;
 
 import java.io.IOException;
 import java.io.Writer;
 
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -342,6 +344,8 @@ public class SoyPortlet extends MVCPortlet {
 
 		processAction(actionRequestImpl, actionResponseImpl);
 
+		_copyRequestAttributes(actionRequestImpl, resourceRequest);
+
 		String portletNamespace = resourceResponse.getNamespace();
 
 		String redirect = HttpUtil.setParameter(
@@ -371,6 +375,8 @@ public class SoyPortlet extends MVCPortlet {
 
 		render(renderRequestImpl, renderResponse);
 
+		_copyRequestAttributes(renderRequestImpl, resourceRequest);
+
 		String mvcRenderCommandName = ParamUtil.getString(
 			resourceRequest, "mvcRenderCommandName", "/");
 
@@ -381,6 +387,8 @@ public class SoyPortlet extends MVCPortlet {
 
 		if (mvcRenderCommand != MVCRenderCommand.EMPTY) {
 			path = mvcRenderCommand.render(renderRequestImpl, renderResponse);
+
+			_copyRequestAttributes(renderRequestImpl, resourceRequest);
 		}
 
 		resourceRequest.setAttribute(
@@ -388,11 +396,24 @@ public class SoyPortlet extends MVCPortlet {
 	}
 
 	private void _clearSessionMessages(PortletRequest portletRequest) {
-		MultiSessionMessages.clear(portletRequest);
-
 		SessionErrors.clear(portletRequest);
 
 		SessionMessages.clear(portletRequest);
+	}
+
+	private void _copyRequestAttributes(
+		PortletRequestImpl portletRequestImpl,
+		ResourceRequest resourceRequest) {
+
+		Enumeration<String> attributeNames =
+			portletRequestImpl.getAttributeNames();
+
+		while (attributeNames.hasMoreElements()) {
+			String attributeName = attributeNames.nextElement();
+
+			resourceRequest.setAttribute(
+				attributeName, portletRequestImpl.getAttribute(attributeName));
+		}
 	}
 
 	private Template _createRequestTemplate(PortletRequest portletRequest)
@@ -449,23 +470,35 @@ public class SoyPortlet extends MVCPortlet {
 			return _templateResources;
 		}
 
-		_templateResources =
-			SoyTemplateResourcesProvider.getBundleTemplateResources(
-				_bundle, templatePath);
+		Bundle bundle = FrameworkUtil.getBundle(SoyPortlet.class);
 
-		MVCCommandCache mvcCommandCache = getRenderMVCCommandCache();
+		_templateResources = OSGiServiceUtil.callService(
+			bundle.getBundleContext(), SoyTemplateResourcesProvider.class,
+			soyTemplateResourcesProvider -> {
+				List<TemplateResource> templateResources =
+					soyTemplateResourcesProvider.getBundleTemplateResources(
+						_bundle, templatePath);
 
-		for (String mvcCommandName : mvcCommandCache.getMVCCommandNames()) {
-			MVCCommand mvcCommand = _getMVCRenderCommand(mvcCommandName);
+				MVCCommandCache mvcCommandCache = getRenderMVCCommandCache();
 
-			Bundle bundle = FrameworkUtil.getBundle(mvcCommand.getClass());
+				for (String mvcCommandName :
+						mvcCommandCache.getMVCCommandNames()) {
 
-			List<TemplateResource> mvcCommandTemplateResources =
-				SoyTemplateResourcesProvider.getBundleTemplateResources(
-					bundle, templatePath);
+					MVCCommand mvcCommand = _getMVCRenderCommand(
+						mvcCommandName);
 
-			_templateResources.addAll(mvcCommandTemplateResources);
-		}
+					Bundle curBundle = FrameworkUtil.getBundle(
+						mvcCommand.getClass());
+
+					List<TemplateResource> mvcCommandTemplateResources =
+						soyTemplateResourcesProvider.getBundleTemplateResources(
+							curBundle, templatePath);
+
+					templateResources.addAll(mvcCommandTemplateResources);
+				}
+
+				return templateResources;
+			});
 
 		return _templateResources;
 	}
@@ -485,13 +518,37 @@ public class SoyPortlet extends MVCPortlet {
 		return false;
 	}
 
+	private void _prepareSessionMessages(
+		PortletRequest portletRequest, SoyContext soyContext) {
+
+		Map<String, Object> sessionErrors = new HashMap<>();
+
+		for (String key : SessionErrors.keySet(portletRequest)) {
+			sessionErrors.put(key, SessionErrors.get(portletRequest, key));
+		}
+
+		soyContext.putInjectedData("sessionErrors", sessionErrors);
+
+		Map<String, Object> sessionMessages = new HashMap<>();
+
+		for (String key : SessionMessages.keySet(portletRequest)) {
+			if (key.endsWith(
+					SessionMessages.KEY_SUFFIX_HIDE_DEFAULT_ERROR_MESSAGE)) {
+
+				continue;
+			}
+
+			sessionMessages.put(key, SessionMessages.get(portletRequest, key));
+		}
+
+		soyContext.putInjectedData("sessionMessages", sessionMessages);
+	}
+
 	private void _prepareTemplate(
 			PortletRequest portletRequest, PortletResponse portletResponse)
 		throws Exception {
 
-		MultiSessionMessages.add(
-			portletRequest,
-			SessionMessages.KEY_SUFFIX_HIDE_DEFAULT_ERROR_MESSAGE);
+		hideDefaultErrorMessage(portletRequest);
 
 		Template template = getTemplate(portletRequest);
 
@@ -519,6 +576,8 @@ public class SoyPortlet extends MVCPortlet {
 
 		soyContext.putInjectedData(
 			"portletNamespace", portletResponse.getNamespace());
+
+		_prepareSessionMessages(portletRequest, soyContext);
 
 		template.putAll(soyContext);
 

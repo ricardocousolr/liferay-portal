@@ -29,8 +29,10 @@ import groovy.lang.Closure;
 import java.io.File;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -332,6 +334,9 @@ public class RootProjectConfigurator implements Plugin<Project> {
 
 				@Override
 				public void execute(Task task) {
+					Logger logger = download.getLogger();
+					Project project = download.getProject();
+
 					if (workspaceExtension.isBundleTokenDownload()) {
 						String token = FileUtil.read(
 							createTokenTask.getTokenFile());
@@ -340,6 +345,39 @@ public class RootProjectConfigurator implements Plugin<Project> {
 
 						download.header(
 							HttpHeaders.AUTHORIZATION, "Bearer " + token);
+					}
+
+					for (Object src : _getSrcList(download)) {
+						File file = null;
+
+						try {
+							URI uri = project.uri(src);
+
+							file = project.file(uri);
+						}
+						catch (Exception e) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(e.getMessage(), e);
+							}
+						}
+
+						if ((file == null) || !file.exists()) {
+							continue;
+						}
+
+						File destinationFile = download.getDest();
+
+						if (destinationFile.isDirectory()) {
+							destinationFile = new File(
+								destinationFile, file.getName());
+						}
+
+						if (destinationFile.equals(file)) {
+							throw new GradleException(
+								"Download source " + file +
+									" and destination " + destinationFile +
+										" cannot be the same");
+						}
 					}
 				}
 
@@ -364,26 +402,30 @@ public class RootProjectConfigurator implements Plugin<Project> {
 
 					download.dest(destinationDir);
 
-					Object src = download.getSrc();
+					List<?> srcList = _getSrcList(download);
 
-					if (src != null) {
-						if (src instanceof List<?>) {
-							List<?> srcList = (List<?>)src;
-
-							if (!srcList.isEmpty()) {
-								return;
-							}
-						}
-						else {
-							return;
-						}
+					if (!srcList.isEmpty()) {
+						return;
 					}
 
 					String bundleUrl = workspaceExtension.getBundleUrl();
 
-					bundleUrl = bundleUrl.replace(" ", "%20");
-
 					try {
+						if (bundleUrl.startsWith("file:")) {
+							URL url = new URL(bundleUrl);
+
+							File file = new File(url.getFile());
+
+							file = file.getAbsoluteFile();
+
+							URI uri = file.toURI();
+
+							bundleUrl = uri.toASCIIString();
+						}
+						else {
+							bundleUrl = bundleUrl.replace(" ", "%20");
+						}
+
 						download.src(bundleUrl);
 					}
 					catch (MalformedURLException murle) {
@@ -575,6 +617,20 @@ public class RootProjectConfigurator implements Plugin<Project> {
 				}
 
 			});
+	}
+
+	private List<?> _getSrcList(Download download) {
+		Object src = download.getSrc();
+
+		if (src == null) {
+			return Collections.emptyList();
+		}
+
+		if (src instanceof List<?>) {
+			return (List<?>)src;
+		}
+
+		return Collections.singletonList(src);
 	}
 
 	private static final boolean _DEFAULT_REPOSITORY_ENABLED = true;

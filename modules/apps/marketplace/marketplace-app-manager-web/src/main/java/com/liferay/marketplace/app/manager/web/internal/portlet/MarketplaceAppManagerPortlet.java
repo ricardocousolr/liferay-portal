@@ -20,9 +20,12 @@ import com.liferay.application.list.constants.ApplicationListWebKeys;
 import com.liferay.application.list.display.context.logic.PanelCategoryHelper;
 import com.liferay.marketplace.app.manager.web.internal.constants.MarketplaceAppManagerPortletKeys;
 import com.liferay.marketplace.app.manager.web.internal.util.BundleUtil;
-import com.liferay.marketplace.bundle.BundleManagerUtil;
+import com.liferay.marketplace.bundle.BundleManager;
 import com.liferay.marketplace.exception.FileExtensionException;
 import com.liferay.marketplace.service.AppService;
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.bundle.blacklist.BundleBlacklistManager;
 import com.liferay.portal.kernel.deploy.DeployManagerUtil;
 import com.liferay.portal.kernel.model.LayoutTemplate;
 import com.liferay.portal.kernel.model.Plugin;
@@ -43,16 +46,13 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -62,6 +62,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -115,7 +116,7 @@ public class MarketplaceAppManagerPortlet extends MVCPortlet {
 		long[] bundleIds = StringUtil.split(
 			ParamUtil.getString(actionRequest, "bundleIds"), 0L);
 
-		List<Bundle> bundles = BundleManagerUtil.getInstalledBundles();
+		List<Bundle> bundles = _bundleManager.getInstalledBundles();
 
 		for (Bundle bundle : bundles) {
 			if (BundleUtil.isFragment(bundle)) {
@@ -135,7 +136,7 @@ public class MarketplaceAppManagerPortlet extends MVCPortlet {
 		long[] bundleIds = StringUtil.split(
 			ParamUtil.getString(actionRequest, "bundleIds"), 0L);
 
-		List<Bundle> bundles = BundleManagerUtil.getInstalledBundles();
+		List<Bundle> bundles = _bundleManager.getInstalledBundles();
 
 		for (Bundle bundle : bundles) {
 			if (BundleUtil.isFragment(bundle)) {
@@ -171,8 +172,7 @@ public class MarketplaceAppManagerPortlet extends MVCPortlet {
 			throw new FileExtensionException();
 		}
 		else {
-			String deployDir = PrefsPropsUtil.getString(
-				PropsKeys.AUTO_DEPLOY_DEPLOY_DIR);
+			String deployDir = PropsUtil.get(PropsKeys.AUTO_DEPLOY_DEPLOY_DIR);
 
 			FileUtil.copyFile(
 				file.toString(), deployDir + StringPool.SLASH + fileName);
@@ -264,13 +264,18 @@ public class MarketplaceAppManagerPortlet extends MVCPortlet {
 		long[] bundleIds = StringUtil.split(
 			ParamUtil.getString(actionRequest, "bundleIds"), 0L);
 
-		List<Bundle> bundles = BundleManagerUtil.getInstalledBundles();
+		List<Bundle> bundles = _bundleManager.getInstalledBundles();
+
+		List<String> symbolicNames = new ArrayList<>(bundleIds.length);
 
 		for (Bundle bundle : bundles) {
 			if (ArrayUtil.contains(bundleIds, bundle.getBundleId())) {
-				bundle.uninstall();
+				symbolicNames.add(bundle.getSymbolicName());
 			}
 		}
+
+		_bundleBlacklistManager.addToBlacklistAndUninstall(
+			symbolicNames.toArray(new String[symbolicNames.size()]));
 	}
 
 	public void updatePluginSetting(
@@ -432,7 +437,7 @@ public class MarketplaceAppManagerPortlet extends MVCPortlet {
 			if ((responseCode == HttpServletResponse.SC_OK) &&
 				(bytes.length > 0)) {
 
-				String deployDir = PrefsPropsUtil.getString(
+				String deployDir = PropsUtil.get(
 					PropsKeys.AUTO_DEPLOY_DEPLOY_DIR);
 
 				String destination = deployDir + StringPool.SLASH + fileName;
@@ -528,9 +533,13 @@ public class MarketplaceAppManagerPortlet extends MVCPortlet {
 		_portletService = portletService;
 	}
 
-	private static final String _DEPLOY_TO_PREFIX = "DEPLOY_TO__";
-
 	private AppService _appService;
+
+	@Reference
+	private BundleBlacklistManager _bundleBlacklistManager;
+
+	@Reference
+	private BundleManager _bundleManager;
 
 	@Reference
 	private Http _http;

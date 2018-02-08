@@ -38,12 +38,12 @@ AUI.add(
 									'</div>',
 									'<div class="card-col-field delete-button-col">',
 										'<a class="delete-button lfr-button" href="javascript:;" id="{id}deleteButton" title="{[ this.strings.deleteFileText ]}">',
-											'<svg class="lexicon-icon" focusable="false"><use data-href="' + Liferay.ThemeDisplay.getPathThemeImages() + '/lexicon/icons.svg#times" /></svg>',
+											'<svg class="lexicon-icon" focusable="false"><use data-href="' + Liferay.ThemeDisplay.getPathThemeImages() + '/lexicon/icons.svg#times" /><title>{[ this.strings.deleteFileText ]}</title></svg>',
 										'</a>',
 									'</div>',
 
 									'<a class="cancel-button lfr-button" href="javascript:;" id="{id}cancelButton">',
-										'<svg class="lexicon-icon" focusable="false"><use data-href="' + Liferay.ThemeDisplay.getPathThemeImages() + '/lexicon/icons.svg#times" /></svg>',
+										'<svg class="lexicon-icon" focusable="false"><use data-href="' + Liferay.ThemeDisplay.getPathThemeImages() + '/lexicon/icons.svg#times" /><title>{[ this.strings.cancelFileText ]}</title></svg>',
 										'<span class="cancel-button-text">{[ this.strings.cancelFileText ]}</span>',
 									'</a>',
 								'</div>',
@@ -468,13 +468,20 @@ AUI.add(
 								function(item, index) {
 									var title = item;
 
+									var tempTitle = title;
+
 									var tempRandomSuffix = instance.get('tempRandomSuffix');
 
 									if (tempRandomSuffix) {
-										var pos = title.indexOf(tempRandomSuffix);
+										var lastIndexOfPeriod = title.lastIndexOf('.');
+										var posTempRandomSuffix = title.indexOf(tempRandomSuffix);
 
-										if (pos != -1) {
-											title = title.substr(0, pos);
+										if (posTempRandomSuffix != -1) {
+											tempTitle = title.substr(0, posTempRandomSuffix);
+
+											if (lastIndexOfPeriod > 0) {
+												tempTitle += title.substr(lastIndexOfPeriod);
+											}
 										}
 									}
 
@@ -482,7 +489,7 @@ AUI.add(
 										id: A.guid(),
 										name: item,
 										temp: true,
-										title: title
+										title: tempTitle
 									};
 								}
 							);

@@ -15,7 +15,6 @@
 package com.liferay.portal.messaging.internal;
 
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.kernel.concurrent.ConcurrentHashSet;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.BaseAsyncDestination;
@@ -26,14 +25,14 @@ import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.messaging.MessageBusEventListener;
 import com.liferay.portal.kernel.messaging.MessageListener;
-import com.liferay.portal.kernel.nio.intraband.messaging.IntrabandBridgeDestination;
-import com.liferay.portal.kernel.resiliency.spi.SPIUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
-import com.liferay.portal.messaging.configuration.DestinationWorkerConfiguration;
+import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.messaging.internal.configuration.DestinationWorkerConfiguration;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
@@ -299,14 +298,6 @@ public class DefaultMessageBus implements ManagedServiceFactory, MessageBus {
 	}
 
 	protected void doAddDestination(Destination destination) {
-		Class<?> clazz = destination.getClass();
-
-		if (SPIUtil.isSPI() &&
-			!clazz.equals(IntrabandBridgeDestination.class)) {
-
-			destination = new IntrabandBridgeDestination(destination);
-		}
-
 		_destinations.put(destination.getName(), destination);
 
 		for (MessageBusEventListener messageBusEventListener :
@@ -324,9 +315,10 @@ public class DefaultMessageBus implements ManagedServiceFactory, MessageBus {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"Registering " + messageListeners.size() +
-					" queued message listeners for destination " +
-						destination.getName());
+				StringBundler.concat(
+					"Registering ", String.valueOf(messageListeners.size()),
+					" queued message listeners for destination ",
+					destination.getName()));
 		}
 
 		for (MessageListener messageListener : messageListeners) {
@@ -513,7 +505,7 @@ public class DefaultMessageBus implements ManagedServiceFactory, MessageBus {
 	private final Map<String, String> _factoryPidsToDestinationName =
 		new ConcurrentHashMap<>();
 	private final Set<MessageBusEventListener> _messageBusEventListeners =
-		new ConcurrentHashSet<>();
+		Collections.newSetFromMap(new ConcurrentHashMap<>());
 	private final Map<String, List<MessageListener>> _queuedMessageListeners =
 		new HashMap<>();
 

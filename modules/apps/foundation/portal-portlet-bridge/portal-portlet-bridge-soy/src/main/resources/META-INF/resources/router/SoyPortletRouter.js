@@ -34,7 +34,14 @@ class SoyPortletRouter extends State {
 		router.on('endNavigate', this.onEndNavigate_.bind(this));
 		router.dispatch();
 
-		Liferay.once('beforeScreenFlip', () => {
+		var handler = Liferay.once('beforeScreenFlip', () => {
+			router.dispose();
+			Router.routerInstance = null;
+			Router.activeRouter = null;
+		});
+
+		Liferay.once(`${this.portletId}:portletRefreshed`, () => {
+			handler.detach();
 			router.dispose();
 			Router.routerInstance = null;
 			Router.activeRouter = null;
@@ -454,7 +461,7 @@ class SoyPortletRouter extends State {
 	 * success)
 	 */
 	maybeShowAlert_(message, type = 'danger') {
-		if (message !== undefined) {
+		if (message) {
 			const alert = Component.render(
 				Alert,
 				{
@@ -466,6 +473,8 @@ class SoyPortletRouter extends State {
 				},
 				this.portletWrapper,
 			);
+
+			this.portletWrapper.parentNode.insertBefore(alert.element, this.portletWrapper);
 
 			Router.router().once('startNavigate', () => alert.dispose());
 		}
@@ -485,11 +494,13 @@ class SoyPortletRouter extends State {
 		} else {
 			const activeState = Router.getActiveState();
 			if (activeState) {
-				const { sessionErrors, sessionMessages } = activeState;
+				const { _INJECTED_DATA_ } = activeState;
+
+				const { sessionErrors, sessionMessages } = _INJECTED_DATA_;
 
 				if (sessionMessages) {
 					Object.keys(sessionMessages).forEach(key =>
-						this.maybeShowAlert_(sessionMessages[key], 'warning'),
+						this.maybeShowAlert_(sessionMessages[key], 'success'),
 					);
 				}
 

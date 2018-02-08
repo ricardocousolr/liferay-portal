@@ -14,9 +14,11 @@
 
 package com.liferay.portlet.configuration.web.internal.display.context;
 
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.ResourcePrimKeyException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Organization;
@@ -37,7 +39,6 @@ import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
-import com.liferay.portal.kernel.service.ResourceBlockLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourceLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalServiceUtil;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
@@ -68,6 +69,7 @@ import javax.portlet.WindowStateException;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 /**
  * @author Eudaldo Alonso
@@ -259,6 +261,24 @@ public class PortletConfigurationPermissionsDisplayContext {
 		return _modelResourceDescription;
 	}
 
+	public List<NavigationItem> getNavigationItems() {
+		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		List<NavigationItem> navigationItems = new ArrayList<>();
+
+		NavigationItem entriesNavigationItem = new NavigationItem();
+
+		entriesNavigationItem.setActive(true);
+		entriesNavigationItem.setHref(themeDisplay.getURLCurrent());
+		entriesNavigationItem.setLabel(
+			LanguageUtil.get(_request, "permissions"));
+
+		navigationItems.add(entriesNavigationItem);
+
+		return navigationItems;
+	}
+
 	public Resource getResource() throws PortalException {
 		if (_resource != null) {
 			return _resource;
@@ -267,25 +287,17 @@ public class PortletConfigurationPermissionsDisplayContext {
 		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		if (ResourceBlockLocalServiceUtil.isSupported(getSelResource())) {
-			ResourceBlockLocalServiceUtil.verifyResourceBlockId(
+		int count =
+			ResourcePermissionLocalServiceUtil.getResourcePermissionsCount(
 				themeDisplay.getCompanyId(), getSelResource(),
-				Long.valueOf(getResourcePrimKey()));
-		}
-		else {
-			int count =
-				ResourcePermissionLocalServiceUtil.getResourcePermissionsCount(
-					themeDisplay.getCompanyId(), getSelResource(),
-					ResourceConstants.SCOPE_INDIVIDUAL, getResourcePrimKey());
+				ResourceConstants.SCOPE_INDIVIDUAL, getResourcePrimKey());
 
-			if (count == 0) {
-				boolean portletActions = Validator.isNull(getModelResource());
+		if (count == 0) {
+			boolean portletActions = Validator.isNull(getModelResource());
 
-				ResourceLocalServiceUtil.addResources(
-					themeDisplay.getCompanyId(), getGroupId(), 0,
-					getSelResource(), getResourcePrimKey(), portletActions,
-					true, true);
-			}
+			ResourceLocalServiceUtil.addResources(
+				themeDisplay.getCompanyId(), getGroupId(), 0, getSelResource(),
+				getResourcePrimKey(), portletActions, true, true);
 		}
 
 		_resource = ResourceLocalServiceUtil.getResource(
@@ -317,7 +329,7 @@ public class PortletConfigurationPermissionsDisplayContext {
 		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		SearchContainer roleSearchContainer = new RoleSearch(
+		SearchContainer<Role> roleSearchContainer = new RoleSearch(
 			_renderRequest, getIteratorURL());
 
 		RoleSearchTerms searchTerms =
@@ -470,23 +482,11 @@ public class PortletConfigurationPermissionsDisplayContext {
 				_group.getParentGroupId());
 		}
 
-		if (parentGroup == null) {
-			if (_group.isOrganization()) {
-				_roleTypes =
-					RoleConstants.TYPES_ORGANIZATION_AND_REGULAR_AND_SITE;
-			}
-			else if (_group.isUser()) {
-				_roleTypes = RoleConstants.TYPES_REGULAR;
-			}
+		if (parentGroup != null) {
+			_roleTypes = _getGroupRoleTypes(parentGroup, _roleTypes);
 		}
 		else {
-			if (parentGroup.isOrganization()) {
-				_roleTypes =
-					RoleConstants.TYPES_ORGANIZATION_AND_REGULAR_AND_SITE;
-			}
-			else if (parentGroup.isUser()) {
-				_roleTypes = RoleConstants.TYPES_REGULAR;
-			}
+			_roleTypes = _getGroupRoleTypes(_group, _roleTypes);
 		}
 
 		return _roleTypes;
@@ -523,8 +523,9 @@ public class PortletConfigurationPermissionsDisplayContext {
 		Portlet portlet = PortletLocalServiceUtil.getPortletById(
 			themeDisplay.getCompanyId(), _getPortletResource());
 
-		ServletContext servletContext =
-			_request.getSession().getServletContext();
+		HttpSession session = _request.getSession();
+
+		ServletContext servletContext = session.getServletContext();
 
 		_selResourceDescription = PortalUtil.getPortletTitle(
 			portlet, servletContext, themeDisplay.getLocale());
@@ -565,6 +566,22 @@ public class PortletConfigurationPermissionsDisplayContext {
 		portletURL.setWindowState(LiferayWindowState.POP_UP);
 
 		return portletURL;
+	}
+
+	private int[] _getGroupRoleTypes(Group group, int[] defaultRoleTypes) {
+		if (group == null) {
+			return defaultRoleTypes;
+		}
+
+		if (group.isOrganization()) {
+			return RoleConstants.TYPES_ORGANIZATION_AND_REGULAR_AND_SITE;
+		}
+
+		if (group.isCompany() || group.isUser() || group.isUserGroup()) {
+			return RoleConstants.TYPES_REGULAR;
+		}
+
+		return defaultRoleTypes;
 	}
 
 	private String _getPortletResource() {

@@ -32,6 +32,7 @@ import com.liferay.dynamic.data.mapping.kernel.StorageEngineManagerUtil;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.expando.kernel.util.ExpandoBridgeIndexerUtil;
+import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.comment.Comment;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -55,6 +56,7 @@ import com.liferay.portal.kernel.search.IndexWriterHelperUtil;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.RelatedEntryIndexer;
+import com.liferay.portal.kernel.search.RelatedEntryIndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Summary;
@@ -66,7 +68,6 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
@@ -98,7 +99,12 @@ import javax.portlet.PortletResponse;
  * @author Raymond Augé
  * @author Alexander Chow
  */
-@OSGiBeanProperties
+@OSGiBeanProperties(
+	property = {
+		"related.entry.indexer.class.name=com.liferay.document.library.kernel.model.DLFileEntry"
+	},
+	service = {Indexer.class, RelatedEntryIndexer.class}
+)
 public class DLFileEntryIndexer
 	extends BaseIndexer<DLFileEntry> implements RelatedEntryIndexer {
 
@@ -177,17 +183,26 @@ public class DLFileEntryIndexer
 	public boolean isVisibleRelatedEntry(long classPK, int status)
 		throws Exception {
 
-		FileEntry fileEntry = DLAppLocalServiceUtil.getFileEntry(classPK);
+		try {
+			FileEntry fileEntry = DLAppLocalServiceUtil.getFileEntry(classPK);
 
-		if (fileEntry instanceof LiferayFileEntry) {
-			DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
+			if (fileEntry instanceof LiferayFileEntry) {
+				DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
 
-			if (dlFileEntry.isInHiddenFolder()) {
-				Indexer<?> indexer = IndexerRegistryUtil.getIndexer(
-					dlFileEntry.getClassName());
+				if (dlFileEntry.isInHiddenFolder()) {
+					Indexer<?> indexer = IndexerRegistryUtil.getIndexer(
+						dlFileEntry.getClassName());
 
-				return indexer.isVisible(dlFileEntry.getClassPK(), status);
+					return indexer.isVisible(dlFileEntry.getClassPK(), status);
+				}
 			}
+		}
+		catch (Exception e) {
+			if (_log.isInfoEnabled()) {
+				_log.info("Unble to get file entry", e);
+			}
+
+			return false;
 		}
 
 		return true;
@@ -384,7 +399,9 @@ public class DLFileEntryIndexer
 			}
 
 			if (indexContent) {
-				is = dlFileEntry.getFileVersion().getContentStream(false);
+				DLFileVersion fileVersion = dlFileEntry.getFileVersion();
+
+				is = fileVersion.getContentStream(false);
 			}
 		}
 		catch (Exception e) {
@@ -472,26 +489,27 @@ public class DLFileEntryIndexer
 			addFileEntryTypeAttributes(document, dlFileVersion);
 
 			if (dlFileEntry.isInHiddenFolder()) {
-				Indexer<?> indexer = IndexerRegistryUtil.getIndexer(
-					dlFileEntry.getClassName());
+				List<RelatedEntryIndexer> relatedEntryIndexers =
+					RelatedEntryIndexerRegistryUtil.getRelatedEntryIndexers(
+						dlFileEntry.getClassName());
 
-				if ((indexer != null) &&
-					(indexer instanceof RelatedEntryIndexer)) {
+				if (relatedEntryIndexers != null) {
+					for (RelatedEntryIndexer relatedEntryIndexer :
+							relatedEntryIndexers) {
 
-					RelatedEntryIndexer relatedEntryIndexer =
-						(RelatedEntryIndexer)indexer;
+						relatedEntryIndexer.addRelatedEntryFields(
+							document, new LiferayFileEntry(dlFileEntry));
 
-					relatedEntryIndexer.addRelatedEntryFields(
-						document, new LiferayFileEntry(dlFileEntry));
+						DocumentHelper documentHelper = new DocumentHelper(
+							document);
 
-					DocumentHelper documentHelper = new DocumentHelper(
-						document);
+						documentHelper.setAttachmentOwnerKey(
+							PortalUtil.getClassNameId(
+								dlFileEntry.getClassName()),
+							dlFileEntry.getClassPK());
 
-					documentHelper.setAttachmentOwnerKey(
-						PortalUtil.getClassNameId(dlFileEntry.getClassName()),
-						dlFileEntry.getClassPK());
-
-					document.addKeyword(Field.RELATED_ENTRY, true);
+						document.addKeyword(Field.RELATED_ENTRY, true);
+					}
 				}
 			}
 

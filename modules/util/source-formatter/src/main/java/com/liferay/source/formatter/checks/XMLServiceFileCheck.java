@@ -14,9 +14,9 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.ToolsUtil;
@@ -310,13 +310,13 @@ public class XMLServiceFileCheck extends BaseFileCheck {
 		public int compare(
 			Element referenceElement1, Element referenceElement2) {
 
-			String packagePath1 = referenceElement1.attributeValue(
+			String packageName1 = referenceElement1.attributeValue(
 				"package-path");
-			String packagePath2 = referenceElement2.attributeValue(
+			String packageName2 = referenceElement2.attributeValue(
 				"package-path");
 
-			if (!packagePath1.equals(packagePath2)) {
-				return packagePath1.compareToIgnoreCase(packagePath2);
+			if (!packageName1.equals(packageName2)) {
+				return packageName1.compareToIgnoreCase(packageName2);
 			}
 
 			String entityName1 = referenceElement1.attributeValue("entity");

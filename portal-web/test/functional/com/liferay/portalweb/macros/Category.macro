@@ -338,9 +338,9 @@
 
 		<execute function="AssertClick" locator1="Categories#VOCABULARY_ENTRY_LINK" value1="${vocabularyName}" />
 
-		<execute function="Type" locator1="TextInput#SEARCH" value1="${categorySearchEntry}" />
-
-		<execute function="Click" locator1="Icon#BASIC_SEARCH" />
+		<execute macro="Search#searchCP">
+			<var name="searchTerm" value="${categorySearchEntry}" />
+		</execute>
 	</command>
 
 	<command name="viewCategoryPropertyCP">
@@ -454,7 +454,7 @@
 
 		<execute function="AssertClick" locator1="CategoriesNavigation#CATEGORY_NAME" value1="${categoryName}" />
 
-		<execute function="AssertTextEquals" locator1="AP#CATEGORIES_FILTER_CATEGORY" value1="${categoryName}" />
+		<execute function="AssertTextEquals#assertPartialText" locator1="AP#CATEGORIES_FILTER_CATEGORY" value1="${categoryName}" />
 	</command>
 
 	<command name="viewNavigationCP">

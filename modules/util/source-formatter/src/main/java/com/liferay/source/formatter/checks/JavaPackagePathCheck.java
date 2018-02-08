@@ -14,7 +14,7 @@
 
 package com.liferay.source.formatter.checks;
 
-import com.liferay.portal.kernel.util.CharPool;
+import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -22,39 +22,48 @@ import com.liferay.source.formatter.BNDSettings;
 import com.liferay.source.formatter.checks.util.BNDSourceUtil;
 import com.liferay.source.formatter.checks.util.JavaSourceUtil;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * @author Hugo Huijser
  */
 public class JavaPackagePathCheck extends BaseFileCheck {
+
+	public void setAllowedInternalPackageDirName(
+		String allowedInternalPackageDirName) {
+
+		_allowedInternalPackageDirNames.add(allowedInternalPackageDirName);
+	}
 
 	@Override
 	protected String doProcess(
 			String fileName, String absolutePath, String content)
 		throws Exception {
 
-		String packagePath = JavaSourceUtil.getPackagePath(content);
+		String packageName = JavaSourceUtil.getPackageName(content);
 
-		if (Validator.isNull(packagePath)) {
+		if (Validator.isNull(packageName)) {
 			addMessage(fileName, "Missing package");
 
 			return content;
 		}
 
-		_checkPackagePath(fileName, packagePath);
+		_checkPackageName(fileName, absolutePath, packageName);
 
-		if (!absolutePath.contains("/modules/private/apps/") &&
-			isModulesFile(absolutePath)) {
-
-			_checkModulePackagePath(fileName, packagePath);
+		if (isModulesFile(absolutePath) && !isModulesApp(absolutePath, true)) {
+			_checkModulePackageName(fileName, packageName);
 		}
 
 		return content;
 	}
 
-	private void _checkModulePackagePath(String fileName, String packagePath)
+	private void _checkModulePackageName(String fileName, String packageName)
 		throws Exception {
 
-		if (!packagePath.startsWith("com.liferay")) {
+		if (!packageName.startsWith("com.liferay")) {
 			return;
 		}
 
@@ -74,14 +83,14 @@ public class JavaPackagePathCheck extends BaseFileCheck {
 		bundleSymbolicName = bundleSymbolicName.replaceAll(
 			"\\.(api|service|test)$", StringPool.BLANK);
 
-		if (packagePath.contains(bundleSymbolicName)) {
+		if (packageName.contains(bundleSymbolicName)) {
 			return;
 		}
 
 		bundleSymbolicName = bundleSymbolicName.replaceAll(
 			"\\.impl$", ".internal");
 
-		if (!packagePath.contains(bundleSymbolicName)) {
+		if (!packageName.contains(bundleSymbolicName)) {
 			addMessage(
 				fileName,
 				"Package should follow Bundle-SymbolicName specified in " +
@@ -90,26 +99,54 @@ public class JavaPackagePathCheck extends BaseFileCheck {
 		}
 	}
 
-	private void _checkPackagePath(String fileName, String packagePath) {
+	private void _checkPackageName(
+		String fileName, String absolutePath, String packageName) {
+
 		int pos = fileName.lastIndexOf(CharPool.SLASH);
 
 		String filePath = StringUtil.replace(
 			fileName.substring(0, pos), CharPool.SLASH, CharPool.PERIOD);
 
-		if (!filePath.endsWith(packagePath)) {
+		if (!filePath.endsWith(packageName)) {
 			addMessage(
 				fileName,
-				"The declared package '" + packagePath +
+				"The declared package '" + packageName +
 					"' does not match the expected package",
 				"package.markdown");
 
 			return;
 		}
 
-		if (packagePath.matches(".*\\.internal\\.([\\w.]+\\.)?impl")) {
+		if (packageName.matches(".*\\.internal\\.([\\w.]+\\.)?impl")) {
 			addMessage(
-				fileName, "Do not use 'impl' inside 'internal', see LPS-70113");
+				fileName, "Do not use 'impl' inside 'internal'",
+				"package.markdown");
+		}
+
+		for (String allowedInternalPackageDirName :
+				_allowedInternalPackageDirNames) {
+
+			if (absolutePath.contains(allowedInternalPackageDirName)) {
+				return;
+			}
+		}
+
+		if (absolutePath.contains("-api/src/")) {
+			Matcher matcher = _internalPackagePattern.matcher(packageName);
+
+			if (matcher.find()) {
+				addMessage(
+					fileName,
+					"Do not use '" + matcher.group(1) +
+						"' package in API module",
+					"package.markdown");
+			}
 		}
 	}
+
+	private final List<String> _allowedInternalPackageDirNames =
+		new ArrayList<>();
+	private final Pattern _internalPackagePattern = Pattern.compile(
+		"\\.(impl|internal)(\\.|\\Z)");
 
 }

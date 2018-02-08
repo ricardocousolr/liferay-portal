@@ -14,9 +14,11 @@
 
 package com.liferay.portal.servlet.filters.strip;
 
+import com.liferay.petra.string.CharPool;
+import com.liferay.portal.kernel.cache.PortalCache;
+import com.liferay.portal.kernel.cache.SingleVMPoolUtil;
 import com.liferay.portal.kernel.cache.key.CacheKeyGenerator;
 import com.liferay.portal.kernel.cache.key.CacheKeyGeneratorUtil;
-import com.liferay.portal.kernel.concurrent.ConcurrentLFUCache;
 import com.liferay.portal.kernel.io.OutputStreamWriter;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.log.Log;
@@ -24,7 +26,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.servlet.BufferCacheServletResponse;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
@@ -39,6 +40,7 @@ import com.liferay.portal.util.PropsValues;
 
 import java.io.Writer;
 
+import java.nio.Buffer;
 import java.nio.CharBuffer;
 
 import java.util.HashSet;
@@ -62,9 +64,9 @@ public class StripFilter extends BasePortalFilter {
 		StripFilter.class.getName() + "#SKIP_FILTER";
 
 	public StripFilter() {
-		if (PropsValues.MINIFIER_INLINE_CONTENT_CACHE_SIZE > 0) {
-			_minifierCache = new ConcurrentLFUCache<>(
-				PropsValues.MINIFIER_INLINE_CONTENT_CACHE_SIZE);
+		if (PropsValues.MINIFIER_INLINE_CONTENT_CACHE_ENABLED) {
+			_minifierCache = SingleVMPoolUtil.getPortalCache(
+				StripFilter.class.getName());
 		}
 		else {
 			_minifierCache = null;
@@ -108,7 +110,9 @@ public class StripFilter extends BasePortalFilter {
 
 		int position = duplicateCharBuffer.position() + length;
 
-		String content = duplicateCharBuffer.limit(position).toString();
+		Buffer buffer = duplicateCharBuffer.limit(position);
+
+		String content = buffer.toString();
 
 		charBuffer.position(position);
 
@@ -253,10 +257,10 @@ public class StripFilter extends BasePortalFilter {
 
 	protected void processCSS(
 			HttpServletRequest request, HttpServletResponse response,
-			CharBuffer charBuffer, Writer writer)
+			CharBuffer charBuffer, Writer writer, char[] openTag)
 		throws Exception {
 
-		outputOpenTag(charBuffer, writer, _MARKER_STYLE_OPEN);
+		outputOpenTag(charBuffer, writer, openTag);
 
 		int length = KMPSearch.search(
 			charBuffer, _MARKER_STYLE_CLOSE, _MARKER_STYLE_CLOSE_NEXTS);
@@ -279,7 +283,7 @@ public class StripFilter extends BasePortalFilter {
 
 		String minifiedContent = content;
 
-		if (PropsValues.MINIFIER_INLINE_CONTENT_CACHE_SIZE > 0) {
+		if (PropsValues.MINIFIER_INLINE_CONTENT_CACHE_ENABLED) {
 			CacheKeyGenerator cacheKeyGenerator =
 				CacheKeyGeneratorUtil.getCacheKeyGenerator(
 					StripFilter.class.getName());
@@ -307,6 +311,9 @@ public class StripFilter extends BasePortalFilter {
 					_minifierCache.put(key, minifiedContent);
 				}
 			}
+		}
+		else {
+			minifiedContent = MinifierUtil.minifyCss(content);
 		}
 
 		if (Validator.isNotNull(minifiedContent)) {
@@ -499,7 +506,7 @@ public class StripFilter extends BasePortalFilter {
 
 		String minifiedContent = content;
 
-		if (PropsValues.MINIFIER_INLINE_CONTENT_CACHE_SIZE > 0) {
+		if (PropsValues.MINIFIER_INLINE_CONTENT_CACHE_ENABLED) {
 			CacheKeyGenerator cacheKeyGenerator =
 				CacheKeyGeneratorUtil.getCacheKeyGenerator(
 					StripFilter.class.getName());
@@ -529,6 +536,10 @@ public class StripFilter extends BasePortalFilter {
 					_minifierCache.put(key, minifiedContent);
 				}
 			}
+		}
+		else {
+			minifiedContent = MinifierUtil.minifyJavaScript(
+				resourceName, content);
 		}
 
 		if (Validator.isNotNull(minifiedContent)) {
@@ -656,15 +667,30 @@ public class StripFilter extends BasePortalFilter {
 
 					continue;
 				}
-				else if (hasMarker(charBuffer, _MARKER_STYLE_OPEN) ||
-						 hasMarker(
-							 charBuffer,
-							 _MARKER_STYLE_DATA_SENNA_TRACK_PERMANENT) ||
-						 hasMarker(
-							 charBuffer,
-							 _MARKER_STYLE_DATA_SENNA_TRACK_TEMPORARY)) {
+				else if (hasMarker(charBuffer, _MARKER_STYLE_OPEN)) {
+					processCSS(
+						request, response, charBuffer, writer,
+						_MARKER_STYLE_OPEN);
 
-					processCSS(request, response, charBuffer, writer);
+					continue;
+				}
+				else if (hasMarker(
+							charBuffer,
+							_MARKER_STYLE_DATA_SENNA_TRACK_PERMANENT)) {
+
+					processCSS(
+						request, response, charBuffer, writer,
+						_MARKER_STYLE_DATA_SENNA_TRACK_PERMANENT);
+
+					continue;
+				}
+				else if (hasMarker(
+							charBuffer,
+							_MARKER_STYLE_DATA_SENNA_TRACK_TEMPORARY)) {
+
+					processCSS(
+						request, response, charBuffer, writer,
+						_MARKER_STYLE_DATA_SENNA_TRACK_TEMPORARY);
 
 					continue;
 				}
@@ -743,6 +769,6 @@ public class StripFilter extends BasePortalFilter {
 		"[Jj][aA][vV][aA][sS][cC][rR][iI][pP][tT]");
 
 	private final Set<String> _ignorePaths = new HashSet<>();
-	private final ConcurrentLFUCache<String, String> _minifierCache;
+	private final PortalCache<String, String> _minifierCache;
 
 }

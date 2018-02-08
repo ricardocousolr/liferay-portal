@@ -17,61 +17,11 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String searchPage = ParamUtil.getString(request, "searchPage");
-
-String searchURL = ParamUtil.getString(request, "searchURL");
+WorkflowNavigationDisplayContext workflowNavigationDisplayContext =
+	(WorkflowNavigationDisplayContext)request.getAttribute(WorkflowWebKeys.WORKFLOW_NAVIGATION_DISPLAY_CONTEXT);
 %>
 
-<aui:nav-bar cssClass="collapse-basic-search" markupView="lexicon">
-	<aui:nav cssClass="navbar-nav">
-		<c:if test="<%= workflowDefinitionTabVisible %>">
-			<portlet:renderURL var="workflowRenderURL">
-				<portlet:param name="tab" value="<%= WorkflowWebKeys.WORKFLOW_TAB_DEFINITION %>" />
-			</portlet:renderURL>
-
-			<aui:nav-item
-				href="<%= workflowRenderURL.toString() %>"
-				label="workflows"
-				selected="<%= tab.equals(WorkflowWebKeys.WORKFLOW_TAB_DEFINITION) %>"
-			/>
-		</c:if>
-
-		<c:if test="<%= workflowDefinitionLinkTabVisible %>">
-			<portlet:renderURL var="schemesRenderURL">
-				<portlet:param name="tab" value="<%= WorkflowWebKeys.WORKFLOW_TAB_DEFINITION_LINK %>" />
-			</portlet:renderURL>
-
-			<aui:nav-item
-				href="<%= schemesRenderURL.toString() %>"
-				label="schemes"
-				selected="<%= tab.equals(WorkflowWebKeys.WORKFLOW_TAB_DEFINITION_LINK) %>"
-			/>
-		</c:if>
-
-		<c:if test="<%= workflowInstanceTabVisible %>">
-			<portlet:renderURL var="monitoringRenderURL">
-				<portlet:param name="tab" value="<%= WorkflowWebKeys.WORKFLOW_TAB_INSTANCE %>" />
-			</portlet:renderURL>
-
-			<%
-			String monitoringLabel = "monitoring";
-
-			if (portletName.equals(WorkflowPortletKeys.USER_WORKFLOW)) {
-				monitoringLabel = "my-submissions";
-			}
-			%>
-
-			<aui:nav-item
-				href="<%= monitoringRenderURL.toString() %>"
-				label="<%= monitoringLabel %>"
-				selected="<%= tab.equals(WorkflowWebKeys.WORKFLOW_TAB_INSTANCE) %>"
-			/>
-		</c:if>
-	</aui:nav>
-
-	<aui:nav-bar-search>
-		<aui:form action="<%= searchURL %>" method="post" name="fm1">
-			<liferay-util:include page="<%= searchPage %>" servletContext="<%= application %>" />
-		</aui:form>
-	</aui:nav-bar-search>
-</aui:nav-bar>
+<clay:navigation-bar
+	inverted="<%= true %>"
+	items="<%= workflowNavigationDisplayContext.getNavigationItems(selectedWorkflowPortletTab, workflowPortletTabs) %>"
+/>

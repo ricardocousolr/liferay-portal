@@ -17,11 +17,12 @@ package com.liferay.mail.reader.internal.messaging;
 import com.liferay.mail.reader.exception.NoSuchAccountException;
 import com.liferay.mail.reader.mailbox.Mailbox;
 import com.liferay.mail.reader.mailbox.MailboxFactoryUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.BaseMessageListener;
 import com.liferay.portal.kernel.messaging.Message;
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 
 /**
@@ -76,8 +77,10 @@ public class MailSynchronizationMessageListener extends BaseMessageListener {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"Starting synch for accountId " + accountId + " folderId " +
-					folderId + " and messageId " + messageId);
+				StringBundler.concat(
+					"Starting synch for accountId ", String.valueOf(accountId),
+					" folderId ", String.valueOf(folderId), " and messageId ",
+					String.valueOf(messageId)));
 		}
 
 		try {
@@ -104,9 +107,11 @@ public class MailSynchronizationMessageListener extends BaseMessageListener {
 			else {
 				if (_log.isDebugEnabled()) {
 					_log.debug(
-						"Unable to acquire synch lock for accountId " +
-							accountId + " and folderId " + folderId +
-								" and messageId " + messageId);
+						StringBundler.concat(
+							"Unable to acquire synch lock for accountId ",
+							String.valueOf(accountId), " and folderId ",
+							String.valueOf(folderId), " and messageId ",
+							String.valueOf(messageId)));
 				}
 			}
 		}

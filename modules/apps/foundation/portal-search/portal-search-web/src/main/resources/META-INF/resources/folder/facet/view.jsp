@@ -14,8 +14,8 @@
  */
 --%>
 
-<%@ page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
-page import="com.liferay.portal.kernel.util.StringPool" %><%@
+<%@ page import="com.liferay.petra.string.StringPool" %><%@
+page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.search.web.internal.facet.display.context.FolderSearchFacetDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.facet.display.context.FolderSearchFacetTermDisplayContext" %>
@@ -67,7 +67,7 @@ FolderSearchFacetDisplayContext folderSearchFacetDisplayContext = (FolderSearchF
 											data-term-id="<%= folderSearchFacetTermDisplayContext.getFolderId() %>"
 											id="<portlet:namespace />term_<%= i %>"
 											name="<portlet:namespace />term_<%= i %>"
-											onChange='Liferay.Search.FacetUtil.changeSelection(event);'
+											onChange="Liferay.Search.FacetUtil.changeSelection(event);"
 											type="checkbox"
 											<%= folderSearchFacetTermDisplayContext.isSelected() ? "checked" : StringPool.BLANK %>
 										/>

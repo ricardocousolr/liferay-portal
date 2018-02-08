@@ -272,6 +272,8 @@ public interface ExportImportHelper {
 			final StagedModelType stagedModelType)
 		throws PortalException;
 
+	public String getPortletExportFileName(Portlet portlet);
+
 	public ZipWriter getPortletZipWriter(String portletId);
 
 	public String getSelectedLayoutsJSON(
@@ -283,6 +285,10 @@ public interface ExportImportHelper {
 
 	public UserIdStrategy getUserIdStrategy(long userId, String userIdStrategy)
 		throws PortalException;
+
+	public boolean isAlwaysIncludeReference(
+		PortletDataContext portletDataContext,
+		StagedModel referenceStagedModel);
 
 	public boolean isReferenceWithinExportScope(
 		PortletDataContext portletDataContext, StagedModel stagedModel);
@@ -457,6 +463,9 @@ public interface ExportImportHelper {
 			PortletDataContext portletDataContext, String content,
 			boolean importReferencedContent)
 		throws Exception;
+
+	public void setPortletScope(
+		PortletDataContext portletDataContext, Element portletElement);
 
 	/**
 	 * @deprecated As of 7.0.0, see {@link

@@ -22,14 +22,13 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.Portlet;
-import com.liferay.portal.kernel.model.PortletApp;
-import com.liferay.portal.kernel.model.PortletURLListener;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.security.xml.SecureXMLFactoryProviderUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
+import com.liferay.portal.kernel.servlet.TransferHeadersHelperUtil;
 import com.liferay.portal.kernel.servlet.URLEncoder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -53,17 +52,14 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.portlet.MimeResponse;
-import javax.portlet.PortletException;
 import javax.portlet.PortletModeException;
 import javax.portlet.PortletPreferences;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 import javax.portlet.PortletURL;
-import javax.portlet.PortletURLGenerationListener;
 import javax.portlet.ResourceURL;
 import javax.portlet.WindowStateException;
 import javax.portlet.filter.PortletResponseWrapper;
@@ -463,54 +459,7 @@ public abstract class PortletResponseImpl implements LiferayPortletResponse {
 	}
 
 	public void transferHeaders(HttpServletResponse response) {
-		for (Map.Entry<String, Object> entry : _headers.entrySet()) {
-			String name = entry.getKey();
-			Object values = entry.getValue();
-
-			if (values instanceof Integer[]) {
-				Integer[] intValues = (Integer[])values;
-
-				for (int value : intValues) {
-					if (response.containsHeader(name)) {
-						response.addIntHeader(name, value);
-					}
-					else {
-						response.setIntHeader(name, value);
-					}
-				}
-			}
-			else if (values instanceof Long[]) {
-				Long[] dateValues = (Long[])values;
-
-				for (long value : dateValues) {
-					if (response.containsHeader(name)) {
-						response.addDateHeader(name, value);
-					}
-					else {
-						response.setDateHeader(name, value);
-					}
-				}
-			}
-			else if (values instanceof String[]) {
-				String[] stringValues = (String[])values;
-
-				for (String value : stringValues) {
-					if (response.containsHeader(name)) {
-						response.addHeader(name, value);
-					}
-					else {
-						response.setHeader(name, value);
-					}
-				}
-			}
-			else if (values instanceof Cookie[]) {
-				Cookie[] cookies = (Cookie[])values;
-
-				for (Cookie cookie : cookies) {
-					response.addCookie(cookie);
-				}
-			}
-		}
+		TransferHeadersHelperUtil.transferHeaders(_headers, response);
 	}
 
 	@Override
@@ -634,7 +583,9 @@ public abstract class PortletResponseImpl implements LiferayPortletResponse {
 
 		String portletURLClass = portlet.getPortletURLClass();
 
-		if (portlet.getPortletId().equals(portletName) &&
+		String portletId = portlet.getPortletId();
+
+		if (portletId.equals(portletName) &&
 			Validator.isNotNull(portletURLClass)) {
 
 			if (portletURLClass.equals(
@@ -682,31 +633,6 @@ public abstract class PortletResponseImpl implements LiferayPortletResponse {
 			}
 		}
 
-		PortletApp portletApp = portlet.getPortletApp();
-
-		Set<PortletURLListener> portletURLListeners =
-			portletApp.getPortletURLListeners();
-
-		for (PortletURLListener portletURLListener : portletURLListeners) {
-			try {
-				PortletURLGenerationListener portletURLGenerationListener =
-					PortletURLListenerFactory.create(portletURLListener);
-
-				if (lifecycle.equals(PortletRequest.ACTION_PHASE)) {
-					portletURLGenerationListener.filterActionURL(portletURL);
-				}
-				else if (lifecycle.equals(PortletRequest.RENDER_PHASE)) {
-					portletURLGenerationListener.filterRenderURL(portletURL);
-				}
-				else if (lifecycle.equals(PortletRequest.RESOURCE_PHASE)) {
-					portletURLGenerationListener.filterResourceURL(portletURL);
-				}
-			}
-			catch (PortletException pe) {
-				_log.error(pe, pe);
-			}
-		}
-
 		try {
 			if (portlet.hasWindowState(
 					portletRequestImpl.getResponseContentType(),
@@ -729,10 +655,6 @@ public abstract class PortletResponseImpl implements LiferayPortletResponse {
 		}
 		catch (PortletModeException pme) {
 			_log.error(pme.getMessage());
-		}
-
-		if (lifecycle.equals(PortletRequest.RESOURCE_PHASE)) {
-			portletURL.setCopyCurrentRenderParameters(true);
 		}
 
 		return portletURL;

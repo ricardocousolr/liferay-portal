@@ -19,14 +19,14 @@ import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderRequest;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderResponse;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderResponseOutput;
 import com.liferay.dynamic.data.mapping.form.evaluator.DDMFormFieldEvaluationResult;
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.KeyValuePair;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -112,13 +112,13 @@ public class CallFunction extends BaseDDMFormRuleFunction {
 
 		String[] tokens = StringUtil.split(expression, CharPool.EQUAL);
 
+		String parameterName = tokens[0];
+
 		String parameterValue = StringPool.BLANK;
 
 		if (tokens.length == 2) {
 			parameterValue = tokens[1];
 		}
-
-		String parameterName = tokens[0];
 
 		if (_ddmFormFieldEvaluationResults.containsKey(parameterValue)) {
 			String ddmFormFieldValue = getDDMFormFieldValue(parameterValue);
@@ -231,6 +231,8 @@ public class CallFunction extends BaseDDMFormRuleFunction {
 
 		if (ddmFormFieldEvaluationResult != null) {
 			ddmFormFieldEvaluationResult.setValue(value);
+
+			ddmFormFieldEvaluationResult.setProperty("valueChanged", true);
 		}
 	}
 

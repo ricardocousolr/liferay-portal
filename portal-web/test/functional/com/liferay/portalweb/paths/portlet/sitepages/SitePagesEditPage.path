@@ -269,7 +269,7 @@
 </tr>
 <tr>
 	<td>CUSTOMIZATION_SETTINGS_CUSTOMIZABLE_COLUMN_CHECKBOX</td>
-	<td>//input[contains(@name,'TypeSettingsProperties--column-${key_columnId}-customizable')]</td>
+	<td>//input[contains(@name,'column-${key_columnId}-customizable')]/../span[contains(@class,'toggle-switch')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -290,7 +290,7 @@
 </tr>
 <tr>
 	<td>COPY_APPLICATIONS_COPY_FROM_PAGE_SELECT</td>
-	<td>//select[contains(@id,'copyLayoutId')]/option[@value='1']</td>
+	<td>//select[contains(@id,'copyLayoutId')]</td>
 	<td></td>
 </tr>
 </tbody>

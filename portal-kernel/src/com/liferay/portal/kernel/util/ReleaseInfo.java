@@ -23,56 +23,160 @@ import java.util.Date;
  */
 public class ReleaseInfo {
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_5_0_0_BUILD_NUMBER = 5000;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_5_0_1_BUILD_NUMBER = 5001;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_5_1_0_BUILD_NUMBER = 5100;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_5_1_1_BUILD_NUMBER = 5101;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_5_1_2_BUILD_NUMBER = 5102;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_5_1_5_BUILD_NUMBER = 5105;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_5_1_6_BUILD_NUMBER = 5106;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_5_1_7_BUILD_NUMBER = 5107;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_5_2_0_BUILD_NUMBER = 5200;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_5_2_1_BUILD_NUMBER = 5201;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_5_2_2_BUILD_NUMBER = 5202;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_5_2_3_BUILD_NUMBER = 5203;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_5_2_5_BUILD_NUMBER = 5205;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_5_2_7_BUILD_NUMBER = 5207;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_5_2_8_BUILD_NUMBER = 5208;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_5_2_9_BUILD_NUMBER = 5209;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_6_0_0_BUILD_NUMBER = 6000;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_6_0_1_BUILD_NUMBER = 6001;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_6_0_2_BUILD_NUMBER = 6002;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_6_0_3_BUILD_NUMBER = 6003;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_6_0_4_BUILD_NUMBER = 6004;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_6_0_5_BUILD_NUMBER = 6005;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_6_0_6_BUILD_NUMBER = 6006;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_6_0_10_BUILD_NUMBER = 6010;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_6_0_11_BUILD_NUMBER = 6011;
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final int RELEASE_6_0_12_BUILD_NUMBER = 6012;
 
 	public static final int RELEASE_6_1_0_BUILD_NUMBER = 6100;
@@ -103,7 +207,13 @@ public class ReleaseInfo {
 
 	public static final int RELEASE_7_0_4_BUILD_NUMBER = 7004;
 
+	public static final int RELEASE_7_0_5_BUILD_NUMBER = 7005;
+
 	public static final int RELEASE_7_0_10_BUILD_NUMBER = 7010;
+
+	public static final int RELEASE_7_1_0_BUILD_NUMBER = 7100;
+
+	public static final int RELEASE_7_1_10_BUILD_NUMBER = 7110;
 
 	public static final Date getBuildDate() {
 		DateFormat df = DateFormat.getDateInstance(DateFormat.LONG);
@@ -129,10 +239,10 @@ public class ReleaseInfo {
 
 	public static final String getReleaseInfo() {
 		if (_releaseInfo == null) {
-			_releaseInfo =
-				_RELEASE_INFO_PREFIX + _NAME + " " + _VERSION_DISPLAY_NAME +
-					" (" + _CODE_NAME + " / Build " + _BUILD + " / " + _DATE +
-						")" + _RELEASE_INFO_SUFFIX;
+			_releaseInfo = StringBundler.concat(
+				_RELEASE_INFO_PREFIX, _NAME, " ", _VERSION_DISPLAY_NAME, " (",
+				_CODE_NAME, " / Build ", _BUILD, " / ", _DATE, ")",
+				_RELEASE_INFO_SUFFIX);
 		}
 
 		return _releaseInfo;
@@ -154,13 +264,13 @@ public class ReleaseInfo {
 		return _VERSION;
 	}
 
-	private static final String _BUILD = "7004";
+	private static final String _BUILD = "7100";
 
 	private static final int _BUILD_NUMBER = GetterUtil.getInteger(_BUILD);
 
-	private static final String _CODE_NAME = "Wilberforce";
+	private static final String _CODE_NAME = "Judson";
 
-	private static final String _DATE = "July 13, 2017";
+	private static final String _DATE = "September 15, 2017";
 
 	private static final String _NAME = "Liferay Community Edition Portal";
 
@@ -174,9 +284,9 @@ public class ReleaseInfo {
 
 	private static final String _VENDOR = "Liferay, Inc.";
 
-	private static final String _VERSION = "7.0.4";
+	private static final String _VERSION = "7.1.0";
 
-	private static final String _VERSION_DISPLAY_NAME = "7.0.4 GA5";
+	private static final String _VERSION_DISPLAY_NAME = "7.1.0 CE";
 
 	private static String _releaseInfo;
 	private static String _serverInfo;

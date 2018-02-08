@@ -2,47 +2,6 @@ AUI.add(
 	'liferay-workflow-tasks',
 	function(A) {
 		var WorkflowTasks = {
-			moveFormDataFromDialog: function(form) {
-				var children = form.get('children');
-
-				var entryActionColumn;
-				var updatedComments;
-				var updatedContent;
-
-				if (form && form.hasChildNodes() && children.size() >= 2) {
-					updatedContent = children.item(0);
-					updatedComments = children.item(1);
-				}
-
-				if (updatedContent) {
-					var contentId = updatedContent.attr('id');
-
-					var originalColumnId = contentId.substring(0, 4);
-
-					if (contentId.search('[a-zA-Z]{4}updateDueDate') != -1) {
-						originalColumnId += 'updateAsignee';
-					}
-
-					if (originalColumnId) {
-						var originalColumnNode = A.one('#' + originalColumnId);
-
-						if (originalColumnNode) {
-							entryActionColumn = originalColumnNode.get('parentNode');
-
-							entryActionColumn.append(updatedContent);
-
-							updatedContent.attr('hidden', true);
-						}
-					}
-				}
-
-				if (updatedComments && entryActionColumn) {
-					entryActionColumn.append(updatedComments);
-
-					updatedComments.attr('hidden', true);
-				}
-			},
-
 			onTaskClick: function(event, randomId) {
 				var instance = this;
 
@@ -53,20 +12,20 @@ AUI.add(
 
 				var content = null;
 
-				var height = 310;
+				var height = 400;
 
 				if (li.hasClass('task-due-date-link')) {
 					content = '#' + randomId + 'updateDueDate';
 
-					height = 410;
+					height = 480;
 				}
 
 				var title = icon.text();
 
-				WorkflowTasks.showPopup(icon.attr('href'), A.one(content), title, randomId, height);
+				WorkflowTasks._showPopup(icon.attr('href'), A.one(content), title, randomId, height);
 			},
 
-			showPopup: function(url, content, title, randomId, height) {
+			_showPopup: function(url, content, title, randomId, height) {
 				var instance = this;
 
 				var form = A.Node.create('<form />');
@@ -75,6 +34,20 @@ AUI.add(
 				form.setAttribute('method', 'POST');
 
 				var comments = A.one('#' + randomId + 'updateComments');
+
+				if (comments && !instance._comments[randomId]) {
+					instance._comments[randomId] = comments;
+				}
+				else if (!comments && instance._comments[randomId]) {
+					comments = instance._comments[randomId];
+				}
+
+				if (content && !instance._content[randomId]) {
+					instance._content[randomId] = content;
+				}
+				else if (!content && title && title.trim().indexOf('Update Due Date') !== -1) {
+					content = instance._content[randomId];
+				}
 
 				if (content) {
 					form.append(content);
@@ -92,15 +65,11 @@ AUI.add(
 							bodyContent: form,
 							destroyOnHide: true,
 							height: height,
-							on: {
-								destroy: function() {
-									instance.moveFormDataFromDialog(form);
-								}
-							},
+							resizable: false,
 							toolbars: {
 								footer: [
 									{
-										cssClass: 'btn-lg btn-primary',
+										cssClass: 'btn-primary mr-2',
 										label: Liferay.Language.get('done'),
 										on: {
 											click: function() {
@@ -109,7 +78,7 @@ AUI.add(
 										}
 									},
 									{
-										cssClass: 'btn-cancel btn-lg btn-link',
+										cssClass: 'btn-cancel',
 										label: Liferay.Language.get('cancel'),
 										on: {
 											click: function() {
@@ -122,7 +91,7 @@ AUI.add(
 									{
 										cssClass: 'close',
 										discardDefaultButtonCssClasses: true,
-										labelHTML: '<span> \u00D7 </span>',
+										labelHTML: '<span aria-hidden="true">&times;</span>',
 										on: {
 											click: function(event) {
 												dialog.hide();
@@ -136,7 +105,10 @@ AUI.add(
 						title: A.Lang.String.escapeHTML(title)
 					}
 				);
-			}
+			},
+
+			_comments: {},
+			_content: {}
 		};
 		Liferay.WorkflowTasks = WorkflowTasks;
 	},

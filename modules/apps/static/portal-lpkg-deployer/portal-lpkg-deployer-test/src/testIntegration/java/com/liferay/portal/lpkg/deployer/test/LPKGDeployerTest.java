@@ -14,9 +14,9 @@
 
 package com.liferay.portal.lpkg.deployer.test;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.lpkg.StaticLPKGResolver;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
@@ -161,11 +161,13 @@ public class LPKGDeployerTest {
 							StaticLPKGResolver.
 								getStaticLPKGBundleSymbolicName())) {
 
-						Bundle bundle = bundleContext.getBundle(
-							"reference:" + StringPool.SLASH + name);
+						String location =
+							"file:/" + name + "?protocol=lpkg&static=true";
+
+						Bundle bundle = bundleContext.getBundle(location);
 
 						Assert.assertNotNull(
-							"No matching static bundle for reference:/" + name,
+							"No matching static bundle for " + location,
 							bundle);
 					}
 					else {

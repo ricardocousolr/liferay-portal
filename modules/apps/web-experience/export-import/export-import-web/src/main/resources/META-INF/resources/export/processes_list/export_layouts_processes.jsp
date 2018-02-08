@@ -100,7 +100,6 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 				<c:when test='<%= displayStyle.equals("descriptive") %>'>
 					<liferay-ui:search-container-column-text>
 						<liferay-ui:user-portrait
-							cssClass="user-icon-lg"
 							userId="<%= backgroundTask.getUserId() %>"
 						/>
 					</liferay-ui:search-container-column-text>
@@ -286,7 +285,7 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 				<c:if test="<%= !backgroundTask.isInProgress() %>">
 					<liferay-ui:icon-menu direction="left-side" icon="<%= StringPool.BLANK %>" markupView="lexicon" message="<%= StringPool.BLANK %>" showWhenSingleIcon="<%= true %>">
 						<portlet:actionURL name="editExportConfiguration" var="relaunchURL">
-							<portlet:param name="mvcRenderCommandName" value="editExportConfiguration" />
+							<portlet:param name="mvcRenderCommandName" value="exportLayoutsView" />
 							<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.RELAUNCH %>" />
 							<portlet:param name="redirect" value="<%= portletURL.toString() %>" />
 							<portlet:param name="backgroundTaskId" value="<%= String.valueOf(backgroundTask.getBackgroundTaskId()) %>" />

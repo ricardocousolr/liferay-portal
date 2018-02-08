@@ -34,20 +34,20 @@ public class JavaModuleTestCheck extends BaseFileCheck {
 			return content;
 		}
 
-		String packagePath = JavaSourceUtil.getPackagePath(content);
+		String packageName = JavaSourceUtil.getPackageName(content);
 
-		if (!packagePath.startsWith("com.liferay")) {
+		if (!packageName.startsWith("com.liferay")) {
 			return content;
 		}
 
-		_checkTestPackage(fileName, absolutePath, content, packagePath);
+		_checkTestPackage(fileName, absolutePath, content, packageName);
 
 		return content;
 	}
 
 	private void _checkTestPackage(
 		String fileName, String absolutePath, String content,
-		String packagePath) {
+		String packageName) {
 
 		if (absolutePath.contains("/src/testIntegration/java/") ||
 			absolutePath.contains("/test/integration/")) {
@@ -56,26 +56,25 @@ public class JavaModuleTestCheck extends BaseFileCheck {
 				content.contains("import org.powermock.")) {
 
 				addMessage(
-					fileName,
-					"Do not use PowerMock inside Arquillian tests, see " +
-						"LPS-56706");
+					fileName, "Do not use PowerMock inside Arquillian tests",
+					"power_mock.markdown");
 			}
 
-			if (!packagePath.endsWith(".test")) {
+			if (!packageName.endsWith(".test")) {
 				addMessage(
 					fileName,
-					"Module integration test must be under a test " +
-						"subpackage, see LPS-57722");
+					"Module integration test must be under a test subpackage",
+					"modules_tests.markdown");
 			}
 		}
 		else if ((absolutePath.contains("/test/unit/") ||
 				  absolutePath.contains("/src/test/java/")) &&
-				 packagePath.endsWith(".test")) {
+				 packageName.endsWith(".test")) {
 
 			addMessage(
 				fileName,
-				"Module unit test should not be under a test subpackage, see " +
-					"LPS-57722");
+				"Module unit test should not be under a test subpackage",
+				"modules_tests.markdown");
 		}
 	}
 

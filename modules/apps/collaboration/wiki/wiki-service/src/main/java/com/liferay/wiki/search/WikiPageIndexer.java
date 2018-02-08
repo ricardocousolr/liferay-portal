@@ -41,6 +41,7 @@ import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.TermsFilter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -53,7 +54,6 @@ import com.liferay.wiki.model.WikiPage;
 import com.liferay.wiki.service.WikiNodeLocalService;
 import com.liferay.wiki.service.WikiNodeService;
 import com.liferay.wiki.service.WikiPageLocalService;
-import com.liferay.wiki.service.permission.WikiPagePermissionChecker;
 
 import java.util.Locale;
 
@@ -69,7 +69,11 @@ import org.osgi.service.component.annotations.Reference;
  * @author Bruno Farache
  * @author Raymond Augé
  */
-@Component(immediate = true, service = Indexer.class)
+@Component(
+	immediate = true,
+	property = {"related.entry.indexer.class.name=com.liferay.wiki.model.WikiPage"},
+	service = {Indexer.class, RelatedEntryIndexer.class}
+)
 public class WikiPageIndexer
 	extends BaseIndexer<WikiPage> implements RelatedEntryIndexer {
 
@@ -138,7 +142,7 @@ public class WikiPageIndexer
 
 		WikiPage page = _wikiPageLocalService.getPage(entryClassPK);
 
-		return WikiPagePermissionChecker.contains(
+		return _wikiPageModelResourcePermission.contains(
 			permissionChecker, page, ActionKeys.VIEW);
 	}
 
@@ -398,5 +402,8 @@ public class WikiPageIndexer
 	private WikiNodeLocalService _wikiNodeLocalService;
 	private WikiNodeService _wikiNodeService;
 	private WikiPageLocalService _wikiPageLocalService;
+
+	@Reference(target = "(model.class.name=com.liferay.wiki.model.WikiPage)")
+	private ModelResourcePermission<WikiPage> _wikiPageModelResourcePermission;
 
 }

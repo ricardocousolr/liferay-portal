@@ -16,7 +16,6 @@ package com.liferay.source.formatter.checkstyle.checks;
 
 import com.liferay.source.formatter.checkstyle.util.DetailASTUtil;
 
-import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
@@ -25,7 +24,7 @@ import java.util.List;
 /**
  * @author Hugo Huijser
  */
-public class AssertEqualsCheck extends AbstractCheck {
+public class AssertEqualsCheck extends BaseCheck {
 
 	@Override
 	public int[] getDefaultTokens() {
@@ -33,7 +32,7 @@ public class AssertEqualsCheck extends AbstractCheck {
 	}
 
 	@Override
-	public void visitToken(DetailAST detailAST) {
+	protected void doVisitToken(DetailAST detailAST) {
 		List<DetailAST> methodCallASTList = DetailASTUtil.getMethodCalls(
 			detailAST, "Assert", "assertEquals");
 
@@ -55,8 +54,8 @@ public class AssertEqualsCheck extends AbstractCheck {
 				firstChildAST, "getLength");
 
 			if (variableName != null) {
-				DetailAST typeAST = DetailASTUtil.findTypeAST(
-					detailAST, variableName);
+				DetailAST typeAST = DetailASTUtil.getVariableTypeAST(
+					methodCallAST, variableName);
 
 				if ((typeAST != null) && _isHits(typeAST)) {
 					log(
@@ -70,8 +69,8 @@ public class AssertEqualsCheck extends AbstractCheck {
 			variableName = _getVariableNameForCall(firstChildAST, "length");
 
 			if (variableName != null) {
-				DetailAST typeAST = DetailASTUtil.findTypeAST(
-					detailAST, variableName);
+				DetailAST typeAST = DetailASTUtil.getVariableTypeAST(
+					methodCallAST, variableName);
 
 				if ((typeAST != null) && DetailASTUtil.isArray(typeAST)) {
 					log(
@@ -85,8 +84,8 @@ public class AssertEqualsCheck extends AbstractCheck {
 			variableName = _getVariableNameForMethodCall(firstChildAST, "size");
 
 			if (variableName != null) {
-				DetailAST typeAST = DetailASTUtil.findTypeAST(
-					detailAST, variableName);
+				DetailAST typeAST = DetailASTUtil.getVariableTypeAST(
+					methodCallAST, variableName);
 
 				if ((typeAST != null) && DetailASTUtil.isCollection(typeAST)) {
 					log(

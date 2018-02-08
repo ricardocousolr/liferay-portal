@@ -291,6 +291,10 @@ public class ExportImportHelperUtil {
 			portletDataContext, stagedModelType);
 	}
 
+	public static String getPortletExportFileName(Portlet portlet) {
+		return _exportImportHelper.getPortletExportFileName(portlet);
+	}
+
 	public static ZipWriter getPortletZipWriter(String portletId) {
 		return _exportImportHelper.getPortletZipWriter(portletId);
 	}
@@ -315,6 +319,14 @@ public class ExportImportHelperUtil {
 		throws PortalException {
 
 		return _exportImportHelper.getUserIdStrategy(userId, userIdStrategy);
+	}
+
+	public static boolean isAlwaysIncludeReference(
+		PortletDataContext portletDataContext,
+		StagedModel referenceStagedModel) {
+
+		return _exportImportHelper.isAlwaysIncludeReference(
+			portletDataContext, referenceStagedModel);
 	}
 
 	public static boolean isReferenceWithinExportScope(
@@ -569,6 +581,12 @@ public class ExportImportHelperUtil {
 
 		return _exportImportHelper.replaceImportLinksToLayouts(
 			portletDataContext, content, importReferencedContent);
+	}
+
+	public static void setPortletScope(
+		PortletDataContext portletDataContext, Element portletElement) {
+
+		_exportImportHelper.setPortletScope(portletDataContext, portletElement);
 	}
 
 	/**

@@ -16,17 +16,17 @@ package com.liferay.portal.util;
 
 import aQute.bnd.annotation.ProviderType;
 
+import com.liferay.petra.memory.FinalizeAction;
+import com.liferay.petra.memory.FinalizeManager;
+import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncFilterInputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.memory.FinalizeAction;
-import com.liferay.portal.kernel.memory.FinalizeManager;
 import com.liferay.portal.kernel.security.pacl.DoPrivileged;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -69,9 +69,15 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.httpclient.HostConfiguration;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
+import org.apache.http.StatusLine;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.NTCredentials;
@@ -259,13 +265,7 @@ public class HttpImpl implements Http {
 		sb.append(URLCodec.encodeURL(value));
 		sb.append(anchor);
 
-		String result = sb.toString();
-
-		if (result.length() > URL_MAXIMUM_LENGTH) {
-			result = shortenURL(result, 2);
-		}
-
-		return result;
+		return shortenURL(sb.toString());
 	}
 
 	@Override
@@ -321,8 +321,9 @@ public class HttpImpl implements Http {
 
 			if (_log.isDebugEnabled()) {
 				_log.debug(
-					toString() + " is waiting on " + availableConnections +
-						" connections");
+					StringBundler.concat(
+						toString(), " is waiting on ",
+						String.valueOf(availableConnections), " connections"));
 			}
 
 			_poolingHttpClientConnectionManager.closeIdleConnections(
@@ -444,9 +445,7 @@ public class HttpImpl implements Http {
 	 * @deprecated As of 7.0.0, with no direct replacement
 	 */
 	@Deprecated
-	public org.apache.commons.httpclient.HttpClient getClient(
-		org.apache.commons.httpclient.HostConfiguration hostConfiguration) {
-
+	public HttpClient getClient(HostConfiguration hostConfiguration) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -521,8 +520,7 @@ public class HttpImpl implements Http {
 	 * @deprecated As of 7.0.0, with no direct replacement
 	 */
 	@Deprecated
-	public org.apache.commons.httpclient.HostConfiguration getHostConfiguration(
-			String location)
+	public HostConfiguration getHostConfiguration(String location)
 		throws IOException {
 
 		throw new UnsupportedOperationException();
@@ -850,8 +848,9 @@ public class HttpImpl implements Http {
 					catch (IllegalArgumentException iae) {
 						if (_log.isInfoEnabled()) {
 							_log.info(
-								"Skipping parameter with key " + key +
-									" because of invalid value " + kvp[1],
+								StringBundler.concat(
+									"Skipping parameter with key ", key,
+									" because of invalid value ", kvp[1]),
 								iae);
 						}
 
@@ -965,8 +964,7 @@ public class HttpImpl implements Http {
 	 */
 	@Deprecated
 	public void proxifyState(
-		org.apache.commons.httpclient.HttpState httpState,
-		org.apache.commons.httpclient.HostConfiguration hostConfiguration) {
+		HttpState httpState, HostConfiguration hostConfiguration) {
 	}
 
 	@Override
@@ -1009,7 +1007,7 @@ public class HttpImpl implements Http {
 		sb.append(url.substring(0, pos + 1));
 
 		String[] parameters = StringUtil.split(
-			url.substring(pos + 1, url.length()), CharPool.AMPERSAND);
+			url.substring(pos + 1), CharPool.AMPERSAND);
 
 		for (String parameter : parameters) {
 			if (parameter.length() > 0) {
@@ -1219,64 +1217,21 @@ public class HttpImpl implements Http {
 	}
 
 	@Override
+	public String shortenURL(String url) {
+		if (url.length() <= URL_MAXIMUM_LENGTH) {
+			return url;
+		}
+
+		return _shortenURL(url, 0);
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #shortenURL(String)}
+	 */
+	@Deprecated
+	@Override
 	public String shortenURL(String url, int count) {
-		if (count == 0) {
-			return null;
-		}
-
-		StringBundler sb = new StringBundler();
-
-		String[] params = StringUtil.split(url, CharPool.AMPERSAND);
-
-		for (int i = 0; i < params.length; i++) {
-			String param = params[i];
-
-			if (param.contains("_backURL=") || param.contains("_redirect=") ||
-				param.contains("_returnToFullPageURL=") ||
-				param.startsWith("redirect")) {
-
-				int pos = param.indexOf(CharPool.EQUAL);
-
-				String qName = param.substring(0, pos);
-
-				String redirect = param.substring(pos + 1);
-
-				try {
-					redirect = decodeURL(redirect);
-				}
-				catch (IllegalArgumentException iae) {
-					if (_log.isDebugEnabled()) {
-						_log.debug(
-							"Skipping undecodable parameter " + param, iae);
-					}
-
-					continue;
-				}
-
-				String newURL = shortenURL(redirect, count - 1);
-
-				if (newURL != null) {
-					newURL = URLCodec.encodeURL(newURL);
-
-					sb.append(qName);
-					sb.append(StringPool.EQUAL);
-					sb.append(newURL);
-
-					if (i < (params.length - 1)) {
-						sb.append(StringPool.AMPERSAND);
-					}
-				}
-			}
-			else {
-				sb.append(param);
-
-				if (i < (params.length - 1)) {
-					sb.append(StringPool.AMPERSAND);
-				}
-			}
-		}
-
-		return sb.toString();
+		return shortenURL(url);
 	}
 
 	@Override
@@ -1500,9 +1455,7 @@ public class HttpImpl implements Http {
 	 * @deprecated As of 7.0.0, with no direct replacement
 	 */
 	@Deprecated
-	protected boolean hasRequestHeader(
-		org.apache.commons.httpclient.HttpMethod httpMethod, String name) {
-
+	protected boolean hasRequestHeader(HttpMethod httpMethod, String name) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -1523,8 +1476,8 @@ public class HttpImpl implements Http {
 	 */
 	@Deprecated
 	protected void processPostMethod(
-		org.apache.commons.httpclient.methods.PostMethod postMethod,
-		List<Http.FilePart> fileParts, Map<String, String> parts) {
+		PostMethod postMethod, List<Http.FilePart> fileParts,
+		Map<String, String> parts) {
 
 		throw new UnsupportedOperationException();
 	}
@@ -1935,8 +1888,9 @@ public class HttpImpl implements Http {
 
 			httpEntity = closeableHttpResponse.getEntity();
 
-			response.setResponseCode(
-				closeableHttpResponse.getStatusLine().getStatusCode());
+			StatusLine statusLine = closeableHttpResponse.getStatusLine();
+
+			response.setResponseCode(statusLine.getStatusCode());
 
 			Header locationHeader = closeableHttpResponse.getFirstHeader(
 				"location");
@@ -2070,6 +2024,89 @@ public class HttpImpl implements Http {
 		}
 
 		return false;
+	}
+
+	private String _shortenURL(String url, int currentLength) {
+		int index = url.indexOf(CharPool.QUESTION);
+
+		if (index == -1) {
+			return url;
+		}
+
+		StringBundler sb = new StringBundler();
+
+		sb.append(url.substring(0, index));
+		sb.append(StringPool.QUESTION);
+
+		String queryString = url.substring(index + 1);
+
+		String[] params = StringUtil.split(queryString, CharPool.AMPERSAND);
+
+		params = ArrayUtil.unique(params);
+
+		List<String> redirectParams = new ArrayList<>();
+
+		for (String param : params) {
+			if (param.contains("_backURL=") || param.contains("_redirect=") ||
+				param.contains("_returnToFullPageURL=") ||
+				(param.startsWith("redirect") &&
+				 (param.indexOf(CharPool.EQUAL) != -1))) {
+
+				redirectParams.add(param);
+			}
+			else {
+				sb.append(param);
+				sb.append(StringPool.AMPERSAND);
+			}
+		}
+
+		if ((currentLength + sb.length()) > URL_MAXIMUM_LENGTH) {
+			sb.setIndex(sb.index() - 1);
+
+			return sb.toString();
+		}
+
+		for (String redirectParam : redirectParams) {
+			int pos = redirectParam.indexOf(CharPool.EQUAL);
+
+			String key = redirectParam.substring(0, pos);
+
+			String redirect = redirectParam.substring(pos + 1);
+
+			try {
+				redirect = URLCodec.decodeURL(redirect, StringPool.UTF8);
+			}
+			catch (IllegalArgumentException iae) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						"Skipping undecodable parameter " + redirectParam, iae);
+				}
+
+				continue;
+			}
+
+			sb.append(key);
+			sb.append(StringPool.EQUAL);
+
+			int newLength = sb.length();
+
+			redirect = URLCodec.encodeURL(
+				_shortenURL(redirect, currentLength + newLength));
+
+			newLength += redirect.length();
+
+			if ((currentLength + newLength) > URL_MAXIMUM_LENGTH) {
+				sb.setIndex(sb.index() - 2);
+			}
+			else {
+				sb.append(redirect);
+				sb.append(StringPool.AMPERSAND);
+			}
+		}
+
+		sb.setIndex(sb.index() - 1);
+
+		return sb.toString();
 	}
 
 	private static final String _DEFAULT_USER_AGENT =

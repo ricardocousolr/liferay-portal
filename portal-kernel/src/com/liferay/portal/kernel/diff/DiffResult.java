@@ -14,8 +14,7 @@
 
 package com.liferay.portal.kernel.diff;
 
-import com.liferay.portal.kernel.util.HashCode;
-import com.liferay.portal.kernel.util.HashCodeFactoryUtil;
+import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 
 import java.util.ArrayList;
@@ -64,8 +63,10 @@ public class DiffResult {
 
 		DiffResult diffResult = (DiffResult)obj;
 
+		List<String> changedLines = diffResult.getChangedLines();
+
 		if ((diffResult.getLineNumber() == _lineNumber) &&
-			diffResult.getChangedLines().equals(_changedLines)) {
+			changedLines.equals(_changedLines)) {
 
 			return true;
 		}
@@ -83,12 +84,9 @@ public class DiffResult {
 
 	@Override
 	public int hashCode() {
-		HashCode hashCode = HashCodeFactoryUtil.getHashCode();
+		int hashCode = HashUtil.hash(0, _lineNumber);
 
-		hashCode.append(_lineNumber);
-		hashCode.append(_changedLines);
-
-		return hashCode.toHashCode();
+		return HashUtil.hash(hashCode, _changedLines);
 	}
 
 	public void setChangedLines(List<String> changedLines) {

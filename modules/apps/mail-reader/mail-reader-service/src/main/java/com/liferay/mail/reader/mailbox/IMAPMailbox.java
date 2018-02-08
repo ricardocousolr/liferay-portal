@@ -34,6 +34,7 @@ import com.liferay.mail.reader.service.AttachmentLocalServiceUtil;
 import com.liferay.mail.reader.service.FolderLocalServiceUtil;
 import com.liferay.mail.reader.service.MessageLocalServiceUtil;
 import com.liferay.petra.mail.InternetAddressUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -42,7 +43,6 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -231,9 +231,7 @@ public class IMAPMailbox extends BaseMailbox {
 		try {
 			internetAddresses = InternetAddress.parse(addresses, true);
 
-			for (int i = 0; i < internetAddresses.length; i++) {
-				InternetAddress internetAddress = internetAddresses[i];
-
+			for (InternetAddress internetAddress : internetAddresses) {
 				if (!Validator.isEmailAddress(internetAddress.getAddress())) {
 					StringBundler sb = new StringBundler(4);
 
@@ -275,7 +273,7 @@ public class IMAPMailbox extends BaseMailbox {
 
 		Account account = AccountLocalServiceUtil.getAccount(accountId);
 
-		StringBundler sb = new StringBundler();
+		StringBundler sb = new StringBundler(4);
 
 		sb.append(user.getFullName());
 		sb.append(" <");
@@ -442,9 +440,7 @@ public class IMAPMailbox extends BaseMailbox {
 
 		List<Long> missingRemoteMessageIdsList = new ArrayList<>();
 
-		for (int i = 0; i < remoteMessageIds.length; i++) {
-			long remoteMessageId = remoteMessageIds[i];
-
+		for (long remoteMessageId : remoteMessageIds) {
 			try {
 				MessageLocalServiceUtil.getMessage(folderId, remoteMessageId);
 			}

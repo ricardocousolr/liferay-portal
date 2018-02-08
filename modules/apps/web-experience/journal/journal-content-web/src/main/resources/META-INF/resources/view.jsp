@@ -130,7 +130,7 @@ AssetRendererFactory<JournalArticle> assetRendererFactory = AssetRendererFactory
 					</c:when>
 					<c:when test="<%= articleDisplay != null %>">
 						<div class="text-right user-tool-asset-addon-entries">
-							<liferay-ui:asset-addon-entry-display assetAddonEntries="<%= journalContentDisplayContext.getSelectedUserToolAssetAddonEntries() %>" />
+							<liferay-asset:asset-addon-entry-display assetAddonEntries="<%= journalContentDisplayContext.getSelectedUserToolAssetAddonEntries() %>" />
 						</div>
 
 						<div class="pull-right visible-interaction">
@@ -152,6 +152,27 @@ AssetRendererFactory<JournalArticle> assetRendererFactory = AssetRendererFactory
 										id="editWebContentIcon"
 										message="edit-web-content"
 										url="<%= journalContentDisplayContext.getURLEdit() %>"
+										useDialog="<%= true %>"
+									/>
+								</c:if>
+
+								<c:if test="<%= journalContentDisplayContext.isShowEditTemplateIcon() %>">
+
+									<%
+									DDMTemplate ddmTemplate = journalContentDisplayContext.getDDMTemplate();
+
+									Map<String, Object> data = new HashMap<String, Object>();
+
+									data.put("destroyOnHide", true);
+									data.put("id", HtmlUtil.escape(portletDisplay.getNamespace()) + "editAsset");
+									data.put("title", HtmlUtil.escape(ddmTemplate.getName(locale)));
+									%>
+
+									<liferay-ui:icon
+										data="<%= data %>"
+										id="editTemplateIcon"
+										message="edit-template"
+										url="<%= journalContentDisplayContext.getURLEditTemplate() %>"
 										useDialog="<%= true %>"
 									/>
 								</c:if>
@@ -207,7 +228,7 @@ AssetRendererFactory<JournalArticle> assetRendererFactory = AssetRendererFactory
 
 <c:if test="<%= (articleDisplay != null) && journalContentDisplayContext.hasViewPermission() %>">
 	<div class="content-metadata-asset-addon-entries">
-		<liferay-ui:asset-addon-entry-display assetAddonEntries="<%= journalContentDisplayContext.getSelectedContentMetadataAssetAddonEntries() %>" />
+		<liferay-asset:asset-addon-entry-display assetAddonEntries="<%= journalContentDisplayContext.getSelectedContentMetadataAssetAddonEntries() %>" />
 	</div>
 </c:if>
 
