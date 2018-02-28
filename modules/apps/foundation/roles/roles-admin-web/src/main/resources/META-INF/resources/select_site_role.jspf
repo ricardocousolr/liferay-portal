@@ -53,24 +53,12 @@ if (step == 1) {
 	}
 }
 
-long groupId = ParamUtil.getLong(request, "groupId", uniqueGroupId);
-
-portletURL.setParameter("groupId", String.valueOf(groupId));
-
 portletURL.setParameter("step", String.valueOf(step));
 %>
 
-<aui:nav-bar cssClass="collapse-basic-search" markupView="lexicon">
-	<aui:nav cssClass="navbar-nav">
-		<aui:nav-item label="site-roles" selected="<%= true %>" />
-	</aui:nav>
-
-	<aui:nav-bar-search>
-		<aui:form action="<%= portletURL.toString() %>" name="searchFm">
-			<liferay-ui:input-search markupView="lexicon" />
-		</aui:form>
-	</aui:nav-bar-search>
-</aui:nav-bar>
+<clay:navigation-bar
+	items='<%= roleDisplayContext.getSelectRoleNavigationItems("site-roles") %>'
+/>
 
 <liferay-frontend:management-bar>
 	<liferay-frontend:management-bar-buttons>
@@ -79,6 +67,12 @@ portletURL.setParameter("step", String.valueOf(step));
 				navigationKeys='<%= new String[] {"all"} %>'
 				portletURL="<%= PortletURLUtil.clone(portletURL, liferayPortletResponse) %>"
 			/>
+
+			<li>
+				<aui:form action="<%= portletURL.toString() %>" name="searchFm">
+					<liferay-ui:input-search markupView="lexicon" />
+				</aui:form>
+			</li>
 		</liferay-frontend:management-bar-filters>
 
 		<liferay-frontend:management-bar-display-buttons
@@ -160,29 +154,32 @@ portletURL.setParameter("step", String.valueOf(step));
 			</aui:script>
 		</c:when>
 		<c:when test="<%= step == 2 %>">
-			<aui:input name="step" type="hidden" value="2" />
-			<aui:input name="groupId" type="hidden" value="<%= String.valueOf(groupId) %>" />
 
 			<%
+			long groupId = ParamUtil.getLong(request, "groupId", uniqueGroupId);
+
 			Group group = GroupServiceUtil.getGroup(groupId);
 
-			portletURL.setParameter("step", "1");
+			portletURL.setParameter("groupId", String.valueOf(groupId));
 			%>
+
+			<aui:input name="step" type="hidden" value="<%= step %>" />
+			<aui:input name="groupId" type="hidden" value="<%= String.valueOf(groupId) %>" />
 
 			<c:if test="<%= selUser != null %>">
 
 				<%
+				portletURL.setParameter("step", "1");
+
 				String breadcrumbs = "<a href=\"" + portletURL.toString() + "\">" + LanguageUtil.get(request, "sites") + "</a> &raquo; " + HtmlUtil.escape(group.getDescriptiveName(locale));
+
+				portletURL.setParameter("step", String.valueOf(step));
 				%>
 
 				<div class="breadcrumbs">
 					<%= breadcrumbs %>
 				</div>
 			</c:if>
-
-			<%
-			portletURL.setParameter("step", "2");
-			%>
 
 			<liferay-ui:search-container
 				headerNames="name"

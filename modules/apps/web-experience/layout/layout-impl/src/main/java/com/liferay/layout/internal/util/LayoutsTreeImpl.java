@@ -16,6 +16,7 @@ package com.liferay.layout.internal.util;
 
 import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
 import com.liferay.exportimport.kernel.staging.Staging;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -37,13 +38,13 @@ import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.service.LayoutSetBranchLocalService;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
+import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SessionClicks;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.layoutsadmin.util.LayoutsTree;
@@ -567,6 +568,7 @@ public class LayoutsTreeImpl implements LayoutsTree {
 		boolean hasManageLayoutsPermission = GroupPermissionUtil.contains(
 			themeDisplay.getPermissionChecker(), groupId,
 			ActionKeys.MANAGE_LAYOUTS);
+		boolean mobile = BrowserSnifferUtil.isMobile(request);
 
 		for (LayoutTreeNode layoutTreeNode : layoutTreeNodes) {
 			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
@@ -609,7 +611,7 @@ public class LayoutsTreeImpl implements LayoutsTree {
 			jsonObject.put("regularURL", layout.getRegularURL(request));
 			jsonObject.put(
 				"sortable",
-				hasManageLayoutsPermission &&
+				hasManageLayoutsPermission && !mobile &&
 				SitesUtil.isLayoutSortable(layout));
 			jsonObject.put("type", layout.getType());
 			jsonObject.put(

@@ -19,8 +19,10 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 
 /**
- * @author Michael C. Han
+ * @author     Michael C. Han
+ * @deprecated As of 7.0.0, with no direct replacement
  */
+@Deprecated
 public abstract class ThrowableAwareRunnable implements Runnable {
 
 	public Throwable getThrowable() {

@@ -11,8 +11,16 @@
 
 		<execute macro="User#firstLoginPG" />
 
-		<execute macro="Page#add">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Navigation" />
+			<var name="panel" value="Site Administration" />
+			<var name="portlet" value="Site Pages" />
+		</execute>
+
+		<execute macro="SitePages#addPublicPage">
+			<var name="columnName" value="1 Column" />
 			<var name="pageName" value="Blogs Page" />
+			<var name="sitePageType" value="Empty Page" />
 		</execute>
 
 		<execute macro="Navigator#gotoPage">
@@ -49,7 +57,7 @@
 					<var name="portletName" value="Blogs" />
 				</execute>
 
-				<execute macro="Page#tearDownPG" />
+				<execute macro="Page#tearDownCP" />
 
 				<execute macro="Site#tearDownCP" />
 
@@ -63,7 +71,7 @@
 	</tear-down>
 
 	<command name="AddBlogsEntries" priority="5">
-		<property name="portal.acceptance" value="true" />
+		<property name="portal.acceptance" value="false" />
 
 		<execute macro="Navigator#gotoPage">
 			<var name="pageName" value="Blogs Page" />
@@ -242,7 +250,9 @@
 
 		<execute macro="Navigator#openURL" />
 
-		<execute macro="ProductMenu#gotoSitesContent">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Content" />
+			<var name="panel" value="Site Administration" />
 			<var name="portlet" value="Blogs" />
 		</execute>
 
@@ -299,8 +309,16 @@
 			<var name="pageName" value="Blogs Page" />
 		</execute>
 
-		<execute macro="Page#add">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Navigation" />
+			<var name="panel" value="Site Administration" />
+			<var name="portlet" value="Site Pages" />
+		</execute>
+
+		<execute macro="SitePages#addPublicPage">
+			<var name="columnName" value="1 Column" />
 			<var name="pageName" value="Blogs Page2" />
+			<var name="sitePageType" value="Empty Page" />
 		</execute>
 
 		<execute macro="Navigator#gotoPage">
@@ -570,7 +588,9 @@
 	</command>
 
 	<command name="AddPortletToOrganizationSitePublicPage" priority="4">
-		<execute macro="ProductMenu#gotoControlPanelUsers">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Users" />
+			<var name="panel" value="Control Panel" />
 			<var name="portlet" value="Users and Organizations" />
 		</execute>
 
@@ -579,7 +599,9 @@
 			<var name="orgType" value="Organization" />
 		</execute>
 
-		<execute macro="ProductMenu#gotoControlPanelUsers">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Users" />
+			<var name="panel" value="Control Panel" />
 			<var name="portlet" value="Users and Organizations" />
 		</execute>
 
@@ -589,13 +611,20 @@
 			<var name="orgName" value="Organization Name" />
 		</execute>
 
-		<execute macro="ProductMenu#gotoControlPanelSites">
-			<var name="portlet" value="Sites" />
+		<execute macro="ProductMenu#gotoSite">
+			<var name="site" value="Organization Name" />
 		</execute>
 
-		<execute macro="Page#add">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Navigation" />
+			<var name="panel" value="Site Administration" />
+			<var name="portlet" value="Site Pages" />
+		</execute>
+
+		<execute macro="SitePages#addPublicPage">
+			<var name="columnName" value="1 Column" />
 			<var name="pageName" value="Blogs Page" />
-			<var name="siteName" value="Organization Name" />
+			<var name="sitePageType" value="Empty Page" />
 		</execute>
 
 		<execute macro="Navigator#gotoSitePage">
@@ -891,7 +920,7 @@
 	</command>
 
 	<command name="EditBlogsEntryComment" priority="5">
-		<property name="portal.acceptance" value="true" />
+		<property name="portal.acceptance" value="false" />
 
 		<execute macro="Navigator#gotoPage">
 			<var name="pageName" value="Blogs Page" />
@@ -1020,7 +1049,7 @@
 	</command>
 
 	<command name="MoveToRecycleBinBlogsEntry" priority="5">
-		<property name="portal.acceptance" value="true" />
+		<property name="portal.acceptance" value="false" />
 
 		<execute macro="Navigator#gotoPage">
 			<var name="pageName" value="Blogs Page" />
@@ -1101,7 +1130,7 @@
 	</command>
 
 	<command name="SaveBlogsEntryDraft" priority="5">
-		<property name="portal.acceptance" value="true" />
+		<property name="portal.acceptance" value="quarantine" />
 
 		<execute macro="Navigator#gotoPage">
 			<var name="pageName" value="Blogs Page" />
@@ -1115,7 +1144,9 @@
 
 		<execute macro="Navigator#openURL" />
 
-		<execute macro="ProductMenu#gotoSitesContent">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Content" />
+			<var name="panel" value="Site Administration" />
 			<var name="portlet" value="Blogs" />
 		</execute>
 
@@ -1132,7 +1163,7 @@
 	</command>
 
 	<command name="SaveBlogsEntryDraftAuto" priority="5">
-		<property name="portal.acceptance" value="true" />
+		<property name="portal.acceptance" value="false" />
 
 		<execute macro="Navigator#gotoPage">
 			<var name="pageName" value="Blogs Page" />
@@ -1146,7 +1177,9 @@
 
 		<execute macro="Navigator#openURL" />
 
-		<execute macro="ProductMenu#gotoSitesContent">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Content" />
+			<var name="panel" value="Site Administration" />
 			<var name="portlet" value="Blogs" />
 		</execute>
 
@@ -1163,8 +1196,16 @@
 	</command>
 
 	<command name="SearchBlogsEntryContent" priority="4">
-		<execute macro="Page#add">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Navigation" />
+			<var name="panel" value="Site Administration" />
+			<var name="portlet" value="Site Pages" />
+		</execute>
+
+		<execute macro="SitePages#addPublicPage">
+			<var name="columnName" value="1 Column" />
 			<var name="pageName" value="Search Page" />
+			<var name="sitePageType" value="Empty Page" />
 		</execute>
 
 		<execute macro="Navigator#gotoPage">
@@ -1181,11 +1222,11 @@
 				<var name="pageName" value="Search Page" />
 			</execute>
 
-			<execute macro="Search#searchPG">
+			<execute macro="SearchPortlet#searchPG">
 				<var name="searchTerm" value="${searchTerm}" />
 			</execute>
 
-			<execute macro="Search#viewSearchResultPG">
+			<execute macro="SearchPortlet#viewSearchResultPG">
 				<var name="searchAssetTitle" value="Blogs Entry Title" />
 				<var name="searchAssetType" value="Blogs Entry" />
 				<var name="searchTerm" value="${searchTerm}" />
@@ -1197,11 +1238,11 @@
 				<var name="pageName" value="Search Page" />
 			</execute>
 
-			<execute macro="Search#searchPG">
+			<execute macro="SearchPortlet#searchPG">
 				<var name="searchTerm" value="${searchTerm}" />
 			</execute>
 
-			<execute macro="Search#viewSearchNoPG">
+			<execute macro="SearchPortlet#viewSearchNoPG">
 				<var name="searchAssetTitle" value="Blogs Entry Title" />
 				<var name="searchNoResults" value="true" />
 				<var name="searchTerm" value="${searchTerm}" />
@@ -1210,8 +1251,16 @@
 	</command>
 
 	<command name="SearchBlogsEntryContentQuotes" priority="4">
-		<execute macro="Page#add">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Navigation" />
+			<var name="panel" value="Site Administration" />
+			<var name="portlet" value="Site Pages" />
+		</execute>
+
+		<execute macro="SitePages#addPublicPage">
+			<var name="columnName" value="1 Column" />
 			<var name="pageName" value="Search Page" />
+			<var name="sitePageType" value="Empty Page" />
 		</execute>
 
 		<execute macro="Navigator#gotoPage">
@@ -1228,11 +1277,11 @@
 				<var name="pageName" value="Search Page" />
 			</execute>
 
-			<execute macro="Search#searchPG">
+			<execute macro="SearchPortlet#searchPG">
 				<var name="searchTerm" value="${searchTerm}" />
 			</execute>
 
-			<execute macro="Search#viewSearchResultPG">
+			<execute macro="SearchPortlet#viewSearchResultPG">
 				<var name="searchAssetTitle" value="Blogs Entry Title" />
 				<var name="searchAssetType" value="Blogs Entry" />
 				<var name="searchTerm" value="${searchTerm}" />
@@ -1244,11 +1293,11 @@
 				<var name="pageName" value="Search Page" />
 			</execute>
 
-			<execute macro="Search#searchPG">
+			<execute macro="SearchPortlet#searchPG">
 				<var name="searchTerm" value="${searchTerm}" />
 			</execute>
 
-			<execute macro="Search#viewSearchNoPG">
+			<execute macro="SearchPortlet#viewSearchNoPG">
 				<var name="searchAssetTitle" value="Blogs Entry Title" />
 				<var name="searchNoResults" value="true" />
 				<var name="searchTerm" value="${searchTerm}" />
@@ -1257,8 +1306,16 @@
 	</command>
 
 	<command name="SearchBlogsEntryTitle" priority="4">
-		<execute macro="Page#add">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Navigation" />
+			<var name="panel" value="Site Administration" />
+			<var name="portlet" value="Site Pages" />
+		</execute>
+
+		<execute macro="SitePages#addPublicPage">
+			<var name="columnName" value="1 Column" />
 			<var name="pageName" value="Search Page" />
+			<var name="sitePageType" value="Empty Page" />
 		</execute>
 
 		<execute macro="Navigator#gotoPage">
@@ -1275,11 +1332,11 @@
 				<var name="pageName" value="Search Page" />
 			</execute>
 
-			<execute macro="Search#searchPG">
+			<execute macro="SearchPortlet#searchPG">
 				<var name="searchTerm" value="${searchTerm}" />
 			</execute>
 
-			<execute macro="Search#viewSearchResultPG">
+			<execute macro="SearchPortlet#viewSearchResultPG">
 				<var name="searchAssetTitle" value="Blogs Entry Title" />
 				<var name="searchAssetType" value="Blogs Entry" />
 				<var name="searchTerm" value="${searchTerm}" />
@@ -1291,11 +1348,11 @@
 				<var name="pageName" value="Search Page" />
 			</execute>
 
-			<execute macro="Search#searchPG">
+			<execute macro="SearchPortlet#searchPG">
 				<var name="searchTerm" value="${searchTerm}" />
 			</execute>
 
-			<execute macro="Search#viewSearchNoPG">
+			<execute macro="SearchPortlet#viewSearchNoPG">
 				<var name="searchAssetTitle" value="Blogs Entry Title" />
 				<var name="searchNoResults" value="true" />
 				<var name="searchTerm" value="${searchTerm}" />
@@ -1304,8 +1361,16 @@
 	</command>
 
 	<command name="SearchBlogsEntryTitleQuotes" priority="4">
-		<execute macro="Page#add">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Navigation" />
+			<var name="panel" value="Site Administration" />
+			<var name="portlet" value="Site Pages" />
+		</execute>
+
+		<execute macro="SitePages#addPublicPage">
+			<var name="columnName" value="1 Column" />
 			<var name="pageName" value="Search Page" />
+			<var name="sitePageType" value="Empty Page" />
 		</execute>
 
 		<execute macro="Navigator#gotoPage">
@@ -1326,11 +1391,11 @@
 				<var name="pageName" value="Search Page" />
 			</execute>
 
-			<execute macro="Search#searchPG">
+			<execute macro="SearchPortlet#searchPG">
 				<var name="searchTerm" value="${searchTerm}" />
 			</execute>
 
-			<execute macro="Search#viewSearchResultPG">
+			<execute macro="SearchPortlet#viewSearchResultPG">
 				<var name="searchAssetTitle" value="Blogs Entry Title" />
 				<var name="searchAssetType" value="Blogs Entry" />
 				<var name="searchTerm" value="${searchTerm}" />
@@ -1342,11 +1407,11 @@
 				<var name="pageName" value="Search Page" />
 			</execute>
 
-			<execute macro="Search#searchPG">
+			<execute macro="SearchPortlet#searchPG">
 				<var name="searchTerm" value="${searchTerm}" />
 			</execute>
 
-			<execute macro="Search#viewSearchNoPG">
+			<execute macro="SearchPortlet#viewSearchNoPG">
 				<var name="searchAssetTitle" value="Blogs Entry Title" />
 				<var name="searchNoResults" value="true" />
 				<var name="searchTerm" value="${searchTerm}" />
@@ -1389,7 +1454,9 @@
 			<var name="siteName" value="${siteName}" />
 		</execute>
 
-		<execute macro="ProductMenu#gotoControlPanelUsers">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Users" />
+			<var name="panel" value="Control Panel" />
 			<var name="portlet" value="Users and Organizations" />
 		</execute>
 
@@ -1400,7 +1467,9 @@
 			<var name="userScreenName" value="usersn1" />
 		</execute>
 
-		<execute macro="ProductMenu#gotoControlPanelUsers">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Users" />
+			<var name="panel" value="Control Panel" />
 			<var name="portlet" value="Roles" />
 		</execute>
 
@@ -1424,7 +1493,7 @@
 		</execute>
 
 		<execute macro="BlogsEntry#flagPG">
-			<var name="flagReason" value="Spam" />
+			<var name="flagReason" value="spam" />
 			<var name="siteName" value="${siteName}" />
 			<var method="TestPropsUtil#get('email.address.2')" name="userEmailAddress" />
 		</execute>
@@ -1446,7 +1515,9 @@
 			<var name="siteName" value="${siteName}" />
 		</execute>
 
-		<execute macro="ProductMenu#gotoControlPanelUsers">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Users" />
+			<var name="panel" value="Control Panel" />
 			<var name="portlet" value="Users and Organizations" />
 		</execute>
 
@@ -1457,7 +1528,9 @@
 			<var name="userScreenName" value="usersn" />
 		</execute>
 
-		<execute macro="ProductMenu#gotoControlPanelUsers">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Users" />
+			<var name="panel" value="Control Panel" />
 			<var name="portlet" value="Users and Organizations" />
 		</execute>
 
@@ -1466,7 +1539,9 @@
 			<var name="userScreenName" value="usersn" />
 		</execute>
 
-		<execute macro="ProductMenu#gotoControlPanelUsers">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Users" />
+			<var name="panel" value="Control Panel" />
 			<var name="portlet" value="Users and Organizations" />
 		</execute>
 
@@ -1677,7 +1752,9 @@
 			<var name="entryTitle" value="Blogs Entry Title" />
 		</execute>
 
-		<execute macro="ProductMenu#gotoControlPanelUsers">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Users" />
+			<var name="panel" value="Control Panel" />
 			<var name="portlet" value="Users and Organizations" />
 		</execute>
 
@@ -1688,7 +1765,9 @@
 			<var name="userScreenName" value="usersn" />
 		</execute>
 
-		<execute macro="ProductMenu#gotoControlPanelUsers">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Users" />
+			<var name="panel" value="Control Panel" />
 			<var name="portlet" value="Users and Organizations" />
 		</execute>
 
@@ -1753,7 +1832,7 @@
 
 		<execute macro="BlogsConfiguration#selectConfigurationIFrame" />
 
-		<execute function="Check" locator1="Checkbox#ENABLE_VIEW_COUNT" />
+		<execute function="Check" locator1="Checkbox#SHOW_VIEW_COUNT" />
 
 		<execute macro="IFrame#saveConfiguration" />
 
@@ -1893,7 +1972,9 @@
 
 		<execute macro="Navigator#openURL" />
 
-		<execute macro="ProductMenu#gotoSitesContent">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Content" />
+			<var name="panel" value="Site Administration" />
 			<var name="portlet" value="Blogs" />
 		</execute>
 
@@ -1903,7 +1984,7 @@
 		</execute>
 
 		<execute macro="Portlet#changeDisplayStyle">
-			<var name="displayStyle" value="List" />
+			<var name="displayStyle" value="list" />
 		</execute>
 
 		<execute macro="BlogsEntry#viewEntryTable">
@@ -2061,7 +2142,9 @@
 			<var name="uploadFileName" value="Document_1.jpg" />
 		</execute>
 
-		<execute macro="PortletEntry#publish" />
+		<execute macro="Button#clickPublish" />
+
+		<execute function="Pause" locator1="30000" />
 
 		<execute macro="Navigator#gotoPage">
 			<var name="pageName" value="Blogs Page" />

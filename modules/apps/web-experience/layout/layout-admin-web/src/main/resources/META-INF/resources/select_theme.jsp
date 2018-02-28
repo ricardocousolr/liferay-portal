@@ -36,13 +36,25 @@ portletURL.setParameter("eventName", eventName);
 List<Theme> themes = ThemeLocalServiceUtil.getPageThemes(company.getCompanyId(), layoutsAdminDisplayContext.getLiveGroupId(), user.getUserId());
 
 themes = ListUtil.sort(themes, new ThemeNameComparator(orderByType.equals("asc")));
+
+List<NavigationItem> navigationItems = new ArrayList<>();
+
+NavigationItem mySitesNavigationItem = new NavigationItem();
+
+mySitesNavigationItem.setActive(true);
+
+PortletURL mainURL = renderResponse.createRenderURL();
+
+mySitesNavigationItem.setHref(mainURL.toString());
+
+mySitesNavigationItem.setLabel(LanguageUtil.get(request, "available-themes"));
+
+navigationItems.add(mySitesNavigationItem);
 %>
 
-<aui:nav-bar markupView="lexicon">
-	<aui:nav cssClass="navbar-nav">
-		<aui:nav-item label="available-themes" selected="<%= true %>" />
-	</aui:nav>
-</aui:nav-bar>
+<clay:navigation-bar
+	items="<%= navigationItems %>"
+/>
 
 <liferay-frontend:management-bar>
 	<liferay-frontend:management-bar-filters>
@@ -68,7 +80,7 @@ themes = ListUtil.sort(themes, new ThemeNameComparator(orderByType.equals("asc")
 	</liferay-frontend:management-bar-buttons>
 </liferay-frontend:management-bar>
 
-<c:if test="<%= permissionChecker.isOmniadmin() && PortletLocalServiceUtil.hasPortlet(themeDisplay.getCompanyId(), PortletKeys.MARKETPLACE_STORE) && PrefsPropsUtil.getBoolean(PropsKeys.AUTO_DEPLOY_ENABLED, PropsValues.AUTO_DEPLOY_ENABLED) %>">
+<c:if test="<%= permissionChecker.isOmniadmin() && PortletLocalServiceUtil.hasPortlet(themeDisplay.getCompanyId(), PortletKeys.MARKETPLACE_STORE) && PropsValues.AUTO_DEPLOY_ENABLED %>">
 
 	<%
 	PortletURL marketplaceURL = PortalUtil.getControlPanelPortletURL(request, PortletKeys.MARKETPLACE_STORE, PortletRequest.RENDER_PHASE);

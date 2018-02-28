@@ -84,12 +84,11 @@ int totalBannedUsers = MBBanLocalServiceUtil.getBansCount(scopeGroupId);
 			/>
 
 			<liferay-ui:search-container-row
-				className="com.liferay.message.boards.kernel.model.MBBan"
+				className="com.liferay.message.boards.model.MBBan"
 				keyProperty="banUserId"
 				modelVar="ban"
 			>
 				<liferay-ui:search-container-column-user
-					cssClass="user-icon-lg"
 					showDetails="<%= false %>"
 					userId="<%= ban.getBanUserId() %>"
 				/>
@@ -107,13 +106,27 @@ int totalBannedUsers = MBBanLocalServiceUtil.getBansCount(scopeGroupId);
 					</h5>
 
 					<h4>
-						<%= HtmlUtil.escape(PortalUtil.getUserName(ban.getBanUserId(), StringPool.BLANK)) %>
+
+						<%
+						User bannedUser = UserLocalServiceUtil.fetchUser(ban.getBanUserId());
+						%>
+
+						<c:choose>
+							<c:when test="<%= (bannedUser != null) && bannedUser.isActive() %>">
+								<aui:a href="<%= bannedUser.getDisplayURL(themeDisplay) %>">
+									<%= HtmlUtil.escape(PortalUtil.getUserName(ban.getBanUserId(), StringPool.BLANK)) %>
+								</aui:a>
+							</c:when>
+							<c:otherwise>
+								<%= HtmlUtil.escape(PortalUtil.getUserName(ban.getBanUserId(), StringPool.BLANK)) %>
+							</c:otherwise>
+						</c:choose>
 					</h4>
 
 					<h5 class="text-default">
 						<liferay-ui:message key="unban-date" />
 
-						<%= dateFormatDateTime.format(MBUtil.getUnbanDate(ban, PropsValues.MESSAGE_BOARDS_EXPIRE_BAN_INTERVAL)) %>
+						<%= dateFormatDateTime.format(com.liferay.message.boards.util.MBUtil.getUnbanDate(ban, PropsValues.MESSAGE_BOARDS_EXPIRE_BAN_INTERVAL)) %>
 					</h5>
 				</liferay-ui:search-container-column-text>
 

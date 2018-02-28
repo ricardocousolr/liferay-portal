@@ -14,6 +14,8 @@
 
 package com.liferay.portal.language;
 
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cache.MultiVMPoolUtil;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cache.PortalCacheMapSynchronizeUtil;
@@ -32,7 +34,6 @@ import com.liferay.portal.kernel.security.pacl.DoPrivileged;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.CookieKeys;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -46,7 +47,6 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -965,7 +965,12 @@ public class LanguageImpl implements Language, Serializable {
 
 		try {
 			if (isInheritLocales(groupId)) {
-				return getAvailableLocales();
+				Group group = GroupLocalServiceUtil.getGroup(groupId);
+
+				CompanyLocalesBag companyLocalesBag = _getCompanyLocalesBag(
+					group.getCompanyId());
+
+				return companyLocalesBag.getAvailableLocales();
 			}
 		}
 		catch (Exception e) {
@@ -1183,8 +1188,7 @@ public class LanguageImpl implements Language, Serializable {
 			value = x.concat(StringPool.SPACE).concat(
 				get(
 					request,
-					StringUtil.toLowerCase(
-						description.substring(pos + 1, description.length()))));
+					StringUtil.toLowerCase(description.substring(pos + 1))));
 		}
 		catch (Exception e) {
 			if (_log.isWarnEnabled()) {
@@ -1325,8 +1329,7 @@ public class LanguageImpl implements Language, Serializable {
 			value = x.concat(StringPool.SPACE).concat(
 				get(
 					locale,
-					StringUtil.toLowerCase(
-						description.substring(pos + 1, description.length()))));
+					StringUtil.toLowerCase(description.substring(pos + 1))));
 		}
 		catch (Exception e) {
 			if (_log.isWarnEnabled()) {
@@ -1580,6 +1583,10 @@ public class LanguageImpl implements Language, Serializable {
 	private static CompanyLocalesBag _getCompanyLocalesBag() {
 		Long companyId = CompanyThreadLocal.getCompanyId();
 
+		return _getCompanyLocalesBag(companyId);
+	}
+
+	private static CompanyLocalesBag _getCompanyLocalesBag(long companyId) {
 		CompanyLocalesBag companyLocalesBag = _companyLocalesBags.get(
 			companyId);
 

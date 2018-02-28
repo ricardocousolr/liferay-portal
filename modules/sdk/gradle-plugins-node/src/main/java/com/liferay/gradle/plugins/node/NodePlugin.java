@@ -43,6 +43,7 @@ import org.gradle.api.plugins.PluginContainer;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Delete;
 import org.gradle.api.tasks.TaskContainer;
+import org.gradle.language.base.plugins.LifecycleBasePlugin;
 import org.gradle.util.VersionNumber;
 
 /**
@@ -57,6 +58,8 @@ public class NodePlugin implements Plugin<Project> {
 	public static final String EXTENSION_NAME = "node";
 
 	public static final String NPM_INSTALL_TASK_NAME = "npmInstall";
+
+	public static final String NPM_PACKAGE_LOCK_TASK_NAME = "npmPackageLock";
 
 	public static final String NPM_RUN_BUILD_TASK_NAME = "npmRunBuild";
 
@@ -86,6 +89,7 @@ public class NodePlugin implements Plugin<Project> {
 				packageJsonFile);
 		}
 
+		_addTaskNpmPackageLock(project, cleanNpmTask, npmInstallTask);
 		_addTaskNpmShrinkwrap(project, cleanNpmTask, npmInstallTask);
 		_addTasksNpmRun(npmInstallTask, packageJsonMap);
 
@@ -145,16 +149,6 @@ public class NodePlugin implements Plugin<Project> {
 
 			});
 
-		downloadNodeTask.setNodeExeUrl(
-			new Callable<String>() {
-
-				@Override
-				public String call() throws Exception {
-					return nodeExtension.getNodeExeUrl();
-				}
-
-			});
-
 		downloadNodeTask.setNodeUrl(
 			new Callable<String>() {
 
@@ -205,6 +199,18 @@ public class NodePlugin implements Plugin<Project> {
 		return npmInstallTask;
 	}
 
+	private Task _addTaskNpmPackageLock(
+		Project project, Delete cleanNpmTask, NpmInstallTask npmInstallTask) {
+
+		Task task = project.task(NPM_PACKAGE_LOCK_TASK_NAME);
+
+		task.dependsOn(cleanNpmTask, npmInstallTask);
+		task.setDescription(
+			"Deletes NPM files and installs Node packages from package.json.");
+
+		return task;
+	}
+
 	private ExecuteNpmTask _addTaskNpmRun(
 		String name, NpmInstallTask npmInstallTask) {
 
@@ -230,6 +236,23 @@ public class NodePlugin implements Plugin<Project> {
 					@Override
 					public void execute(JavaPlugin javaPlugin) {
 						_configureTaskNpmRunBuildForJavaPlugin(executeNpmTask);
+					}
+
+				});
+		}
+		else if (taskName.equals(_NPM_RUN_TEST_TASK_NAME)) {
+			PluginContainer pluginContainer = project.getPlugins();
+
+			pluginContainer.withType(
+				LifecycleBasePlugin.class,
+				new Action<LifecycleBasePlugin>() {
+
+					@Override
+					public void execute(
+						LifecycleBasePlugin lifecycleBasePlugin) {
+
+						_configureTaskNpmRunTestForLifecycleBasePlugin(
+							executeNpmTask);
 					}
 
 				});
@@ -274,11 +297,13 @@ public class NodePlugin implements Plugin<Project> {
 	private void _configureTaskDownloadNodeGlobal(
 		DownloadNodeTask downloadNodeTask, NodeExtension nodeExtension) {
 
-		if (!nodeExtension.isDownload() || !nodeExtension.isGlobal()) {
+		Project project = downloadNodeTask.getProject();
+
+		if (!nodeExtension.isDownload() || !nodeExtension.isGlobal() ||
+			(project.getParent() == null)) {
+
 			return;
 		}
-
-		Project project = downloadNodeTask.getProject();
 
 		Project rootProject = project.getRootProject();
 
@@ -290,12 +315,10 @@ public class NodePlugin implements Plugin<Project> {
 			DownloadNodeTask.class);
 
 		File nodeDir = downloadNodeTask.getNodeDir();
-		String nodeExeUrl = downloadNodeTask.getNodeExeUrl();
 		String nodeUrl = downloadNodeTask.getNodeUrl();
 
 		for (DownloadNodeTask curRootDownloadNodeTask : rootDownloadNodeTasks) {
 			if (nodeDir.equals(curRootDownloadNodeTask.getNodeDir()) &&
-				nodeExeUrl.equals(curRootDownloadNodeTask.getNodeExeUrl()) &&
 				nodeUrl.equals(curRootDownloadNodeTask.getNodeUrl())) {
 
 				rootDownloadNodeTask = curRootDownloadNodeTask;
@@ -458,6 +481,15 @@ public class NodePlugin implements Plugin<Project> {
 		classesTask.dependsOn(executeNpmTask);
 	}
 
+	private void _configureTaskNpmRunTestForLifecycleBasePlugin(
+		ExecuteNpmTask executeNpmTask) {
+
+		Task checkTask = GradleUtil.getTask(
+			executeNpmTask.getProject(), LifecycleBasePlugin.CHECK_TASK_NAME);
+
+		checkTask.dependsOn(executeNpmTask);
+	}
+
 	private void _configureTaskPublishNodeModule(
 		PublishNodeModuleTask publishNodeModuleTask) {
 
@@ -595,6 +627,8 @@ public class NodePlugin implements Plugin<Project> {
 
 			});
 	}
+
+	private static final String _NPM_RUN_TEST_TASK_NAME = "npmRunTest";
 
 	private static final VersionNumber _node8VersionNumber =
 		VersionNumber.version(8);

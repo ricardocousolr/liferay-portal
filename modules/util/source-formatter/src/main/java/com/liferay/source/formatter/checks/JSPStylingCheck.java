@@ -14,7 +14,7 @@
 
 package com.liferay.source.formatter.checks;
 
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.regex.Matcher;
@@ -76,7 +76,7 @@ public class JSPStylingCheck extends BaseFileCheck {
 
 		if (matcher.find()) {
 			addMessage(
-				fileName, "Avoid chaining on 'getClass'",
+				fileName, "Avoid chaining on 'getClass'", "chaining.markdown",
 				getLineCount(content, matcher.start()));
 		}
 	}

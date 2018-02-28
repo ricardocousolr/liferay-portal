@@ -27,7 +27,7 @@
 
 <div class="subscribe">
 	<c:if test="<%= blogsGroupServiceOverriddenConfiguration.enableRss() %>">
-		<liferay-ui:rss
+		<liferay-rss:rss
 			delta="<%= GetterUtil.getInteger(blogsGroupServiceOverriddenConfiguration.rssDelta()) %>"
 			displayStyle="<%= blogsGroupServiceOverriddenConfiguration.rssDisplayStyle() %>"
 			feedType="<%= blogsGroupServiceOverriddenConfiguration.rssFeedType() %>"
@@ -67,7 +67,7 @@
 	</c:if>
 </div>
 
-<liferay-ui:categorization-filter
+<liferay-asset:categorization-filter
 	assetType="entries"
 	portletURL="<%= portletURL %>"
 />
@@ -110,7 +110,7 @@ List<BlogsEntry> blogsEntries = _convertToBlogEntries(results);
 		if (result instanceof AssetEntry) {
 			assetEntry = (AssetEntry)result;
 
-			AssetUtil.addLayoutTags(request, assetEntry.getTags());
+			assetHelper.addLayoutTags(request, assetEntry.getTags());
 		}
 
 		index++;

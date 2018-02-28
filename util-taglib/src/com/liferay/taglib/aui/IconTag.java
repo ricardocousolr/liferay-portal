@@ -14,13 +14,14 @@
 
 package com.liferay.taglib.aui;
 
+import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.ReflectionUtil;
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.aui.base.BaseIconTag;
@@ -80,6 +81,21 @@ public class IconTag extends BaseIconTag {
 	}
 
 	@Override
+	public String getId() {
+		String id = super.getId();
+
+		if (Validator.isNotNull(id)) {
+			return id;
+		}
+
+		id = PortalUtil.generateRandomKey(request, IconTag.class.getName());
+
+		id = HtmlUtil.getAUICompatibleId(id);
+
+		return id;
+	}
+
+	@Override
 	protected String getPage() {
 		return _PAGE;
 	}
@@ -91,9 +107,16 @@ public class IconTag extends BaseIconTag {
 		String url = getUrl();
 
 		if (url == null) {
-			jspWriter.write("<span class=\"");
-			jspWriter.write(GetterUtil.getString(getCssClass()));
-			jspWriter.write("\" ");
+			jspWriter.write("<span ");
+
+			String cssClass = GetterUtil.getString(getCssClass());
+
+			if (Validator.isNotNull(cssClass)) {
+				jspWriter.write("class=\"");
+				jspWriter.write(cssClass);
+				jspWriter.write("\" ");
+			}
+
 			jspWriter.write(AUIUtil.buildData(getData()));
 			jspWriter.write(" id=\"");
 			jspWriter.write(GetterUtil.getString(getId()));
@@ -150,15 +173,21 @@ public class IconTag extends BaseIconTag {
 						WebKeys.THEME_DISPLAY);
 
 				String label = getLabel();
+				String title = GetterUtil.getString(getImage());
 
 				if (label != null) {
 					ResourceBundle resourceBundle =
 						TagResourceBundleUtil.getResourceBundle(
 							request, themeDisplay.getLocale());
 
-					jspWriter.write(
-						HtmlUtil.escapeAttribute(
-							LanguageUtil.get(resourceBundle, label)));
+					title = HtmlUtil.escapeAttribute(
+						LanguageUtil.get(resourceBundle, label));
+
+					jspWriter.write(title);
+				}
+
+				if (title == null) {
+					title = "Icon";
 				}
 
 				jspWriter.write("\" ");
@@ -178,7 +207,11 @@ public class IconTag extends BaseIconTag {
 				jspWriter.write(src);
 				jspWriter.write(StringPool.POUND);
 				jspWriter.write(GetterUtil.getString(getImage()));
-				jspWriter.write("\" /></svg>");
+				jspWriter.write("\"></use>");
+				jspWriter.write("<title>");
+				jspWriter.write(title);
+				jspWriter.write("</title>");
+				jspWriter.write("</svg>");
 			}
 			else {
 				jspWriter.write("<i class=\"icon-");

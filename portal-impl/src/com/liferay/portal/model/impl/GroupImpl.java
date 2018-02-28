@@ -17,6 +17,7 @@ package com.liferay.portal.model.impl;
 import com.liferay.exportimport.kernel.lar.PortletDataHandler;
 import com.liferay.exportimport.kernel.staging.StagingConstants;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -60,7 +61,6 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -71,11 +71,9 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Represents either a site or a generic resource container.
@@ -187,14 +185,8 @@ public class GroupImpl extends GroupBaseImpl {
 
 	@Override
 	public List<Group> getDescendants(boolean site) {
-		Set<Group> descendants = new LinkedHashSet<>();
-
-		for (Group group : getChildren(site)) {
-			descendants.add(group);
-			descendants.addAll(group.getDescendants(site));
-		}
-
-		return new ArrayList<>(descendants);
+		return GroupLocalServiceUtil.getGroups(
+			getCompanyId(), getTreePath().concat("_%"), site);
 	}
 
 	@JSON
@@ -977,10 +969,6 @@ public class GroupImpl extends GroupBaseImpl {
 			this, privateSite);
 
 		if (siteLayoutsCount == 0) {
-			boolean hasPowerUserRole = RoleLocalServiceUtil.hasUserRole(
-				permissionChecker.getUserId(), permissionChecker.getCompanyId(),
-				RoleConstants.POWER_USER, true);
-
 			if (isSite()) {
 				if (privateSite) {
 					showSite =
@@ -995,6 +983,11 @@ public class GroupImpl extends GroupBaseImpl {
 				showSite = false;
 			}
 			else if (isUser()) {
+				boolean hasPowerUserRole = RoleLocalServiceUtil.hasUserRole(
+					permissionChecker.getUserId(),
+					permissionChecker.getCompanyId(), RoleConstants.POWER_USER,
+					true);
+
 				if (privateSite) {
 					showSite =
 						PropsValues.

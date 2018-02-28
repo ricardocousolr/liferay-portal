@@ -14,6 +14,8 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.petra.reflect.ReflectionUtil;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -36,7 +38,7 @@ public class ObjectGraphUtil {
 		queue.offer(object);
 
 		Set<Object> visitedObjects = Collections.newSetFromMap(
-			new IdentityHashMap<Object, Boolean>());
+			new IdentityHashMap<>());
 
 		while ((object = queue.poll()) != null) {
 			if (!visitedObjects.add(object)) {

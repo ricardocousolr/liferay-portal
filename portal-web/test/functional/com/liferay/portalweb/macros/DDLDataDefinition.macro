@@ -22,7 +22,7 @@
 			</else>
 		</if>
 
-		<execute function="Click" locator1="Button#PLUS" />
+		<execute macro="LexiconEntry#gotoAdd" />
 
 		<execute macro="DDLDataDefinition#editName">
 			<var name="ddlDataDefinitionName" value="${ddlDataDefinitionName}" />
@@ -143,7 +143,9 @@
 
 		<execute macro="Navigator#openURL" />
 
-		<execute macro="ProductMenu#gotoSitesContent">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Content" />
+			<var name="panel" value="Site Administration" />
 			<var name="portlet" value="Dynamic Data Lists" />
 		</execute>
 
@@ -157,9 +159,9 @@
 	<command name="deleteNoCP">
 		<execute macro="DDLNavigator#gotoManageDataDefinitions" />
 
-		<execute function="Type" locator1="NavBar#BASIC_SEARCH_FIELD" value1="${ddlDataDefinitionName}" />
-
-		<execute function="Click" locator1="Icon#BASIC_SEARCH" />
+		<execute macro="Search#searchCP">
+			<var name="searchTerm" value="${ddlDataDefinitionName}" />
+		</execute>
 
 		<execute function="Click#waitForMenuToggleJSClick" locator1="DDMSelectStructure#DDM_STRUCTURE_ELLIPSIS_1" />
 
@@ -177,9 +179,9 @@
 	<command name="editCP">
 		<execute macro="DDLNavigator#gotoManageDataDefinitions" />
 
-		<execute function="Type" locator1="NavBar#BASIC_SEARCH_FIELD" value1="${ddlDataDefinitionName}" />
-
-		<execute function="Click" locator1="Icon#BASIC_SEARCH" />
+		<execute macro="Search#searchCP">
+			<var name="searchTerm" value="${ddlDataDefinitionName}" />
+		</execute>
 
 		<execute function="Click#waitForMenuToggleJSClick" locator1="DDMSelectStructure#DDM_STRUCTURE_ELLIPSIS_1" />
 
@@ -256,7 +258,9 @@
 	<command name="tearDownCP">
 		<execute macro="Navigator#openURL" />
 
-		<execute macro="ProductMenu#gotoSitesContent">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Content" />
+			<var name="panel" value="Site Administration" />
 			<var name="portlet" value="Dynamic Data Lists" />
 		</execute>
 
@@ -264,9 +268,9 @@
 
 		<var name="ddlDataDefinitionName" value="Data Definition" />
 
-		<execute function="Type" locator1="NavBar#BASIC_SEARCH_FIELD" value1="${ddlDataDefinitionName}" />
-
-		<execute function="Click" locator1="Icon#BASIC_SEARCH" />
+		<execute macro="Search#searchCP">
+			<var name="searchTerm" value="${ddlDataDefinitionName}" />
+		</execute>
 
 		<execute function="AssertTextNotEquals" locator1="DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME_1" value1="Contacts" />
 

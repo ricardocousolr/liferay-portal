@@ -14,6 +14,8 @@
 
 package com.liferay.portal.cache.ehcache.internal;
 
+import com.liferay.osgi.util.ServiceTrackerFactory;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.cache.BasePortalCacheManager;
 import com.liferay.portal.cache.configuration.PortalCacheConfiguration;
 import com.liferay.portal.cache.configuration.PortalCacheManagerConfiguration;
@@ -24,6 +26,7 @@ import com.liferay.portal.cache.ehcache.internal.event.PortalCacheManagerEventLi
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cache.PortalCacheListener;
 import com.liferay.portal.kernel.cache.PortalCacheListenerScope;
+import com.liferay.portal.kernel.cache.PortalCacheManager;
 import com.liferay.portal.kernel.cache.configurator.PortalCacheConfiguratorSettings;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -33,7 +36,7 @@ import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.ReflectionUtil;
+import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
@@ -54,6 +57,11 @@ import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.event.CacheManagerEventListenerRegistry;
 import net.sf.ehcache.management.ManagementService;
 import net.sf.ehcache.util.FailSafeTimer;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * @author Joseph Shum
@@ -173,6 +181,12 @@ public class EhcachePortalCacheManager<K extends Serializable, V>
 		if (_managementService != null) {
 			_managementService.dispose();
 		}
+
+		if (_serviceTracker != null) {
+			_serviceTracker.close();
+
+			_serviceTracker = null;
+		}
 	}
 
 	@Override
@@ -185,6 +199,24 @@ public class EhcachePortalCacheManager<K extends Serializable, V>
 		getPortalCacheManagerConfiguration() {
 
 		return _portalCacheManagerConfiguration;
+	}
+
+	protected void initPortalCacheConfiguratorSettingsServiceTracker(
+		BundleContext bundleContext) {
+
+		if (_cacheManager != null) {
+			return;
+		}
+
+		String filterString = StringBundler.concat(
+			"(&(objectClass=", PortalCacheConfiguratorSettings.class.getName(),
+			")(", PortalCacheManager.PORTAL_CACHE_MANAGER_NAME, "=",
+			getPortalCacheManagerName(), "))");
+
+		_serviceTracker = ServiceTrackerFactory.open(
+			bundleContext, filterString,
+			new PortalCacheConfiguratorSettingsServiceTrackerCustomizer(
+				bundleContext));
 	}
 
 	@Override
@@ -330,8 +362,10 @@ public class EhcachePortalCacheManager<K extends Serializable, V>
 		try {
 			if (_log.isInfoEnabled()) {
 				_log.info(
-					"Reconfiguring caches in cache manager " +
-						getPortalCacheManagerName() + " using " + url);
+					StringBundler.concat(
+						"Reconfiguring caches in cache manager ",
+						getPortalCacheManagerName(), " using ",
+						String.valueOf(url)));
 			}
 
 			reconfigurePortalCaches(url);
@@ -382,7 +416,49 @@ public class EhcachePortalCacheManager<K extends Serializable, V>
 	private boolean _registerCacheManager = true;
 	private boolean _registerCaches = true;
 	private boolean _registerCacheStatistics = true;
+	private ServiceTracker _serviceTracker;
 	private boolean _stopCacheManagerTimer = true;
 	private boolean _usingDefault;
+
+	private class PortalCacheConfiguratorSettingsServiceTrackerCustomizer
+		implements ServiceTrackerCustomizer
+			<PortalCacheConfiguratorSettings, PortalCacheConfiguratorSettings> {
+
+		@Override
+		public PortalCacheConfiguratorSettings addingService(
+			ServiceReference<PortalCacheConfiguratorSettings>
+				serviceReference) {
+
+			PortalCacheConfiguratorSettings portalCacheConfiguratorSettings =
+				_bundleContext.getService(serviceReference);
+
+			reconfigure(portalCacheConfiguratorSettings);
+
+			return portalCacheConfiguratorSettings;
+		}
+
+		@Override
+		public void modifiedService(
+			ServiceReference<PortalCacheConfiguratorSettings> serviceReference,
+			PortalCacheConfiguratorSettings portalCacheConfiguratorSettings) {
+		}
+
+		@Override
+		public void removedService(
+			ServiceReference<PortalCacheConfiguratorSettings> serviceReference,
+			PortalCacheConfiguratorSettings portalCacheConfiguratorSettings) {
+
+			_bundleContext.ungetService(serviceReference);
+		}
+
+		private PortalCacheConfiguratorSettingsServiceTrackerCustomizer(
+			BundleContext bundleContext) {
+
+			_bundleContext = bundleContext;
+		}
+
+		private final BundleContext _bundleContext;
+
+	}
 
 }

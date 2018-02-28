@@ -14,11 +14,13 @@
 
 		<execute macro="Navigator#openURL" />
 
-		<execute macro="ProductMenu#gotoControlPanelConfiguration">
-			<var name="portlet" value="Kaleo Designer" />
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Configuration" />
+			<var name="panel" value="Control Panel" />
+			<var name="portlet" value="Workflow" />
 		</execute>
 
-		<execute macro="KaleoDesigner#editWorkflowDefinitionViaKDCP">
+		<execute macro="Workflow#gotoEditWorkflowDefinition">
 			<var name="workflowDefinitionTitle" value="Single Approver" />
 		</execute>
 	</set-up>
@@ -35,8 +37,8 @@
 	</tear-down>
 
 	<command name="DeleteTaskNode" priority="5">
-		<execute macro="KaleoDesigner#editWorkflowDefinitionTitleViaWorkflowCP">
-			<var name="workflowDefinitionTitle" value="Edited Workflow Definition" />
+		<execute macro="PortletEntry#inputTitle">
+			<var name="title" value="${workflowDefinitionTitle}" />
 		</execute>
 
 		<execute macro="KaleoDesigner#selectNode">
@@ -47,19 +49,21 @@
 			<var name="nodeNodeLabel" value="update" />
 		</execute>
 
-		<execute macro="KaleoDesigner#publishWorkflowDefinitionViaKDCP" />
+		<execute macro="KaleoFormsAdmin#updateWorkflow" />
 
-		<execute macro="ProductMenu#gotoControlPanelConfiguration">
-			<var name="portlet" value="Kaleo Designer" />
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Configuration" />
+			<var name="panel" value="Control Panel" />
+			<var name="portlet" value="Workflow" />
 		</execute>
 
-		<execute macro="KaleoDesigner#viewTableDefinitionPublishedViaKDCP">
+		<execute macro="Workflow#viewDefinitionPublished">
 			<var name="workflowDefinitionName" value="Single Approver" />
 			<var name="workflowDefinitionTitle" value="Edited Workflow Definition" />
 			<var name="workflowDefinitionVersionNumber" value="2" />
 		</execute>
 
-		<execute macro="KaleoDesigner#editWorkflowDefinitionViaKDCP">
+		<execute macro="Workflow#gotoEditWorkflowDefinition">
 			<var name="workflowDefinitionTitle" value="Edited Workflow Definition" />
 		</execute>
 
@@ -96,7 +100,7 @@
 			<var name="nodeNotificationsDescription" value="Review Notification Description" />
 			<var name="nodeNotificationsName" value="Review Notification" />
 			<var name="nodeNotificationsRecipientType" value="Role Type" />
-			<var name="roleName" value="Administrator" />
+			<var name="roleTitle" value="Administrator" />
 			<var name="roleType" value="Regular" />
 		</execute>
 
@@ -110,7 +114,7 @@
 		<execute macro="KaleoDesigner#viewNodeNotifications">
 			<var name="nodeNotificationsName" value="Review Notification" />
 			<var name="nodeNotificationsRecipientType" value="Role Type" />
-			<var name="roleName" value="Administrator" />
+			<var name="roleTitle" value="Administrator" />
 			<var name="roleType" value="Regular" />
 		</execute>
 	</command>

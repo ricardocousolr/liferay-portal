@@ -180,10 +180,6 @@
 			<contains></contains>
 			<matches>.*Unable to process message.*product-app-theme.*</matches>
 		</ignore-error>
-		<ignore-error description="LPS-67925">
-			<contains></contains>
-			<matches>.*HotDeployException\: Error registering plugins for opensocial\-portlet.*</matches>
-		</ignore-error>
 		<ignore-error description="LPS-68366">
 			<contains></contains>
 			<matches>.*ServerAdminPortlet\_tabs1\=resources generates exception.*NullPointerException.*</matches>
@@ -202,6 +198,10 @@
 		</ignore-error>
 		<ignore-error description="LRQA-34199, temporarily ignore SAMLBootstrap error">
 			<contains>The activate method has thrown an exception</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LRQA-34927, temporarily ignore until COMMERCE-210 is fixed">
+			<contains>Invocation to listener threw exception</contains>
 			<matches></matches>
 		</ignore-error>
 		<ignore-error description="WCM-202">

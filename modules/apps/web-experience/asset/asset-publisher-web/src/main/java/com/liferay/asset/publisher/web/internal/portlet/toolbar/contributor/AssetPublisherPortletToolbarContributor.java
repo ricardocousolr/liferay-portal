@@ -14,12 +14,13 @@
 
 package com.liferay.asset.publisher.web.internal.portlet.toolbar.contributor;
 
-import com.liferay.asset.publisher.web.constants.AssetPublisherPortletKeys;
-import com.liferay.asset.publisher.web.constants.AssetPublisherWebKeys;
+import com.liferay.asset.publisher.constants.AssetPublisherPortletKeys;
+import com.liferay.asset.publisher.constants.AssetPublisherWebKeys;
 import com.liferay.asset.publisher.web.display.context.AssetPublisherDisplayContext;
+import com.liferay.asset.publisher.web.internal.util.AssetPublisherWebUtil;
 import com.liferay.asset.publisher.web.util.AssetPublisherCustomizer;
-import com.liferay.asset.util.impl.AssetPublisherAddItemHolder;
-import com.liferay.asset.util.impl.AssetUtil;
+import com.liferay.asset.util.AssetHelper;
+import com.liferay.asset.util.AssetPublisherAddItemHolder;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -81,11 +82,7 @@ public class AssetPublisherPortletToolbarContributor
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		Group scopeGroup = themeDisplay.getScopeGroup();
-		Layout layout = themeDisplay.getLayout();
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
-
-		String portletName = portletDisplay.getPortletName();
 
 		AssetPublisherCustomizer assetPublisherCustomizer =
 			(AssetPublisherCustomizer)portletRequest.getAttribute(
@@ -96,15 +93,7 @@ public class AssetPublisherPortletToolbarContributor
 				assetPublisherCustomizer, portletRequest, portletResponse,
 				portletRequest.getPreferences());
 
-		if (!assetPublisherDisplayContext.isShowAddContentButton() ||
-			(scopeGroup.hasStagingGroup() && !scopeGroup.isStagingGroup() &&
-			 PropsValues.STAGING_LIVE_GROUP_LOCKING_ENABLED) ||
-			layout.isLayoutPrototypeLinkActive() ||
-			portletName.equals(
-				AssetPublisherPortletKeys.HIGHEST_RATED_ASSETS) ||
-			portletName.equals(AssetPublisherPortletKeys.MOST_VIEWED_ASSETS) ||
-			portletName.equals(AssetPublisherPortletKeys.RELATED_ASSETS)) {
-
+		if (!_isVisible(assetPublisherDisplayContext, portletRequest)) {
 			return;
 		}
 
@@ -238,11 +227,12 @@ public class AssetPublisherPortletToolbarContributor
 			curGroupId = group.getLiveGroupId();
 		}
 
-		boolean addDisplayPageParameter = AssetUtil.isDefaultAssetPublisher(
-			themeDisplay.getLayout(), portletDisplay.getId(),
-			assetPublisherDisplayContext.getPortletResource());
+		boolean addDisplayPageParameter =
+			_assetPublisherWebUtil.isDefaultAssetPublisher(
+				themeDisplay.getLayout(), portletDisplay.getId(),
+				assetPublisherDisplayContext.getPortletResource());
 
-		String url = AssetUtil.getAddURLPopUp(
+		String url = _assetHelper.getAddURLPopUp(
 			curGroupId, themeDisplay.getPlid(),
 			assetPublisherAddItemHolder.getPortletURL(),
 			addDisplayPageParameter, themeDisplay.getLayout());
@@ -254,8 +244,62 @@ public class AssetPublisherPortletToolbarContributor
 		return urlMenuItem;
 	}
 
+	private boolean _isVisible(
+		AssetPublisherDisplayContext assetPublisherDisplayContext,
+		PortletRequest portletRequest) {
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		if (!assetPublisherDisplayContext.isShowAddContentButton()) {
+			return false;
+		}
+
+		Group scopeGroup = themeDisplay.getScopeGroup();
+
+		if (scopeGroup.hasStagingGroup() && !scopeGroup.isStagingGroup() &&
+			PropsValues.STAGING_LIVE_GROUP_LOCKING_ENABLED) {
+
+			return false;
+		}
+
+		Layout layout = themeDisplay.getLayout();
+
+		if (layout.isLayoutPrototypeLinkActive() &&
+			assetPublisherDisplayContext.isSelectionStyleManual()) {
+
+			return false;
+		}
+
+		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
+
+		String portletName = portletDisplay.getPortletName();
+
+		if (portletName.equals(
+				AssetPublisherPortletKeys.HIGHEST_RATED_ASSETS)) {
+
+			return false;
+		}
+
+		if (portletName.equals(AssetPublisherPortletKeys.MOST_VIEWED_ASSETS)) {
+			return false;
+		}
+
+		if (portletName.equals(AssetPublisherPortletKeys.RELATED_ASSETS)) {
+			return false;
+		}
+
+		return true;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		AssetPublisherPortletToolbarContributor.class);
+
+	@Reference
+	private AssetHelper _assetHelper;
+
+	@Reference
+	private AssetPublisherWebUtil _assetPublisherWebUtil;
 
 	private GroupLocalService _groupLocalService;
 

@@ -14,10 +14,11 @@
 
 package com.liferay.portal.upgrade.v7_0_3;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.util.PropsValues;
 
 import java.util.List;
@@ -41,8 +42,9 @@ public class UpgradeOrganization extends UpgradeProcess {
 
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
 			runSQL(
-				"update Organization_ set type_ = 'organization' where type_ " +
-					"not in ('" + organizationsTypesString + "')");
+				StringBundler.concat(
+					"update Organization_ set type_ = 'organization' where ",
+					"type_ not in ('", organizationsTypesString, "')"));
 		}
 	}
 

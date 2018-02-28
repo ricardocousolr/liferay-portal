@@ -14,8 +14,7 @@
 
 package com.liferay.util;
 
-import com.liferay.portal.kernel.util.HashCode;
-import com.liferay.portal.kernel.util.HashCodeFactoryUtil;
+import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 /**
@@ -34,11 +33,14 @@ public class State {
 		State state = (State)obj;
 
 		if ((getId() != null) && (state.getId() != null)) {
-			return StringUtil.toLowerCase(getId()).compareTo(
-				StringUtil.toLowerCase(state.getId()));
+			String lowerCaseId = StringUtil.toLowerCase(getId());
+
+			return lowerCaseId.compareTo(StringUtil.toLowerCase(state.getId()));
 		}
 		else if ((getName() != null) && (state.getName() != null)) {
-			return StringUtil.toLowerCase(getName()).compareTo(
+			String lowerCaseName = StringUtil.toLowerCase(getName());
+
+			return lowerCaseName.compareTo(
 				StringUtil.toLowerCase(state.getName()));
 		}
 		else {
@@ -79,12 +81,9 @@ public class State {
 
 	@Override
 	public int hashCode() {
-		HashCode hashCode = HashCodeFactoryUtil.getHashCode();
+		int hashCode = HashUtil.hash(0, _id);
 
-		hashCode.append(_id);
-		hashCode.append(_name);
-
-		return hashCode.toHashCode();
+		return HashUtil.hash(hashCode, _name);
 	}
 
 	private final String _id;

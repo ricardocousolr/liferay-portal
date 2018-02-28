@@ -19,19 +19,22 @@
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
 <%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
+taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
-<%@ page import="com.liferay.adaptive.media.exception.AdaptiveMediaImageConfigurationException" %><%@
-page import="com.liferay.adaptive.media.image.configuration.AdaptiveMediaImageConfigurationEntry" %><%@
-page import="com.liferay.adaptive.media.image.service.AdaptiveMediaImageEntryLocalServiceUtil" %><%@
+<%@ page import="com.liferay.adaptive.media.exception.AMImageConfigurationException" %><%@
+page import="com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry" %><%@
+page import="com.liferay.adaptive.media.image.service.AMImageEntryLocalServiceUtil" %><%@
 page import="com.liferay.adaptive.media.web.internal.background.task.OptimizeImagesAllConfigurationsBackgroundTaskExecutor" %><%@
 page import="com.liferay.adaptive.media.web.internal.background.task.OptimizeImagesSingleConfigurationBackgroundTaskExecutor" %><%@
-page import="com.liferay.adaptive.media.web.internal.constants.AdaptiveMediaWebKeys" %><%@
+page import="com.liferay.adaptive.media.web.internal.constants.AMWebKeys" %><%@
 page import="com.liferay.adaptive.media.web.internal.search.ImageConfigurationEntriesChecker" %><%@
+page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.JSPNavigationItemList" %><%@
+page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.backgroundtask.BackgroundTask" %><%@
 page import="com.liferay.portal.kernel.backgroundtask.BackgroundTaskConstants" %><%@
 page import="com.liferay.portal.kernel.backgroundtask.BackgroundTaskManagerUtil" %><%@
@@ -46,7 +49,6 @@ page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.ListUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
-page import="com.liferay.portal.kernel.util.StringPool" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %>
 

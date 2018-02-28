@@ -14,7 +14,7 @@
 
 package com.liferay.source.formatter.checkstyle.checks;
 
-import com.liferay.portal.kernel.util.CharPool;
+import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -26,7 +26,6 @@ import com.liferay.source.formatter.checks.util.SourceUtil;
 import com.liferay.source.formatter.util.SourceFormatterUtil;
 import com.liferay.source.formatter.util.ThreadSafeSortedClassLibraryBuilder;
 
-import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.FileContents;
 import com.puppycrawl.tools.checkstyle.api.FullIdent;
@@ -51,7 +50,7 @@ import java.util.Set;
 /**
  * @author Hugo Huijser
  */
-public class MissingOverrideCheck extends AbstractCheck {
+public class MissingOverrideCheck extends BaseCheck {
 
 	@Override
 	public int[] getDefaultTokens() {
@@ -59,7 +58,7 @@ public class MissingOverrideCheck extends AbstractCheck {
 	}
 
 	@Override
-	public void visitToken(DetailAST detailAST) {
+	protected void doVisitToken(DetailAST detailAST) {
 		FileContents fileContents = getFileContents();
 
 		String fileName = StringUtil.replace(
@@ -79,7 +78,7 @@ public class MissingOverrideCheck extends AbstractCheck {
 		}
 
 		JavaClass javaClass = javaProjectBuilder.getClassByName(
-			_getPackagePath(detailAST) + "." + _getClassName(fileName));
+			_getPackageName(detailAST) + "." + _getClassName(fileName));
 
 		List<Tuple> ancestorJavaClassTuples = _addAncestorJavaClassTuples(
 			javaClass, javaProjectBuilder, new ArrayList<Tuple>());
@@ -196,7 +195,7 @@ public class MissingOverrideCheck extends AbstractCheck {
 		return _javaProjectBuilder;
 	}
 
-	private String _getPackagePath(DetailAST packageDefAST) {
+	private String _getPackageName(DetailAST packageDefAST) {
 		DetailAST dotAST = packageDefAST.findFirstToken(TokenTypes.DOT);
 
 		FullIdent fullIdent = FullIdent.createFullIdent(dotAST);
@@ -213,8 +212,8 @@ public class MissingOverrideCheck extends AbstractCheck {
 			return false;
 		}
 
-		for (int i = 0; i < annotations.size(); i++) {
-			JavaClass javaClass = annotations.get(i).getType();
+		for (JavaAnnotation javaAnnotation : annotations) {
+			JavaClass javaClass = javaAnnotation.getType();
 
 			if (annotationName.equals(javaClass.getName())) {
 				return true;

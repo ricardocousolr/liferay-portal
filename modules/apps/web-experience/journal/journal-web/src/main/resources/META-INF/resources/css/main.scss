@@ -1,5 +1,9 @@
 .portlet-journal {
 	.article-content-content {
+		img {
+			max-width: 100%;
+		}
+
 		.form-builder-field {
 			box-shadow: none;
 			margin: 0;
@@ -8,9 +12,13 @@
 		}
 	}
 
-	.article-content-description, .article-content-title {
+	.article-content-description, .article-content-title, .article-friendly-url {
 		.input-localized-content {
 			display: none;
+		}
+
+		.form-control {
+			border-bottom-width: 1px;
 		}
 
 		.alloy-editor-switch {

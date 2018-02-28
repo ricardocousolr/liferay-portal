@@ -30,6 +30,42 @@ Liferay = window.Liferay || {};
 		}
 	);
 
+	var jqueryInit = $.prototype.init;
+
+	$.prototype.init = function(selector, context, root) {
+		if (selector === '#') {
+			selector = '';
+		}
+
+		return new jqueryInit(selector, context, root);
+	};
+
+	$(document).on(
+		'show.bs.collapse',
+		function(event) {
+			var target = $(event.target);
+
+			var ancestor = target.parents('.panel-group');
+
+			if (target.hasClass('panel-collapse') && ancestor.length) {
+				var openChildren = ancestor.find('.panel-collapse.in').not(target);
+
+				if (openChildren.length && ancestor.find('[data-parent="#' + ancestor.attr('id') + '"]').length) {
+					openChildren.removeClass('in');
+				}
+			}
+
+			if (target.hasClass('in')) {
+				target.addClass('show');
+				target.removeClass('in');
+
+				target.collapse('hide');
+
+				return false;
+			}
+		}
+	);
+
 	/**
 	 * OPTIONS
 	 *
@@ -231,8 +267,35 @@ Liferay = window.Liferay || {};
 
 	Liferay.Service = Service;
 
+	var componentPromiseWrappers = {};
 	var components = {};
 	var componentsFn = {};
+
+	var _createPromiseWrapper = function(value) {
+		var promiseWrapper;
+
+		if (value) {
+			promiseWrapper = {
+				promise: Promise.resolve(value),
+				resolve: function() {}
+			};
+		}
+		else {
+			var promiseResolve;
+			var promise = new Promise(
+				function(resolve) {
+					promiseResolve = resolve;
+				}
+			);
+
+			promiseWrapper = {
+				promise: promise,
+				resolve: promiseResolve
+			};
+		}
+
+		return promiseWrapper;
+	};
 
 	Liferay.component = function(id, value) {
 		var retVal;
@@ -251,12 +314,67 @@ Liferay = window.Liferay || {};
 			retVal = component;
 		}
 		else {
+			if (components[id] && value !== null) {
+				console.warn('Component with id "' + id + '" is being registered twice. This can lead to unexpected behaviour in the "Liferay.component" and "Liferay.componentReady" APIs, as well as in the "*:registered" events.');
+			}
+
 			retVal = (components[id] = value);
 
-			Liferay.fire(id + ':registered');
+			if (value === null) {
+				delete componentPromiseWrappers[id];
+			}
+			else {
+				Liferay.fire(id + ':registered');
+
+				var componentPromiseWrapper = componentPromiseWrappers[id];
+
+				if (componentPromiseWrapper) {
+					componentPromiseWrapper.resolve(value);
+				}
+				else {
+					componentPromiseWrappers[id] = _createPromiseWrapper(value);
+				}
+			}
 		}
 
 		return retVal;
+	};
+
+	Liferay.componentReady = function() {
+		var component;
+		var componentPromise;
+
+		if (arguments.length === 1) {
+			component = arguments[0];
+		}
+		else {
+			component = [];
+
+			for (var i = 0; i < arguments.length; i++) {
+				component[i] = arguments[i];
+			}
+		}
+
+		if (Array.isArray(component)) {
+			componentPromise = Promise.all(
+				component.map(
+					function(id) {
+						return Liferay.componentReady(id);
+					}
+				)
+			);
+		}
+		else {
+			var componentPromiseWrapper = componentPromiseWrappers[component];
+
+			if (!componentPromiseWrapper) {
+				componentPromiseWrappers[component] = componentPromiseWrapper = _createPromiseWrapper();
+			}
+
+			componentPromise = componentPromiseWrapper.promise;
+		}
+
+		return componentPromise;
 	};
 
 	Liferay._components = components;

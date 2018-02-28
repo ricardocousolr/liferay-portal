@@ -16,6 +16,11 @@
 
 <%@ include file="/init.jsp" %>
 
+<%@ page import="com.liferay.document.library.configuration.DLConfiguration" %><%@
+page import="com.liferay.document.library.web.internal.util.RepositoryClassDefinitionUtil" %><%@
+page import="com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil" %><%@
+page import="com.liferay.portal.kernel.util.LocaleUtil" %>
+
 <%
 PortalPreferences portalPreferences = PortletPreferencesFactoryUtil.getPortalPreferences(liferayPortletRequest);
 
@@ -44,10 +49,12 @@ if (rootFolderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 			rootFolderName = StringPool.BLANK;
 		}
 	}
-	catch (NoSuchFolderException nsfe) {
+	catch (NoSuchFolderException | PrincipalException e) {
 		rootFolderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
 	}
 }
+
+DLConfiguration dlConfiguration = ConfigurationProviderUtil.getSystemConfiguration(DLConfiguration.class);
 
 boolean showComments = ParamUtil.getBoolean(request, "showComments", true);
 boolean showHeader = ParamUtil.getBoolean(request, "showHeader", true);

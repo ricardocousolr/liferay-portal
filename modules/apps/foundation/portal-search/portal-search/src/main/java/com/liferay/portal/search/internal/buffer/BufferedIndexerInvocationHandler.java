@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.util.MethodKey;
+import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.search.buffer.IndexerRequest;
 import com.liferay.portal.search.buffer.IndexerRequestBuffer;
 import com.liferay.portal.search.buffer.IndexerRequestBufferOverflowHandler;
@@ -102,19 +103,25 @@ public class BufferedIndexerInvocationHandler implements InvocationHandler {
 			return method.invoke(_indexer, args);
 		}
 
-		if (args[0] instanceof ResourcedModel &&
-			args[0] instanceof ClassedModel &&
+		if (args[0] instanceof ClassedModel &&
 			Objects.equals(method.getName(), "reindex")) {
 
 			MethodKey methodKey = new MethodKey(
 				Indexer.class, method.getName(), String.class, Long.TYPE);
 
 			ClassedModel classedModel = (ClassedModel)args[0];
-			ResourcedModel resourcedModel = (ResourcedModel)args[0];
+
+			Long classPK = (Long)classedModel.getPrimaryKeyObj();
+
+			if (args[0] instanceof ResourcedModel) {
+				ResourcedModel resourcedModel = (ResourcedModel)args[0];
+
+				classPK = resourcedModel.getResourcePrimKey();
+			}
 
 			bufferRequest(
-				methodKey, classedModel.getModelClassName(),
-				resourcedModel.getResourcePrimKey(), indexerRequestBuffer);
+				methodKey, classedModel.getModelClassName(), classPK,
+				indexerRequestBuffer);
 		}
 		else if (args[0] instanceof ClassedModel) {
 			MethodKey methodKey = new MethodKey(
@@ -146,8 +153,10 @@ public class BufferedIndexerInvocationHandler implements InvocationHandler {
 			catch (Exception e) {
 				if (_log.isDebugEnabled()) {
 					_log.debug(
-						"Unable to get resource primary key for class " +
-							className + " with primary key " + classPK);
+						StringBundler.concat(
+							"Unable to get resource primary key for class ",
+							className, " with primary key ",
+							String.valueOf(classPK)));
 				}
 			}
 

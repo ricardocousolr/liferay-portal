@@ -6,6 +6,10 @@ AUI.add(
 		var CaptchaField = A.Component.create(
 			{
 				ATTRS: {
+					context: {
+						getter: '_getContext'
+					},
+
 					html: {
 						value: ''
 					},
@@ -47,10 +51,37 @@ AUI.add(
 
 						var inputNode = instance.getInputNode();
 
-						return !inputNode.val() || hasErrors;
+						return inputNode && !inputNode.val() || hasErrors;
+					},
+
+					render: function() {
+						var instance = this;
+
+						var container = instance.get('container');
+
+						container.plug(A.Plugin.ParseContent);
+
+						return CaptchaField.superclass.render.apply(instance, arguments);
 					},
 
 					showErrorMessage: Lang.emptyFn,
+
+					_getContext: function(context) {
+						var instance = this;
+
+						if (!context) {
+							return {};
+						}
+						else if (context.html) {
+							return A.merge(
+								context,
+								{
+									html: window.DDMCaptcha.render.Soy.toIncDom(context.html.content)
+								}
+							);
+						}
+						return context;
+					},
 
 					_onClickRefresh: function() {
 						var instance = this;
@@ -73,6 +104,6 @@ AUI.add(
 	},
 	'',
 	{
-		requires: ['liferay-ddm-form-renderer-field']
+		requires: ['aui-parse-content', 'liferay-ddm-form-renderer-field']
 	}
 );

@@ -38,10 +38,11 @@ import org.osgi.service.component.annotations.Deactivate;
 public class ContentTransformerHandler {
 
 	public <T> T transform(
-		ContentTransformerContentType<T> contentType, T originalContent) {
+		ContentTransformerContentType<T> contentTransformerContentType,
+		T originalContent) {
 
 		List<ContentTransformer> contentTransformers =
-			_serviceTrackerMap.getService(contentType);
+			_serviceTrackerMap.getService(contentTransformerContentType);
 
 		if (contentTransformers == null) {
 			return originalContent;
@@ -55,7 +56,9 @@ public class ContentTransformerHandler {
 					transformedContent);
 			}
 			catch (Exception e) {
-				_log.error(e);
+				if (_log.isDebugEnabled()) {
+					_log.debug(e, e);
+				}
 			}
 		}
 
@@ -70,7 +73,8 @@ public class ContentTransformerHandler {
 				ContentTransformer contentTransformer =
 					bundleContext.getService(serviceReference);
 
-				emitter.emit(contentTransformer.getContentType());
+				emitter.emit(
+					contentTransformer.getContentTransformerContentType());
 
 				bundleContext.ungetService(serviceReference);
 			});

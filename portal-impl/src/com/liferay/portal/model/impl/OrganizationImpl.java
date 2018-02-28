@@ -14,6 +14,7 @@
 
 package com.liferay.portal.model.impl;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -33,14 +34,12 @@ import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -172,14 +171,8 @@ public class OrganizationImpl extends OrganizationBaseImpl {
 
 	@Override
 	public List<Organization> getDescendants() {
-		Set<Organization> descendants = new LinkedHashSet<>();
-
-		for (Organization suborganization : getSuborganizations()) {
-			descendants.add(suborganization);
-			descendants.addAll(suborganization.getDescendants());
-		}
-
-		return new ArrayList<>(descendants);
+		return OrganizationLocalServiceUtil.getOrganizations(
+			getCompanyId(), getTreePath().concat("_%"));
 	}
 
 	@Override

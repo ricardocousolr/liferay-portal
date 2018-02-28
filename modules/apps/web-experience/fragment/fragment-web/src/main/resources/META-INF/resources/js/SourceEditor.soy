@@ -1,0 +1,31 @@
+{namespace SourceEditor}
+
+/**
+ * SourceEditor
+ */
+{template .render}
+	{@param initialContent: string}
+	{@param spritemap: string}
+	{@param syntax: string}
+	{@param toolbarItems: list<[
+		handler: any,
+		icon: string,
+		title: string
+	]>}
+	{@param? _handleContentChanged: any}
+
+	<div class="source-editor">
+		{call SourceEditorToolbar.render}
+			{param hidden: true /}
+			{param items: $toolbarItems /}
+			{param spritemap: $spritemap /}
+			{param syntax: $syntax /}
+		{/call}
+
+		{call AceEditor.render}
+			{param events: ['contentChanged': $_handleContentChanged] /}
+			{param initialContent: $initialContent /}
+			{param syntax: $syntax /}
+		{/call}
+	</div>
+{/template}

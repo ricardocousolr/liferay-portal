@@ -14,8 +14,7 @@
 
 package com.liferay.organizations.service.internal.verify;
 
-import com.liferay.portal.kernel.concurrent.ThrowableAwareRunnable;
-import com.liferay.portal.kernel.concurrent.ThrowableAwareRunnablesExecutorUtil;
+import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -30,8 +29,11 @@ import com.liferay.portal.verify.VerifyProcess;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -49,43 +51,19 @@ public class OrganizationServiceVerifyProcess extends VerifyProcess {
 
 	@Override
 	protected void doVerify() throws Exception {
-		List<ThrowableAwareRunnable> throwableAwareRunnables =
-			new ArrayList<>();
+		ExecutorService executorService = Executors.newFixedThreadPool(3);
 
-		throwableAwareRunnables.add(
-			new ThrowableAwareRunnable() {
+		List<Future<Void>> futures = executorService.invokeAll(
+			Arrays.asList(
+				this::rebuildTree, this::updateOrganizationAssets,
+				this::updateOrganizationAssetEntries));
 
-				@Override
-				protected void doRun() throws Exception {
-					rebuildTree();
-				}
+		executorService.shutdown();
 
-			});
-
-		throwableAwareRunnables.add(
-			new ThrowableAwareRunnable() {
-
-				@Override
-				protected void doRun() throws Exception {
-					updateOrganizationAssets();
-				}
-
-			});
-
-		throwableAwareRunnables.add(
-			new ThrowableAwareRunnable() {
-
-				@Override
-				protected void doRun() throws Exception {
-					updateOrganizationAssetEntries();
-				}
-
-			});
-
-		ThrowableAwareRunnablesExecutorUtil.execute(throwableAwareRunnables);
+		UnsafeConsumer.accept(futures, Future::get, Exception.class);
 	}
 
-	protected void rebuildTree() throws Exception {
+	protected Void rebuildTree() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
 			long[] companyIds = PortalInstances.getCompanyIdsBySQL();
 
@@ -93,25 +71,26 @@ public class OrganizationServiceVerifyProcess extends VerifyProcess {
 				_organizationLocalService.rebuildTree(companyId);
 			}
 		}
+
+		return null;
 	}
 
-	protected void updateOrganizationAssetEntries() throws Exception {
+	protected Void updateOrganizationAssetEntries() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
-			StringBundler sb = new StringBundler();
+			StringBundler sb = new StringBundler(7);
 
 			sb.append("select distinct AssetEntry.classPK as classPK, ");
-			sb.append("Organization_.uuid_ as uuid from ");
-			sb.append(
-				"AssetEntry, Organization_ where AssetEntry.classNameId = ");
+			sb.append("Organization_.uuid_ as uuid from AssetEntry, ");
+			sb.append("Organization_ where AssetEntry.classNameId = ");
 
 			long classNameId = _classNameLocalService.getClassNameId(
 				Organization.class.getName());
 
 			sb.append(classNameId);
 
-			sb.append(
-				" and AssetEntry.classPK = Organization_.organizationId ");
-			sb.append("and AssetEntry.classUuid is null");
+			sb.append(" and AssetEntry.classPK = ");
+			sb.append("Organization_.organizationId and AssetEntry.classUuid ");
+			sb.append("is null");
 
 			try (PreparedStatement ps1 = connection.prepareStatement(
 					sb.toString());
@@ -139,17 +118,20 @@ public class OrganizationServiceVerifyProcess extends VerifyProcess {
 				}
 			}
 		}
+
+		return null;
 	}
 
-	protected void updateOrganizationAssets() throws Exception {
+	protected Void updateOrganizationAssets() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
 			List<Organization> organizations =
 				_organizationLocalService.getNoAssetOrganizations();
 
 			if (_log.isDebugEnabled()) {
 				_log.debug(
-					"Processing " + organizations.size() + " organizations " +
-						"with no asset");
+					StringBundler.concat(
+						"Processing ", String.valueOf(organizations.size()),
+						" organizations with no asset"));
 			}
 
 			for (Organization organization : organizations) {
@@ -160,9 +142,11 @@ public class OrganizationServiceVerifyProcess extends VerifyProcess {
 				catch (Exception e) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
-							"Unable to update asset for organization " +
-								organization.getOrganizationId() + ": " +
-									e.getMessage());
+							StringBundler.concat(
+								"Unable to update asset for organization ",
+								String.valueOf(
+									organization.getOrganizationId()),
+								": ", e.getMessage()));
 					}
 				}
 			}
@@ -171,6 +155,8 @@ public class OrganizationServiceVerifyProcess extends VerifyProcess {
 				_log.debug("Assets verified for organizations");
 			}
 		}
+
+		return null;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

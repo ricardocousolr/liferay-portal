@@ -18,9 +18,10 @@ import com.liferay.captcha.taglib.servlet.taglib.CaptchaTag;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTemplateContextContributor;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.template.soy.utils.SoyHTMLSanitizer;
 import com.liferay.taglib.servlet.PageContextFactoryUtil;
 import com.liferay.taglib.servlet.PipingServletResponse;
 
@@ -32,6 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.PageContext;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Bruno Basto
@@ -62,7 +64,7 @@ public class CaptchaDDMFormFieldTemplateContextContributor
 			e.printStackTrace();
 		}
 
-		parameters.put("html", html);
+		parameters.put("html", _soyHTMLSanitizer.sanitize(html));
 
 		return parameters;
 	}
@@ -94,5 +96,8 @@ public class CaptchaDDMFormFieldTemplateContextContributor
 
 		return unsyncStringWriter.toString();
 	}
+
+	@Reference
+	private SoyHTMLSanitizer _soyHTMLSanitizer;
 
 }

@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -304,6 +305,10 @@ public interface AssetLinkLocalService extends BaseLocalService,
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetLink> getLinks(long entryId);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetLink> getLinks(long groupId, Date startDate, Date endDate,
+		int start, int end);
+
 	/**
 	* Returns all the asset links of the given link type whose first or second
 	* entry ID is the given entry ID.
@@ -319,6 +324,16 @@ public interface AssetLinkLocalService extends BaseLocalService,
 	*/
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetLink> getLinks(long entryId, int typeId);
+
+	/**
+	* Returns all the asset links of an AssetEntry.
+	*
+	* @param classNameId AssetEntry's classNameId
+	* @param classPK AssetEntry's classPK
+	* @return the asset links of the given entry params
+	*/
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetLink> getLinks(long classNameId, long classPK);
 
 	/**
 	* Returns the OSGi service identifier.

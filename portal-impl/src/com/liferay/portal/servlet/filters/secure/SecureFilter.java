@@ -14,9 +14,11 @@
 
 package com.liferay.portal.servlet.filters.secure;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.access.control.AccessControlUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
@@ -31,9 +33,9 @@ import com.liferay.portal.kernel.servlet.ProtectedServletRequest;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -274,24 +276,24 @@ public class SecureFilter extends BasePortalFilter {
 				_log.debug("Securing " + completeURL);
 			}
 
-			StringBundler redirectURL = new StringBundler(5);
+			StringBundler sb = new StringBundler(5);
 
-			redirectURL.append(Http.HTTPS_WITH_SLASH);
-			redirectURL.append(request.getServerName());
-			redirectURL.append(request.getServletPath());
+			sb.append(Http.HTTPS_WITH_SLASH);
+			sb.append(request.getServerName());
+			sb.append(request.getServletPath());
 
 			String queryString = request.getQueryString();
 
 			if (Validator.isNotNull(queryString)) {
-				redirectURL.append(StringPool.QUESTION);
-				redirectURL.append(request.getQueryString());
+				sb.append(StringPool.QUESTION);
+				sb.append(request.getQueryString());
 			}
 
 			if (_log.isDebugEnabled()) {
-				_log.debug("Redirect to " + redirectURL);
+				_log.debug("Redirect to " + sb.toString());
 			}
 
-			response.sendRedirect(redirectURL.toString());
+			response.sendRedirect(sb.toString());
 		}
 		else {
 			if (_log.isDebugEnabled()) {
@@ -319,8 +321,16 @@ public class SecureFilter extends BasePortalFilter {
 			initThreadLocals(user);
 
 			if (!user.isDefaultUser()) {
+				String authType = ParamUtil.getString(request, "authType");
+
+				if (authType == null) {
+					Company company = PortalUtil.getCompany(request);
+
+					authType = company.getAuthType();
+				}
+
 				request = setCredentials(
-					request, request.getSession(), user, null);
+					request, request.getSession(), user, authType);
 			}
 			else {
 				if (_digestAuthEnabled) {

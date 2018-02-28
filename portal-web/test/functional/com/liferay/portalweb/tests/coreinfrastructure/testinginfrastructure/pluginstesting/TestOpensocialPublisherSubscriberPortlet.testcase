@@ -9,11 +9,21 @@
 	</set-up>
 
 	<tear-down>
-		<execute macro="Page#tearDownPG" />
+		<execute macro="Page#tearDownCP" />
 	</tear-down>
 
 	<command name="ViewPublisherSubscriber" priority="4">
-		<execute macro="Page#add">
+		<execute macro="ProductMenu#gotoPortlet">
+			<var name="category" value="Navigation" />
+			<var name="panel" value="Site Administration" />
+			<var name="portlet" value="Site Pages" />
+		</execute>
+
+		<execute macro="SitePages#addPublicPage">
+			<var name="pageName" value="Test Publisher Subscriber Page" />
+		</execute>
+
+		<execute macro="Navigator#gotoPage">
 			<var name="pageName" value="Test Publisher Subscriber Page" />
 		</execute>
 
@@ -32,7 +42,7 @@
 		<execute function="Click" locator1="TestSubscriber#SUBSCRIBER_PORTLET_SUBSCRIBE_BUTTON" />
 		<execute function="Click" locator1="TestPublisher#PUBLISHER_PORTLET_PUBLISH_BUTTON" />
 
-	<!--<var name="randomNumber" path="TestPublisher" locator="PUBLISHER_PORTLET_MESSAGE" />
+		<!--<var name="randomNumber" path="TestPublisher" locator="PUBLISHER_PORTLET_MESSAGE" />
 
 		<execute function="AssertTextEquals#assertPartialText" locator1="TestPublisher#PUBLISHER_PORTLET_MESSAGE" value1="${randomNumber}" />
 		<execute function="AssertTextEquals#assertPartialText" locator1=" TestSubscriber#SUBSCRIBER_PORTLET_MESSAGE" value1="${randomNumber}" />-->

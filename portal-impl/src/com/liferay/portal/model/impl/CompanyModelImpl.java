@@ -30,7 +30,6 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 
 import java.io.Serializable;
 
@@ -93,7 +92,7 @@ public class CompanyModelImpl extends BaseModelImpl<Company>
 		TABLE_COLUMNS_MAP.put("active_", Types.BOOLEAN);
 	}
 
-	public static final String TABLE_SQL_CREATE = "create table Company (mvccVersion LONG default 0 not null,companyId LONG not null primary key,accountId LONG,webId VARCHAR(75) null,key_ TEXT null,mx VARCHAR(75) null,homeURL STRING null,logoId LONG,system BOOLEAN,maxUsers INTEGER,active_ BOOLEAN)";
+	public static final String TABLE_SQL_CREATE = "create table Company (mvccVersion LONG default 0 not null,companyId LONG not null primary key,accountId LONG,webId VARCHAR(75) null,key_ TEXT null,mx VARCHAR(200) null,homeURL STRING null,logoId LONG,system BOOLEAN,maxUsers INTEGER,active_ BOOLEAN)";
 	public static final String TABLE_SQL_DROP = "drop table Company";
 	public static final String ORDER_BY_JPQL = " ORDER BY company.companyId ASC";
 	public static final String ORDER_BY_SQL = " ORDER BY Company.companyId ASC";
@@ -327,7 +326,7 @@ public class CompanyModelImpl extends BaseModelImpl<Company>
 	@Override
 	public String getWebId() {
 		if (_webId == null) {
-			return StringPool.BLANK;
+			return "";
 		}
 		else {
 			return _webId;
@@ -353,7 +352,7 @@ public class CompanyModelImpl extends BaseModelImpl<Company>
 	@Override
 	public String getKey() {
 		if (_key == null) {
-			return StringPool.BLANK;
+			return "";
 		}
 		else {
 			return _key;
@@ -369,7 +368,7 @@ public class CompanyModelImpl extends BaseModelImpl<Company>
 	@Override
 	public String getMx() {
 		if (_mx == null) {
-			return StringPool.BLANK;
+			return "";
 		}
 		else {
 			return _mx;
@@ -395,7 +394,7 @@ public class CompanyModelImpl extends BaseModelImpl<Company>
 	@Override
 	public String getHomeURL() {
 		if (_homeURL == null) {
-			return StringPool.BLANK;
+			return "";
 		}
 		else {
 			return _homeURL;

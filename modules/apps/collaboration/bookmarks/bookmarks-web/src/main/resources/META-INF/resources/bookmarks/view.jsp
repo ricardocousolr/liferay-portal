@@ -167,8 +167,6 @@ BookmarksUtil.addPortletBreadcrumbEntries(folder, request, renderResponse);
 	portletURL="<%= restoreTrashEntriesURL %>"
 />
 
-<liferay-util:include page="/bookmarks/navigation.jsp" servletContext="<%= application %>" />
-
 <liferay-util:include page="/bookmarks/toolbar.jsp" servletContext="<%= application %>">
 	<liferay-util:param name="searchContainerId" value="entries" />
 </liferay-util:include>
@@ -207,10 +205,6 @@ BookmarksUtil.addPortletBreadcrumbEntries(folder, request, renderResponse);
 		</aui:form>
 	</div>
 </div>
-
-<c:if test="<%= portletName.equals(BookmarksPortletKeys.BOOKMARKS_ADMIN) %>">
-	<liferay-util:include page="/bookmarks/add_button.jsp" servletContext="<%= application %>" />
-</c:if>
 
 <%
 if (navigation.equals("all") && !defaultFolderView && (folder != null) && (portletName.equals(BookmarksPortletKeys.BOOKMARKS) || portletName.equals(BookmarksPortletKeys.BOOKMARKS_ADMIN))) {

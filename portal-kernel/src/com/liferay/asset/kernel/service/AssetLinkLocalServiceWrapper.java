@@ -365,6 +365,14 @@ public class AssetLinkLocalServiceWrapper implements AssetLinkLocalService,
 		return _assetLinkLocalService.getLinks(entryId);
 	}
 
+	@Override
+	public java.util.List<com.liferay.asset.kernel.model.AssetLink> getLinks(
+		long groupId, java.util.Date startDate, java.util.Date endDate,
+		int start, int end) {
+		return _assetLinkLocalService.getLinks(groupId, startDate, endDate,
+			start, end);
+	}
+
 	/**
 	* Returns all the asset links of the given link type whose first or second
 	* entry ID is the given entry ID.
@@ -382,6 +390,19 @@ public class AssetLinkLocalServiceWrapper implements AssetLinkLocalService,
 	public java.util.List<com.liferay.asset.kernel.model.AssetLink> getLinks(
 		long entryId, int typeId) {
 		return _assetLinkLocalService.getLinks(entryId, typeId);
+	}
+
+	/**
+	* Returns all the asset links of an AssetEntry.
+	*
+	* @param classNameId AssetEntry's classNameId
+	* @param classPK AssetEntry's classPK
+	* @return the asset links of the given entry params
+	*/
+	@Override
+	public java.util.List<com.liferay.asset.kernel.model.AssetLink> getLinks(
+		long classNameId, long classPK) {
+		return _assetLinkLocalService.getLinks(classNameId, classPK);
 	}
 
 	/**

@@ -376,42 +376,7 @@
 	<script src="<%= HtmlUtil.escape(themeDisplay.getCDNDynamicResourcesHost() + PortalWebResourcesUtil.getContextPath(PortalWebResourceConstants.RESOURCE_TYPE_JS_LOADER_MODULES) + "/js_loader_modules?t=" + jsLoaderModulesLastModified) %>" type="text/javascript"></script>
 </c:if>
 
-<c:choose>
-	<c:when test="<%= themeDisplay.isThemeJsFastLoad() %>">
-		<c:choose>
-			<c:when test="<%= themeDisplay.isThemeJsBarebone() %>">
-				<script src="<%= HtmlUtil.escape(PortalUtil.getStaticResourceURL(request, themeDisplay.getCDNDynamicResourcesHost() + themeDisplay.getPathJavaScript() + "/barebone.jsp", "minifierBundleId=javascript.barebone.files", jsLastModified)) %>" type="text/javascript"></script>
-			</c:when>
-			<c:otherwise>
-				<script src="<%= HtmlUtil.escape(PortalUtil.getStaticResourceURL(request, themeDisplay.getCDNDynamicResourcesHost() + themeDisplay.getPathJavaScript() + "/everything.jsp", "minifierBundleId=javascript.everything.files", jsLastModified)) %>" type="text/javascript"></script>
-			</c:otherwise>
-		</c:choose>
-	</c:when>
-	<c:otherwise>
-
-		<%
-		String path = themeDisplay.getCDNHost().concat(themeDisplay.getPathJavaScript());
-
-		String[] javaScriptFiles = null;
-
-		if (themeDisplay.isThemeJsBarebone()) {
-			javaScriptFiles = JavaScriptBundleUtil.getFileNames(PropsKeys.JAVASCRIPT_BAREBONE_FILES);
-		}
-		else {
-			javaScriptFiles = JavaScriptBundleUtil.getFileNames(PropsKeys.JAVASCRIPT_EVERYTHING_FILES);
-		}
-
-		for (String javaScriptFile : javaScriptFiles) {
-		%>
-
-			<script data-senna-track="permanent" src="<%= HtmlUtil.escape(PortalUtil.getStaticResourceURL(request, path + "/" + javaScriptFile, "minifierType=", jsLastModified)) %>" type="text/javascript"></script>
-
-		<%
-		}
-		%>
-
-	</c:otherwise>
-</c:choose>
+<liferay-util:dynamic-include key="/html/common/themes/top_js.jspf#resources" />
 
 <c:if test="<%= PortalWebResourcesUtil.getPortalWebResources(PortalWebResourceConstants.RESOURCE_TYPE_JS_BUNDLE_CONFIG) != null %>">
 
@@ -457,6 +422,37 @@
 </script>
 
 <%-- Analytics --%>
+
+<%
+String analyticsKey = PrefsPropsUtil.getString(company.getCompanyId(), PropsKeys.ADMIN_ANALYTICS_KEY);
+%>
+
+<c:if test="<%= Validator.isNotNull(analyticsKey) %>">
+	<script data-senna-track="permanent" id="liferayAnalyticsScript" type="text/javascript">
+		(function(u, c, a, m, o, l) {
+			o = 'script';
+			l = document;
+			a = l.createElement(o);
+			m = l.getElementsByTagName(o)[0];
+			a.async = 1;
+			a.src = u;
+			a.onload = c;
+			m.parentNode.insertBefore(a, m);
+		})('https://analytics.liferay.com/analytics-all-min.js');
+
+		Analytics.create({analyticsKey: '<%= HtmlUtil.escapeJS(analyticsKey) %>'});
+		Analytics.send('view', 'Layout');
+
+		<c:if test="<%= PropsValues.JAVASCRIPT_SINGLE_PAGE_APPLICATION_ENABLED %>">
+			Liferay.on(
+				'endNavigate',
+				function(event) {
+					Analytics.send('view', 'Layout', {'page': event.path});
+				}
+			);
+		</c:if>
+	</script>
+</c:if>
 
 <%
 UnicodeProperties groupTypeSettings = group.getTypeSettingsProperties();

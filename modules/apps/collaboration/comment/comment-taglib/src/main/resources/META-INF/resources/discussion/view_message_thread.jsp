@@ -33,15 +33,6 @@ boolean skipEditorLoading = ParamUtil.getBoolean(request, "skipEditorLoading");
 
 DiscussionComment rootDiscussionComment = discussion.getRootDiscussionComment();
 
-String articleCssClass = StringPool.BLANK;
-
-if (rootDiscussionComment.getCommentId() == discussionComment.getParentCommentId()) {
-	articleCssClass = "card-tab-group";
-}
-else if (depth < 4) {
-	articleCssClass = "card-tab";
-}
-
 DiscussionRequestHelper discussionRequestHelper = new DiscussionRequestHelper(request);
 
 DiscussionPermission discussionPermission = CommentManagerUtil.getDiscussionPermission(discussionRequestHelper.getPermissionChecker());
@@ -52,7 +43,7 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 %>
 
 <c:if test="<%= commentTreeDisplayContext.isDiscussionVisible() %>">
-	<article class="lfr-discussion <%= articleCssClass %>">
+	<article class="lfr-discussion <%= (rootDiscussionComment.getCommentId() == discussionComment.getParentCommentId()) ? "card-tab-group" : "card-tab" %>">
 		<div class="card list-group-card panel">
 			<div class="panel-body">
 				<div class="card-row">
@@ -66,7 +57,6 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 
 						<div class="lfr-discussion-details">
 							<liferay-ui:user-portrait
-								cssClass="user-icon-lg"
 								userId="<%= discussionComment.getUserId() %>"
 								userName="<%= discussionComment.getUserName() %>"
 							/>
@@ -127,13 +117,12 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 													<span>
 														<div class="lfr-discussion-reply-user-avatar">
 															<liferay-ui:user-portrait
-																cssClass="user-icon-lg"
 																user="<%= parentMessageUser %>"
 															/>
 														</div>
 
 														<div class="lfr-discussion-reply-user-name">
-															<%= parentDiscussionComment.getUserName() %>
+															<%= HtmlUtil.escape(parentDiscussionComment.getUserName()) %>
 														</div>
 
 														<div class="lfr-discussion-reply-creation-date">
@@ -263,12 +252,11 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 			</div>
 		</div>
 
-		<div class="<%= (depth < 3) ? "card-tab" : StringPool.BLANK %> lfr-discussion lfr-discussion-form-reply" id="<%= namespace + randomNamespace + "postReplyForm" + index %>" style="display: none;">
+		<div class="card-tab lfr-discussion lfr-discussion-form-reply" id="<%= namespace + randomNamespace + "postReplyForm" + index %>" style="display: none;">
 			<div class="card list-group-card panel">
 				<div class="panel-body">
 					<div class="lfr-discussion-details">
 						<liferay-ui:user-portrait
-							cssClass="user-icon-lg"
 							user="<%= user %>"
 						/>
 					</div>
@@ -279,13 +267,13 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 						<aui:input name='<%= "postReplyBody" + index %>' type="hidden" />
 
 						<aui:button-row>
-							<aui:button cssClass="btn-comment btn-lg btn-primary" disabled="<%= true %>" id='<%= randomNamespace + "postReplyButton" + index %>' onClick='<%= randomNamespace + "postReply(" + index + ");" %>' value='<%= themeDisplay.isSignedIn() ? "reply" : "reply-as" %>' />
+							<aui:button cssClass="btn-comment btn-primary" disabled="<%= true %>" id='<%= randomNamespace + "postReplyButton" + index %>' onClick='<%= randomNamespace + "postReply(" + index + ");" %>' value='<%= themeDisplay.isSignedIn() ? "reply" : "reply-as" %>' />
 
 							<%
 							String taglibCancel = randomNamespace + "hideEditor('" + namespace + randomNamespace + "postReplyBody" + index + "','" + namespace + randomNamespace + "postReplyForm" + index + "')";
 							%>
 
-							<aui:button cssClass="btn-comment btn-lg" onClick="<%= taglibCancel %>" type="cancel" />
+							<aui:button cssClass="btn-comment" onClick="<%= taglibCancel %>" type="cancel" />
 						</aui:button-row>
 
 						<aui:script>

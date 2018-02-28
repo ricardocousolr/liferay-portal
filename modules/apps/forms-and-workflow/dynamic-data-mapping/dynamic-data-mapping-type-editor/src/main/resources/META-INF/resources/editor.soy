@@ -16,9 +16,9 @@
 	{@param placeholder: string}
 	{@param required: bool}
 	{@param showLabel: bool}
-	{@param? tip: string}
 	{@param value: string}
 	{@param visible: bool}
+	{@param? tip: string}
 
 	<div class="form-group{$visible ? '' : ' hide'} liferay-ddm-form-field-editor" data-fieldname="{$name}">
 		{if $showLabel}
@@ -30,19 +30,22 @@
 				{/if}
 			</label>
 
-			{if $tip}
-				<p class="liferay-ddm-form-field-tip">{$tip}</p>
-			{/if}
+			<p class="liferay-ddm-form-field-tip">{$tip ? $tip: ''}</p>
 		{/if}
 
-		<div class="input-group-container">
-			<div class="alloy-editor-container" id="{$name}Container">
-				<div class="alloy-editor alloy-editor-placeholder form-control" contenteditable="false" data-placeholder="{$placeholder}" id="{$name}Editor" name="{$name}Editor">
-					{$value}
+		<div class="form-control input-group-container">
+			<div class="alloy-editor-container input-group" id="{$name}Container">
+				<div class="alloy-editor alloy-editor-placeholder" contenteditable="false" data-placeholder="{$placeholder}" id="{$name}Editor" name="{$name}Editor">
+				{$value}
 				</div>
 			</div>
 
-			<input id="{$name}" name="{$name}" type="hidden" value="{$value}" />
+			<input
+				id="{$name}"
+				name="{$name}"
+				type="hidden"
+				value="{$value}"
+			/>
 		</div>
 	</div>
 {/template}

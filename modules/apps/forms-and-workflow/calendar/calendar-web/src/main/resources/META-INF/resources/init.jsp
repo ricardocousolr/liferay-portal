@@ -24,6 +24,7 @@ taglib uri="http://liferay.com/tld/comment" prefix="liferay-comment" %><%@
 taglib uri="http://liferay.com/tld/expando" prefix="liferay-expando" %><%@
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
+taglib uri="http://liferay.com/tld/rss" prefix="liferay-rss" %><%@
 taglib uri="http://liferay.com/tld/security" prefix="liferay-security" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
@@ -32,6 +33,7 @@ taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 <%@ page import="com.liferay.asset.kernel.model.AssetEntry" %><%@
 page import="com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil" %><%@
 page import="com.liferay.calendar.constants.CalendarActionKeys" %><%@
+page import="com.liferay.calendar.constants.CalendarConstants" %><%@
 page import="com.liferay.calendar.exception.CalendarBookingDurationException" %><%@
 page import="com.liferay.calendar.exception.CalendarBookingRecurrenceException" %><%@
 page import="com.liferay.calendar.exception.CalendarNameException" %><%@
@@ -58,9 +60,6 @@ page import="com.liferay.calendar.service.CalendarNotificationTemplateLocalServi
 page import="com.liferay.calendar.service.CalendarResourceServiceUtil" %><%@
 page import="com.liferay.calendar.service.CalendarServiceUtil" %><%@
 page import="com.liferay.calendar.service.configuration.CalendarServiceConfigurationValues" %><%@
-page import="com.liferay.calendar.service.permission.CalendarPermission" %><%@
-page import="com.liferay.calendar.service.permission.CalendarPortletPermission" %><%@
-page import="com.liferay.calendar.service.permission.CalendarResourcePermission" %><%@
 page import="com.liferay.calendar.util.CalendarResourceUtil" %><%@
 page import="com.liferay.calendar.util.CalendarUtil" %><%@
 page import="com.liferay.calendar.util.ColorUtil" %><%@
@@ -71,7 +70,11 @@ page import="com.liferay.calendar.web.internal.constants.CalendarWebKeys" %><%@
 page import="com.liferay.calendar.web.internal.display.context.CalendarDisplayContext" %><%@
 page import="com.liferay.calendar.web.internal.search.CalendarResourceDisplayTerms" %><%@
 page import="com.liferay.calendar.web.internal.search.CalendarResourceSearch" %><%@
+page import="com.liferay.calendar.web.internal.security.permission.resource.CalendarPermission" %><%@
+page import="com.liferay.calendar.web.internal.security.permission.resource.CalendarPortletPermission" %><%@
+page import="com.liferay.calendar.web.internal.security.permission.resource.CalendarResourcePermission" %><%@
 page import="com.liferay.calendar.workflow.CalendarBookingWorkflowConstants" %><%@
+page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
 page import="com.liferay.portal.kernel.bean.BeanPropertiesUtil" %><%@
 page import="com.liferay.portal.kernel.dao.orm.QueryUtil" %><%@
@@ -107,7 +110,6 @@ page import="com.liferay.portal.kernel.util.PrefsPropsUtil" %><%@
 page import="com.liferay.portal.kernel.util.PropsKeys" %><%@
 page import="com.liferay.portal.kernel.util.SessionClicks" %><%@
 page import="com.liferay.portal.kernel.util.StringBundler" %><%@
-page import="com.liferay.portal.kernel.util.StringPool" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.Time" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@

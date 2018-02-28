@@ -14,12 +14,12 @@
 
 package com.liferay.taglib.aui;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.aui.base.BaseATag;
@@ -63,9 +63,17 @@ public class ATag extends BaseATag {
 				jspWriter.write(themeDisplay.getPathThemeImages());
 				jspWriter.write("/lexicon/icons.svg#shortcut\" /><span ");
 				jspWriter.write("class=\"sr-only\">");
-				jspWriter.write(
-					LanguageUtil.get(resourceBundle, "opens-new-window"));
-				jspWriter.write("</span></svg>");
+
+				String opensNewWindowLabel = LanguageUtil.get(
+					resourceBundle, "opens-new-window");
+
+				jspWriter.write(opensNewWindowLabel);
+
+				jspWriter.write("</span>");
+				jspWriter.write("<title>");
+				jspWriter.write(opensNewWindowLabel);
+				jspWriter.write("</title>");
+				jspWriter.write("</svg>");
 			}
 
 			jspWriter.write("</a>");

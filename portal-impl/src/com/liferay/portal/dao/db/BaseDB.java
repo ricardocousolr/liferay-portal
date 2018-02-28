@@ -15,6 +15,7 @@
 package com.liferay.portal.dao.db;
 
 import com.liferay.counter.kernel.service.CounterLocalServiceUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.dao.orm.common.SQLTransformer;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -38,7 +39,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
@@ -81,31 +81,37 @@ public abstract class BaseDB implements DB {
 			_log.info("Adding indexes");
 		}
 
-		for (String sql : StringUtil.splitLines(indexesSQL)) {
-			if (Validator.isNull(sql)) {
-				continue;
-			}
+		try (UnsyncBufferedReader unsyncBufferedReader =
+				new UnsyncBufferedReader(new UnsyncStringReader(indexesSQL))) {
 
-			int y = sql.indexOf(" on ");
+			String sql = null;
 
-			int x = sql.lastIndexOf(" ", y - 1);
+			while ((sql = unsyncBufferedReader.readLine()) != null) {
+				if (Validator.isNull(sql)) {
+					continue;
+				}
 
-			String indexName = sql.substring(x + 1, y);
+				int y = sql.indexOf(" on ");
 
-			if (validIndexNames.contains(indexName)) {
-				continue;
-			}
+				int x = sql.lastIndexOf(" ", y - 1);
 
-			if (_log.isInfoEnabled()) {
-				_log.info(sql);
-			}
+				String indexName = sql.substring(x + 1, y);
 
-			try {
-				runSQL(con, sql);
-			}
-			catch (Exception e) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(e.getMessage() + ": " + sql);
+				if (validIndexNames.contains(indexName)) {
+					continue;
+				}
+
+				if (_log.isInfoEnabled()) {
+					_log.info(sql);
+				}
+
+				try {
+					runSQL(con, sql);
+				}
+				catch (Exception e) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(e.getMessage() + ": " + sql);
+					}
 				}
 			}
 		}
@@ -127,8 +133,9 @@ public abstract class BaseDB implements DB {
 		String suffix = getSuffix(population);
 
 		File file = new File(
-			sqlDir + "/create" + suffix + "/create" + suffix + "-" +
-				getServerName() + ".sql");
+			StringBundler.concat(
+				sqlDir, "/create", suffix, "/create", suffix, "-",
+				getServerName(), ".sql"));
 
 		String content = buildCreateFileContent(
 			sqlDir, databaseName, population);
@@ -154,8 +161,9 @@ public abstract class BaseDB implements DB {
 		template = buildSQL(template);
 
 		FileUtil.write(
-			sqlDir + "/" + fileName + "/" + fileName + "-" + getServerName() +
-				".sql",
+			StringBundler.concat(
+				sqlDir, "/", fileName, "/", fileName, "-", getServerName(),
+				".sql"),
 			template);
 	}
 
@@ -657,11 +665,10 @@ public abstract class BaseDB implements DB {
 	protected String buildTemplate(String sqlDir, String fileName)
 		throws IOException {
 
-		String template = readFile(sqlDir + "/" + fileName + ".sql");
+		String template = readFile(
+			StringBundler.concat(sqlDir, "/", fileName, ".sql"));
 
-		if (fileName.equals("portal") ||
-			fileName.equals("update-5.0.1-5.1.0")) {
-
+		if (fileName.equals("portal")) {
 			StringBundler sb = new StringBundler();
 
 			try (UnsyncBufferedReader unsyncBufferedReader =
@@ -809,8 +816,8 @@ public abstract class BaseDB implements DB {
 
 			validIndexNames.remove(indexNameUpperCase);
 
-			String sql =
-				"drop index " + indexNameUpperCase + " on " + tableName;
+			String sql = StringBundler.concat(
+				"drop index ", indexNameUpperCase, " on ", tableName);
 
 			if (_log.isInfoEnabled()) {
 				_log.info(sql);

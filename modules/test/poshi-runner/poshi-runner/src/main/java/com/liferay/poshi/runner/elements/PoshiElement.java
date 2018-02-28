@@ -22,27 +22,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.regex.Pattern;
 
 import org.dom4j.Attribute;
+import org.dom4j.Comment;
 import org.dom4j.Element;
+import org.dom4j.Node;
 import org.dom4j.tree.DefaultElement;
 
 /**
  * @author Kenji Heigel
  */
-public abstract class PoshiElement extends DefaultElement {
+public abstract class PoshiElement
+	extends DefaultElement implements PoshiNode<Element, PoshiElement> {
 
-	public PoshiElement(String name, Element element) {
-		super(name);
-
-		_addAttributes(element);
-		_addElements(element);
-	}
-
-	public PoshiElement(String name, String readableSyntax) {
-		super(name);
-
-		parseReadableSyntax(readableSyntax);
+	public PoshiElement() {
+		super("");
 	}
 
 	@Override
@@ -56,7 +51,22 @@ public abstract class PoshiElement extends DefaultElement {
 		super.add(new PoshiElementAttribute(attribute));
 	}
 
-	public abstract void parseReadableSyntax(String readableSyntax);
+	public abstract PoshiElement clone(
+		PoshiElement parentPoshiElement, String readableSyntax);
+
+	public PoshiElement clone(String readableSyntax) {
+		return clone(null, readableSyntax);
+	}
+
+	public boolean isReadableSyntaxComment(String readableSyntax) {
+		readableSyntax = readableSyntax.trim();
+
+		if (readableSyntax.startsWith("//")) {
+			return true;
+		}
+
+		return false;
+	}
 
 	@Override
 	public boolean remove(Attribute attribute) {
@@ -75,43 +85,43 @@ public abstract class PoshiElement extends DefaultElement {
 		return false;
 	}
 
+	@Override
 	public String toReadableSyntax() {
 		StringBuilder sb = new StringBuilder();
 
-		for (PoshiElement poshiElement : toPoshiElements(elements())) {
-			sb.append(poshiElement.toReadableSyntax());
+		for (Node node : Dom4JUtil.toNodeList(content())) {
+			if (node instanceof PoshiComment) {
+				PoshiComment poshiComment = (PoshiComment)node;
+
+				sb.append(poshiComment.toReadableSyntax());
+			}
+			else if (node instanceof PoshiElement) {
+				PoshiElement poshiElement = (PoshiElement)node;
+
+				sb.append(poshiElement.toReadableSyntax());
+			}
 		}
 
 		return sb.toString();
 	}
 
-	protected static String getBracedContent(String readableSyntax) {
-		return RegexUtil.getGroup(readableSyntax, ".*?\\{(.*)\\}", 1);
+	protected PoshiElement(String name, Element element) {
+		super(name);
+
+		if (!isElementType(name, element)) {
+			throw new RuntimeException(
+				"Element does not match expected Poshi element name\n" +
+					element.toString());
+		}
+
+		_addAttributes(element);
+		_addNodes(element);
 	}
 
-	protected static String getNameFromAssignment(String assignment) {
-		String name = assignment.split("=")[0];
+	protected PoshiElement(String name, String readableSyntax) {
+		super(name);
 
-		name = name.trim();
-		name = name.replaceAll("@", "");
-		name = name.replaceAll("property ", "");
-
-		return name.replaceAll("var ", "");
-	}
-
-	protected static String getParentheticalContent(String readableSyntax) {
-		return RegexUtil.getGroup(readableSyntax, ".*?\\((.*)\\)", 1);
-	}
-
-	protected static String getQuotedContent(String readableSyntax) {
-		return RegexUtil.getGroup(readableSyntax, ".*?\"(.*)\"", 1);
-	}
-
-	protected void addElementFromReadableSyntax(String readableSyntax) {
-		PoshiElement poshiElement = PoshiElementFactory.newPoshiElement(
-			readableSyntax);
-
-		add(poshiElement);
+		parseReadableSyntax(readableSyntax);
 	}
 
 	protected String createReadableBlock(String content) {
@@ -141,8 +151,38 @@ public abstract class PoshiElement extends DefaultElement {
 
 	protected abstract String getBlockName();
 
+	protected String getBracedContent(String readableSyntax) {
+		return RegexUtil.getGroup(readableSyntax, ".*?\\{(.*)\\}", 1);
+	}
+
+	protected String getNameFromAssignment(String assignment) {
+		String name = assignment.split("=")[0];
+
+		name = name.trim();
+		name = name.replaceAll("@", "");
+		name = name.replaceAll("property ", "");
+
+		return name.replaceAll("var ", "");
+	}
+
 	protected String getPad() {
 		return "\t";
+	}
+
+	protected String getParentheticalContent(String readableSyntax) {
+		return RegexUtil.getGroup(readableSyntax, ".*?\\((.*)\\)", 1);
+	}
+
+	protected String getQuotedContent(String readableSyntax) {
+		return RegexUtil.getGroup(readableSyntax, ".*?\"(.*)\"", 1);
+	}
+
+	protected String getValueFromAssignment(String assignment) {
+		int start = assignment.indexOf("=");
+
+		String value = assignment.substring(start + 1);
+
+		return value.trim();
 	}
 
 	protected boolean isBalancedReadableSyntax(String readableSyntax) {
@@ -187,6 +227,29 @@ public abstract class PoshiElement extends DefaultElement {
 		return false;
 	}
 
+	protected boolean isConditionValidInParent(
+		PoshiElement parentPoshiElement) {
+
+		if (parentPoshiElement instanceof AndPoshiElement ||
+			parentPoshiElement instanceof ElseIfPoshiElement ||
+			parentPoshiElement instanceof IfPoshiElement ||
+			parentPoshiElement instanceof NotPoshiElement ||
+			parentPoshiElement instanceof OrPoshiElement) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	protected boolean isElementType(String name, Element element) {
+		if (name.equals(element.getName())) {
+			return true;
+		}
+
+		return false;
+	}
+
 	protected boolean isValidReadableBlock(String readableSyntax) {
 		readableSyntax = readableSyntax.trim();
 
@@ -202,11 +265,19 @@ public abstract class PoshiElement extends DefaultElement {
 			return false;
 		}
 
+		if (isReadableSyntaxComment(readableSyntax)) {
+			return true;
+		}
+
 		if (isBalanceValidationRequired(readableSyntax)) {
 			return isBalancedReadableSyntax(readableSyntax);
 		}
 
 		return false;
+	}
+
+	protected String quoteContent(String content) {
+		return "\"" + content + "\"";
 	}
 
 	protected List<PoshiElementAttribute> toPoshiElementAttributes(
@@ -240,6 +311,10 @@ public abstract class PoshiElement extends DefaultElement {
 		return poshiElements;
 	}
 
+	protected static final Pattern nestedVarAssignmentPattern = Pattern.compile(
+		"(\\w*? = \".*?\"|\\w*? = escapeText\\(\".*?\"\\))($|\\s|,)",
+		Pattern.DOTALL);
+
 	private void _addAttributes(Element element) {
 		for (Attribute attribute :
 				Dom4JUtil.toAttributeList(element.attributes())) {
@@ -248,11 +323,11 @@ public abstract class PoshiElement extends DefaultElement {
 		}
 	}
 
-	private void _addElements(Element element) {
-		for (Element childElement :
-				Dom4JUtil.toElementList(element.elements())) {
-
-			add(PoshiElementFactory.newPoshiElement(childElement));
+	private void _addNodes(Element element) {
+		for (Node node : Dom4JUtil.toNodeList(element.content())) {
+			if (node instanceof Comment || node instanceof Element) {
+				add(PoshiNodeFactory.newPoshiNode(node));
+			}
 		}
 	}
 

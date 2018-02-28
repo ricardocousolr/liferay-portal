@@ -14,9 +14,9 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.source.formatter.checks.util.JavaSourceUtil;
 import com.liferay.source.formatter.checks.util.SourceUtil;
 import com.liferay.source.formatter.parser.JavaClass;
@@ -114,7 +114,7 @@ public class JavaRedundantConstructorCheck extends BaseJavaTermCheck {
 
 	private String _getClassName(String fileContent, JavaClass javaClass) {
 		if (javaClass.getParentJavaClass() == null) {
-			return JavaSourceUtil.getPackagePath(fileContent) +
+			return JavaSourceUtil.getPackageName(fileContent) +
 				StringPool.PERIOD + javaClass.getName();
 		}
 

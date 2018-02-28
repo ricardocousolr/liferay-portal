@@ -154,6 +154,60 @@ cache digest.
 - [LPS-73472]: Remove spurious files before recreating symbolic links in the
 `.bin` directories of `node_modules`.
 
+## 3.1.1 - 2017-09-18
+
+### Added
+- [LPS-74770]: Run the `"test"` script (if declared in the `package.json` file)
+when executing the `check` task.
+
+## 3.2.0 - 2017-09-28
+
+### Added
+- [LPS-74933]: Add the ability to merge the existing `package.json` of the
+project with the values provided by the task properties of
+`PublishNodeModuleTask` when publishing a package to the NPM registry.
+
+## 3.2.1 - 2017-10-10
+
+### Fixed
+- [LPS-75175]: Fix the `downloadNode` task's circular dependency when setting
+the `node.global` property to `true` in the root project.
+
+## 4.0.0 - 2017-11-20
+
+### Changed
+- [LPS-75965]: Download the Node.js Windows distribution if running on Windows.
+
+### Removed
+- [LPS-75965]: The `downloadNode.nodeExeUrl` and `node.nodeExeUrl` properties
+are no longer available.
+
+## 4.0.1 - 2018-01-02
+
+### Fixed
+- [LPS-74904]: Fail the build if all retries configured in the
+`npmInstallRetries` property of an `ExecuteNodeTask` instance have been
+exhausted.
+
+## 4.0.2 - 2018-01-17
+
+*No changes.*
+
+## 4.1.0 - 2018-02-08
+
+### Added
+- [LPS-69802]: Add the task `npmPackageLock` to delete the NPM files and run
+`npm install` to install the dependencies declared in the project's
+`package.json` file, if present.
+
+## 4.2.0 - 2018-02-13
+
+### Added
+- [LPS-77996]: Add the property `nodeModulesDigestFile`. If this property is
+set, the digest is compared with the `node_modules` directory's digest. If they
+don't match, the `node_modules` directory is deleted before running
+`npm install`.
+
 [LPS-66906]: https://issues.liferay.com/browse/LPS-66906
 [LPS-67023]: https://issues.liferay.com/browse/LPS-67023
 [LPS-67573]: https://issues.liferay.com/browse/LPS-67573
@@ -171,3 +225,9 @@ cache digest.
 [LPS-72340]: https://issues.liferay.com/browse/LPS-72340
 [LPS-73070]: https://issues.liferay.com/browse/LPS-73070
 [LPS-73472]: https://issues.liferay.com/browse/LPS-73472
+[LPS-74770]: https://issues.liferay.com/browse/LPS-74770
+[LPS-74904]: https://issues.liferay.com/browse/LPS-74904
+[LPS-74933]: https://issues.liferay.com/browse/LPS-74933
+[LPS-75175]: https://issues.liferay.com/browse/LPS-75175
+[LPS-75965]: https://issues.liferay.com/browse/LPS-75965
+[LPS-77996]: https://issues.liferay.com/browse/LPS-77996

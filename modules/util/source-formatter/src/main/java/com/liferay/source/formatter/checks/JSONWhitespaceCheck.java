@@ -14,10 +14,10 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.ToolsUtil;
 
@@ -61,10 +61,15 @@ public class JSONWhitespaceCheck extends WhitespaceCheck {
 			}
 		}
 
-		content = sb.toString();
+		if (isAllowTrailingEmptyLines(fileName) && content.endsWith("\n")) {
+			content = sb.toString();
+		}
+		else {
+			content = sb.toString();
 
-		if (content.endsWith("\n")) {
-			content = content.substring(0, content.length() - 1);
+			if (content.endsWith("\n")) {
+				content = content.substring(0, content.length() - 1);
+			}
 		}
 
 		Matcher matcher = _missingWhitespacePattern.matcher(content);
@@ -77,6 +82,15 @@ public class JSONWhitespaceCheck extends WhitespaceCheck {
 		}
 
 		return super.doProcess(fileName, absolutePath, content);
+	}
+
+	@Override
+	protected boolean isAllowTrailingEmptyLines(String fileName) {
+		if (fileName.endsWith("/package.json")) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private final Pattern _leadingSpacesPattern = Pattern.compile(
