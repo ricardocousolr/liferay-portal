@@ -28,6 +28,7 @@ import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.storage.Fields;
 import com.liferay.dynamic.data.mapping.util.DDMUtil;
 import com.liferay.item.selector.ItemSelector;
+import com.liferay.journal.constants.JournalConstants;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.constants.JournalWebKeys;
 import com.liferay.journal.exception.ArticleContentException;
@@ -54,6 +55,7 @@ import com.liferay.journal.exception.NoSuchArticleException;
 import com.liferay.journal.exception.NoSuchFeedException;
 import com.liferay.journal.exception.NoSuchFolderException;
 import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.model.JournalArticleConstants;
 import com.liferay.journal.model.JournalFeed;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.model.JournalFolderConstants;
@@ -94,6 +96,11 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.MultiSessionMessages;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
+import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
+import com.liferay.portal.kernel.settings.ModifiableSettings;
+import com.liferay.portal.kernel.settings.Settings;
+import com.liferay.portal.kernel.settings.SettingsException;
+import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.LiferayFileItemException;
 import com.liferay.portal.kernel.upload.UploadException;
@@ -142,6 +149,7 @@ import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
+import javax.portlet.ValidatorException;
 import javax.portlet.WindowState;
 
 import javax.servlet.ServletException;
@@ -1045,6 +1053,8 @@ public class JournalPortlet extends MVCPortlet {
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			JournalFolder.class.getName(), actionRequest);
 
+		updateInheritCompanyWorkflowEnabled(actionRequest, serviceContext);
+
 		_journalFolderService.updateFolder(
 			serviceContext.getScopeGroupId(),
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
@@ -1440,6 +1450,40 @@ public class JournalPortlet extends MVCPortlet {
 		_journalContentSearchLocalService.updateContentSearch(
 			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
 			portletResource, articleId, true);
+	}
+
+	protected void updateInheritCompanyWorkflowEnabled(
+			ActionRequest actionRequest, ServiceContext serviceContext)
+		throws IOException, SettingsException, ValidatorException {
+
+		Settings settings = SettingsFactoryUtil.getSettings(
+			new GroupServiceSettingsLocator(
+				serviceContext.getScopeGroupId(),
+				JournalConstants.SERVICE_NAME));
+
+		ModifiableSettings modifiableSettings =
+			settings.getModifiableSettings();
+
+		String workflowDefinitionName = ParamUtil.getString(
+			actionRequest,
+			"workflowDefinition" +
+				JournalArticleConstants.DDM_STRUCTURE_ID_ALL);
+
+		boolean inheritCompanyWorkflowEnabled = workflowDefinitionName.equals(
+			"InheritedCompanyWorkflow");
+
+		modifiableSettings.setValue(
+			"inheritCompanyWorkflowEnabled",
+			String.valueOf(inheritCompanyWorkflowEnabled));
+
+		modifiableSettings.store();
+
+		if (inheritCompanyWorkflowEnabled) {
+			serviceContext.setAttribute(
+				"workflowDefinition" +
+					JournalArticleConstants.DDM_STRUCTURE_ID_ALL,
+				StringPool.BLANK);
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(JournalPortlet.class);
