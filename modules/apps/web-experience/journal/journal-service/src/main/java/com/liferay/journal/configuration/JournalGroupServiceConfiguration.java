@@ -216,4 +216,9 @@ public interface JournalGroupServiceConfiguration {
 	)
 	public LocalizedValuesMap emailArticleMovedFromTrashBody();
 
+	@Meta.AD(
+		deflt = "true", name = "inherit-company-workflow-enabled"
+	)
+	public boolean inheritCompanyWorkflowEnabled();
+
 }
