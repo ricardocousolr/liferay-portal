@@ -16,6 +16,8 @@ package com.liferay.journal.workflow;
 
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.journal.configuration.JournalGroupServiceConfiguration;
+import com.liferay.journal.constants.JournalConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalArticleConstants;
 import com.liferay.journal.model.JournalFolder;
@@ -24,16 +26,20 @@ import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalFolderLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
+import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
+import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.BaseWorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
+import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
@@ -59,6 +65,15 @@ public class JournalArticleWorkflowHandler
 	@Override
 	public String getClassName() {
 		return JournalArticle.class.getName();
+	}
+
+	public boolean getInheritCompanyWorkflowEnabled(long groupId)
+		throws ConfigurationException {
+
+		JournalGroupServiceConfiguration journalGroupServiceConfiguration =
+			getJournalGroupServiceConfiguration(groupId);
+
+		return journalGroupServiceConfiguration.inheritCompanyWorkflowEnabled();
 	}
 
 	@Override
@@ -98,7 +113,26 @@ public class JournalArticleWorkflowHandler
 		}
 
 		if (folderId == 0) {
-			return super.getWorkflowDefinitionLink(companyId, groupId, classPK);
+			workflowDefinitionLink = super.getWorkflowDefinitionLink(
+				companyId, groupId, classPK);
+
+			if (workflowDefinitionLink != null) {
+				return workflowDefinitionLink;
+			}
+			else {
+				boolean inheritCompanyWorkflowEnabled =
+					getInheritCompanyWorkflowEnabled(groupId);
+
+				if (inheritCompanyWorkflowEnabled) {
+					workflowDefinitionLink =
+						_workflowDefinitionLinkLocalService.
+							fetchWorkflowDefinitionLink(
+								companyId, WorkflowConstants.DEFAULT_GROUP_ID,
+								JournalArticle.class.getName(), 0, 0, true);
+				}
+
+				return workflowDefinitionLink;
+			}
 		}
 
 		JournalFolder folder = _journalFolderLocalService.fetchFolder(folderId);
@@ -146,6 +180,16 @@ public class JournalArticleWorkflowHandler
 			workflowContext);
 	}
 
+	protected JournalGroupServiceConfiguration
+			getJournalGroupServiceConfiguration(long groupId)
+		throws ConfigurationException {
+
+		return configurationProvider.getConfiguration(
+			JournalGroupServiceConfiguration.class,
+			new GroupServiceSettingsLocator(
+				groupId, JournalConstants.SERVICE_NAME));
+	}
+
 	@Reference(unbind = "-")
 	protected void setDDMStructureLocalService(
 		DDMStructureLocalService ddmStructureLocalService) {
@@ -174,6 +218,9 @@ public class JournalArticleWorkflowHandler
 		_workflowDefinitionLinkLocalService =
 			workflowDefinitionLinkLocalService;
 	}
+
+	@ServiceReference(type = ConfigurationProvider.class)
+	protected ConfigurationProvider configurationProvider;
 
 	private static final boolean _VISIBLE = true;
 
