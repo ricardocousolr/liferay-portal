@@ -308,10 +308,25 @@ renderResponse.setTitle(title);
 							catch (NoSuchWorkflowDefinitionLinkException nswdle) {
 							}
 
+							boolean inheritCompanyWorkflowEnabled = false;
+
+							if (rootFolder) {
+								inheritCompanyWorkflowEnabled = journalGroupServiceConfiguration.inheritCompanyWorkflowEnabled();
+
+								if (inheritCompanyWorkflowEnabled) {
+									workflowDefinitionLink = WorkflowDefinitionLinkLocalServiceUtil.fetchWorkflowDefinitionLink(company.getCompanyId(), WorkflowConstants.DEFAULT_GROUP_ID, JournalArticle.class.getName(), 0, 0, true);
+								}
+							%>
+
+								<aui:option label="inherit-company-workflow-x" selected="<%= inheritCompanyWorkflowEnabled %>" value="InheritedCompanyWorkflow" />
+
+							<%
+							}
+
 							for (WorkflowDefinition workflowDefinition : workflowDefinitions) {
 								boolean selected = false;
 
-								if ((workflowDefinitionLink != null) && workflowDefinitionLink.getWorkflowDefinitionName().equals(workflowDefinition.getName()) && (workflowDefinitionLink.getWorkflowDefinitionVersion() == workflowDefinition.getVersion())) {
+								if (!inheritCompanyWorkflowEnabled && (workflowDefinitionLink != null) && workflowDefinitionLink.getWorkflowDefinitionName().equals(workflowDefinition.getName()) && (workflowDefinitionLink.getWorkflowDefinitionVersion() == workflowDefinition.getVersion())) {
 									selected = true;
 								}
 							%>
