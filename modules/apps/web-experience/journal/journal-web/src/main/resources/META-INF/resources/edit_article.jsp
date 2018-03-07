@@ -238,6 +238,11 @@ request.setAttribute("edit_article.jsp-changeStructure", changeStructure);
 				hasInheritedWorkflowDefinitionLink = true;
 			}
 		}
+		else {
+			boolean inheritCompanyWorkflowEnabled = journalGroupServiceConfiguration.inheritCompanyWorkflowEnabled();
+
+			hasInheritedWorkflowDefinitionLink = hasInheritedWorkflowDefinitionLink && inheritCompanyWorkflowEnabled;
+		}
 
 		boolean workflowEnabled = hasInheritedWorkflowDefinitionLink || WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), groupId, JournalFolder.class.getName(), folderId, ddmStructure.getStructureId()) || WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), groupId, JournalFolder.class.getName(), inheritedWorkflowDDMStructuresFolderId, ddmStructure.getStructureId()) || WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), groupId, JournalFolder.class.getName(), inheritedWorkflowDDMStructuresFolderId, JournalArticleConstants.DDM_STRUCTURE_ID_ALL);
 
