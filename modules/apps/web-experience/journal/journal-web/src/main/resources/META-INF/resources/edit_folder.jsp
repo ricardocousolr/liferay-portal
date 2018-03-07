@@ -318,7 +318,7 @@ renderResponse.setTitle(title);
 								}
 							%>
 
-								<aui:option label="inherit-company-workflow-x" selected="<%= inheritCompanyWorkflowEnabled %>" value="InheritedCompanyWorkflow" />
+								<aui:option label='<%= workflowDefinitionLink != null ? "Inherited: " + workflowDefinitionLink.getWorkflowDefinitionName() + " (" + LanguageUtil.format(request, "version-x", workflowDefinitionLink.getWorkflowDefinitionVersion(), false) + ")" : "Inherited: " + "no-workflow" %>' selected="<%= inheritCompanyWorkflowEnabled %>" value="InheritedCompanyWorkflow" />
 
 							<%
 							}
