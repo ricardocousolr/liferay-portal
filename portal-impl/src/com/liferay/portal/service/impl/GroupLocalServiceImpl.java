@@ -582,6 +582,78 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 	}
 
 	/**
+	 * Adds the user group to the group.
+	 *
+	 * @param userGroupId the primary key of the user group
+	 * @param group the group
+	 */
+	@Override
+	public void addUserGroupGroup(long userGroupId, Group group) {
+		userGroupPersistence.addGroup(userGroupId, group);
+
+		try {
+			reindexUsersInUserGroup(userGroupId);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
+	}
+
+	/**
+	 * Adds the user group to the group.
+	 *
+	 * @param userGroupId the primary key of the user group
+	 * @param groupId the primary key of the group
+	 */
+	@Override
+	public void addUserGroupGroup(long userGroupId, long groupId) {
+		userGroupPersistence.addGroup(userGroupId, groupId);
+
+		try {
+			reindexUsersInUserGroup(userGroupId);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
+	}
+
+	/**
+	 * Adds the user group to the groups.
+	 *
+	 * @param userGroupId the primary key of the user group
+	 * @param groups the groups
+	 */
+	@Override
+	public void addUserGroupGroups(long userGroupId, List<Group> groups) {
+		userGroupPersistence.addGroups(userGroupId, groups);
+
+		try {
+			reindexUsersInUserGroup(userGroupId);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
+	}
+
+	/**
+	 * Adds the user group to the groups.
+	 *
+	 * @param userGroupId the primary key of the user group
+	 * @param groupIds the primary keys of the groups
+	 */
+	@Override
+	public void addUserGroupGroups(long userGroupId, long[] groupIds) {
+		userGroupPersistence.addGroups(userGroupId, groupIds);
+
+		try {
+			reindexUsersInUserGroup(userGroupId);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
+	}
+
+	/**
 	 * Adds a company group if it does not exist. This method is typically used
 	 * when a virtual host is added.
 	 *
@@ -736,6 +808,23 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 		try {
 			reindexUsersInOrganization(organizationId);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
+	}
+
+	/**
+	 * Clears the user group from the groups.
+	 *
+	 * @param userGroupId the primary key of the user group
+	 */
+	@Override
+	public void clearUserGroupGroups(long userGroupId) {
+		userGroupPersistence.clearGroups(userGroupId);
+
+		try {
+			reindexUsersInUserGroup(userGroupId);
 		}
 		catch (SearchException se) {
 			throw new SystemException(se);
@@ -1112,6 +1201,78 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 		try {
 			reindexUsersInOrganization(organizationId);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
+	}
+
+	/**
+	 * Removes the user group from the group.
+	 *
+	 * @param userGroupId the primary key of the user group
+	 * @param group the group
+	 */
+	@Override
+	public void deleteUserGroupGroup(long userGroupId, Group group) {
+		userGroupPersistence.removeGroup(userGroupId, group);
+
+		try {
+			reindexUsersInUserGroup(userGroupId);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
+	}
+
+	/**
+	 * Removes the user group from the group.
+	 *
+	 * @param userGroupId the primary key of the user group
+	 * @param groupId the primary key of the group
+	 */
+	@Override
+	public void deleteUserGroupGroup(long userGroupId, long groupId) {
+		userGroupPersistence.removeGroup(userGroupId, groupId);
+
+		try {
+			reindexUsersInUserGroup(userGroupId);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
+	}
+
+	/**
+	 * Removes the user group from the groups.
+	 *
+	 * @param userGroupId the primary key of the user group
+	 * @param groups the groups
+	 */
+	@Override
+	public void deleteUserGroupGroups(long userGroupId, List<Group> groups) {
+		userGroupPersistence.removeGroups(userGroupId, groups);
+
+		try {
+			reindexUsersInUserGroup(userGroupId);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
+	}
+
+	/**
+	 * Removes the user group from the groups.
+	 *
+	 * @param userGroupId the primary key of the user group
+	 * @param groupIds the primary keys of the groups
+	 */
+	@Override
+	public void deleteUserGroupGroups(long userGroupId, long[] groupIds) {
+		userGroupPersistence.removeGroups(userGroupId, groupIds);
+
+		try {
+			reindexUsersInUserGroup(userGroupId);
 		}
 		catch (SearchException se) {
 			throw new SystemException(se);
@@ -4451,6 +4612,25 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 		long[] userIds = organizationLocalService.getUserPrimaryKeys(
 			organizationId);
+
+		List<User> users = new ArrayList<>(userIds.length);
+
+		for (Long userId : userIds) {
+			User user = userLocalService.fetchUser(userId);
+
+			users.add(user);
+		}
+
+		indexer.reindex(users);
+	}
+
+	protected void reindexUsersInUserGroup(long userGroupId)
+		throws SearchException {
+
+		Indexer<User> indexer = IndexerRegistryUtil.nullSafeGetIndexer(
+			User.class);
+
+		long[] userIds = userGroupLocalService.getUserPrimaryKeys(userGroupId);
 
 		List<User> users = new ArrayList<>(userIds.length);
 
