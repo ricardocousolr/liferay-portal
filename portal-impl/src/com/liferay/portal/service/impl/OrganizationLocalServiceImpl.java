@@ -99,6 +99,60 @@ public class OrganizationLocalServiceImpl
 	extends OrganizationLocalServiceBaseImpl {
 
 	/**
+	 * Adds the organization to the group.
+	 *
+	 * @param organizationId the primary key of the organization
+	 * @param groupId the primary key of the group
+	 */
+	@Override
+	public void addGroupOrganization(long groupId, long organizationId) {
+		groupPersistence.addOrganization(groupId, organizationId);
+
+		try {
+			reindexUsers(organizationId);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
+	}
+
+	/**
+	 * Adds the organization to the group.
+	 *
+	 * @param organization the organization
+	 * @param groupId the primary key of the group
+	 */
+	@Override
+	public void addGroupOrganization(long groupId, Organization organization) {
+		groupPersistence.addOrganization(groupId, organization);
+
+		try {
+			reindexUsers(organization);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
+	}
+
+	/**
+	 * Adds the organizations to the group.
+	 *
+	 * @param organizationIds the primary keys of the organizations
+	 * @param groupId the primary key of the group
+	 */
+	@Override
+	public void addGroupOrganizations(long groupId, long[] organizationIds) {
+		groupPersistence.addOrganizations(groupId, organizationIds);
+
+		try {
+			reindexUsers(organizationIds);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
+	}
+
+	/**
 	 * Adds an organization.
 	 *
 	 * <p>
@@ -1701,6 +1755,13 @@ public class OrganizationLocalServiceImpl
 	@Override
 	public void unsetGroupOrganizations(long groupId, long[] organizationIds) {
 		groupPersistence.removeOrganizations(groupId, organizationIds);
+
+		try {
+			reindexUsers(organizationIds);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
 	}
 
 	/**
@@ -2240,6 +2301,35 @@ public class OrganizationLocalServiceImpl
 		}
 
 		return true;
+	}
+
+	protected void reindexUsers(long organizationId) throws SearchException {
+		Indexer<User> indexer = IndexerRegistryUtil.nullSafeGetIndexer(
+			User.class);
+
+		long[] userIds = getUserPrimaryKeys(organizationId);
+
+		List<User> users = new ArrayList<>(userIds.length);
+
+		for (Long userId : userIds) {
+			User user = userLocalService.fetchUser(userId);
+
+			users.add(user);
+		}
+
+		indexer.reindex(users);
+	}
+
+	protected void reindexUsers(long[] organizationIds) throws SearchException {
+		for (long organizationId : organizationIds) {
+			reindexUsers(organizationId);
+		}
+	}
+
+	protected void reindexUsers(Organization organization)
+		throws SearchException {
+
+		reindexUsers(organization.getOrganizationId());
 	}
 
 	protected void validate(

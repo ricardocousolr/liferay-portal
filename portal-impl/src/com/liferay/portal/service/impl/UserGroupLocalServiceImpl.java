@@ -82,6 +82,78 @@ import java.util.Set;
 public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 
 	/**
+	 * Adds the user group to the group.
+	 *
+	 * @param userGroupId the primary key of the user group
+	 * @param groupId the primary key of the group
+	 */
+	@Override
+	public void addGroupUserGroup(long groupId, long userGroupId) {
+		groupPersistence.addUserGroup(groupId, userGroupId);
+
+		try {
+			reindexUsers(userGroupId);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
+	}
+
+	/**
+	 * Adds the user group to the group.
+	 *
+	 * @param userGroup the user group
+	 * @param groupId the primary key of the group
+	 */
+	@Override
+	public void addGroupUserGroup(long groupId, UserGroup userGroup) {
+		groupPersistence.addUserGroup(groupId, userGroup);
+
+		try {
+			reindexUsers(userGroup);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
+	}
+
+	/**
+	 * Adds the user groups to the group.
+	 *
+	 * @param userGroups the user groups
+	 * @param groupId the primary key of the group
+	 */
+	@Override
+	public void addGroupUserGroups(long groupId, List<UserGroup> userGroups) {
+		groupPersistence.addUserGroups(groupId, userGroups);
+
+		try {
+			reindexUsers(userGroups);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
+	}
+
+	/**
+	 * Adds the user groups to the group.
+	 *
+	 * @param userGroupIds the primary keys of the user groups
+	 * @param groupId the primary key of the group
+	 */
+	@Override
+	public void addGroupUserGroups(long groupId, long[] userGroupIds) {
+		groupPersistence.addUserGroups(groupId, userGroupIds);
+
+		try {
+			reindexUsers(userGroupIds);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
+	}
+
+	/**
 	 * Adds a user group.
 	 *
 	 * <p>
@@ -849,6 +921,13 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 			userGroupIds, groupId);
 
 		groupPersistence.removeUserGroups(groupId, userGroupIds);
+
+		try {
+			reindexUsers(userGroupIds);
+		}
+		catch (SearchException se) {
+			throw new SystemException(se);
+		}
 	}
 
 	/**
@@ -1142,6 +1221,41 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 		}
 
 		return false;
+	}
+
+	protected void reindexUsers(List<UserGroup> userGroups)
+		throws SearchException {
+
+		for (UserGroup userGroup : userGroups) {
+			reindexUsers(userGroup.getUserGroupId());
+		}
+	}
+
+	protected void reindexUsers(long userGroupId) throws SearchException {
+		Indexer<User> indexer = IndexerRegistryUtil.nullSafeGetIndexer(
+			User.class);
+
+		long[] userIds = getUserPrimaryKeys(userGroupId);
+
+		List<User> users = new ArrayList<>(userIds.length);
+
+		for (Long userId : userIds) {
+			User user = userLocalService.fetchUser(userId);
+
+			users.add(user);
+		}
+
+		indexer.reindex(users);
+	}
+
+	protected void reindexUsers(long[] userGroupIds) throws SearchException {
+		for (long userGroupId : userGroupIds) {
+			reindexUsers(userGroupId);
+		}
+	}
+
+	protected void reindexUsers(UserGroup userGroup) throws SearchException {
+		reindexUsers(userGroup.getUserGroupId());
 	}
 
 	protected void validate(long userGroupId, long companyId, String name)
