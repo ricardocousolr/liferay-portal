@@ -7,7 +7,14 @@
 				<#assign cssClass = "active" />
 			</#if>
 
-			<li class="${cssClass}">
+			<li
+
+				<#if entry?is_last>
+					aria-current="page"
+				</#if>
+
+				class="${cssClass}"
+			>
 				<#if entry?has_next>
 					<a
 
