@@ -16,6 +16,7 @@ package com.liferay.portal.upgrade.internal.executor;
 
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.index.updater.IndexUpdater;
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
 import com.liferay.portal.kernel.dao.db.DBContext;
 import com.liferay.portal.kernel.dao.db.DBProcessContext;
@@ -117,6 +118,9 @@ public class UpgradeExecutor {
 	}
 
 	@Reference
+	private IndexUpdater _indexUpdater;
+
+	@Reference
 	private OutputStreamContainerFactoryTracker
 		_outputStreamContainerFactoryTracker;
 
@@ -179,6 +183,10 @@ public class UpgradeExecutor {
 					release.setState(state);
 
 					_releaseLocalService.updateRelease(release);
+				}
+
+				if (state == ReleaseConstants.STATE_GOOD) {
+					_indexUpdater.updateIndexes(_bundleSymbolicName);
 				}
 			}
 
