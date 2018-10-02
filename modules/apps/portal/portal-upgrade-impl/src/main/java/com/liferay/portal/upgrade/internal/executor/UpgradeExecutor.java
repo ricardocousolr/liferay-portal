@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.output.stream.container.OutputStreamContainer;
 import com.liferay.portal.output.stream.container.OutputStreamContainerFactory;
 import com.liferay.portal.output.stream.container.OutputStreamContainerFactoryTracker;
+import com.liferay.portal.upgrade.constants.UpgradeConstants;
 import com.liferay.portal.upgrade.internal.graph.ReleaseGraphManager;
 import com.liferay.portal.upgrade.internal.registry.UpgradeInfo;
 import com.liferay.portal.upgrade.internal.release.ReleasePublisher;
@@ -185,7 +186,9 @@ public class UpgradeExecutor {
 					_releaseLocalService.updateRelease(release);
 				}
 
-				if (state == ReleaseConstants.STATE_GOOD) {
+				if ((state == ReleaseConstants.STATE_GOOD) &&
+					!_isInitialDatabaseCreation()) {
+
 					_indexUpdater.updateIndexes(_bundleSymbolicName);
 				}
 			}
@@ -200,6 +203,22 @@ public class UpgradeExecutor {
 			_bundleSymbolicName = bundleSymbolicName;
 			_upgradeInfos = upgradeInfos;
 			_outputStream = outputStream;
+		}
+
+		private boolean _isInitialDatabaseCreation() {
+			if (_upgradeInfos.size() != 1) {
+				return false;
+			}
+			else {
+				UpgradeInfo upgradeInfo = _upgradeInfos.get(0);
+
+				UpgradeStep upgradeStep = upgradeInfo.getUpgradeStep();
+
+				String upgradeStepName = upgradeStep.toString();
+
+				return upgradeStepName.equals(
+					UpgradeConstants.INITIAL_DATABASE_CREATION);
+			}
 		}
 
 		private void _updateReleaseState(int state) {
