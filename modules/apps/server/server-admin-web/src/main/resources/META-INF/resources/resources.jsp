@@ -210,6 +210,15 @@ long usedMemory = totalMemory - runtime.freeMemory();
 			</li>
 			<li class="clearfix list-group-item">
 				<div class="pull-left">
+					<h5><liferay-ui:message key="verify-database-tables-of-all-modules" /></h5>
+				</div>
+
+				<div class="pull-right">
+					<aui:button cssClass="save-server-button" data-cmd="verifyModuleTables" value="execute" />
+				</div>
+			</li>
+			<li class="clearfix list-group-item">
+				<div class="pull-left">
 					<h5><liferay-ui:message key="verify-membership-policies" /></h5>
 				</div>
 

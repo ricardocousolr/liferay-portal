@@ -22,6 +22,7 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.convert.ConvertException;
 import com.liferay.portal.convert.ConvertProcess;
+import com.liferay.portal.index.updater.IndexUpdater;
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
 import com.liferay.portal.kernel.cache.MultiVMPool;
 import com.liferay.portal.kernel.cache.SingleVMPool;
@@ -196,6 +197,9 @@ public class EditServerMVCActionCommand extends BaseMVCActionCommand {
 		}
 		else if (cmd.equals("verifyPluginTables")) {
 			verifyPluginTables();
+		}
+		else if (cmd.equals("verifyModuleTables")) {
+			verifyModuleTables();
 		}
 
 		sendRedirect(actionRequest, actionResponse, redirect);
@@ -541,6 +545,10 @@ public class EditServerMVCActionCommand extends BaseMVCActionCommand {
 		userGroupMembershipPolicy.verifyPolicy();
 	}
 
+	protected void verifyModuleTables() {
+		_indexUpdater.updateIndexesAll();
+	}
+
 	protected void verifyPluginTables() throws Exception {
 		_serviceComponentLocalService.verifyDB();
 	}
@@ -550,6 +558,9 @@ public class EditServerMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private DirectServletRegistry _directServletRegistry;
+
+	@Reference
+	private IndexUpdater _indexUpdater;
 
 	@Reference
 	private MailService _mailService;
