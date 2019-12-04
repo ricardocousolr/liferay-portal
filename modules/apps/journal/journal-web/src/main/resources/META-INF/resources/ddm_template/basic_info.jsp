@@ -45,6 +45,8 @@ String[] templateLanguageTypes = journalEditDDMTemplateDisplayContext.getTemplat
 		<p class="article-structure">
 			<b><liferay-ui:message key="language" /></b>: <%= sb.toString() %>
 		</p>
+
+		<aui:input name="language" type="hidden" value="<%= journalEditDDMTemplateDisplayContext.getLanguage() %>" />
 	</c:when>
 	<c:otherwise>
 		<aui:select changesContext="<%= true %>" label="language" name="language">
