@@ -94,33 +94,37 @@ public class UpdateLanguageAction implements Action {
 		String redirect = PortalUtil.escapeRedirect(
 			ParamUtil.getString(httpServletRequest, "redirect"));
 
-		String layoutURL = StringPool.BLANK;
+		String layoutURL = redirect;
+
+		String friendlyURLSeparatorPart = StringPool.BLANK;
 		String queryString = StringPool.BLANK;
 
-		int pos = redirect.indexOf(Portal.FRIENDLY_URL_SEPARATOR);
+		int posQuestion = redirect.indexOf(StringPool.QUESTION);
 
-		if (pos == -1) {
-			pos = redirect.indexOf(StringPool.QUESTION);
+		if (posQuestion != -1) {
+			queryString = redirect.substring(posQuestion);
+			layoutURL = redirect.substring(0, posQuestion);
 		}
 
-		if (pos != -1) {
-			layoutURL = redirect.substring(0, pos);
-			queryString = redirect.substring(pos);
-		}
-		else {
-			layoutURL = redirect;
+		int posFriendlyURLSeparator = layoutURL.indexOf(
+			Portal.FRIENDLY_URL_SEPARATOR);
+
+		if (posFriendlyURLSeparator != -1) {
+			friendlyURLSeparatorPart = layoutURL.substring(
+				posFriendlyURLSeparator);
+			layoutURL = layoutURL.substring(0, posFriendlyURLSeparator);
 		}
 
 		if (themeDisplay.isI18n()) {
 			String i18nPath = themeDisplay.getI18nPath();
 
-			layoutURL = redirect.substring(i18nPath.length());
+			layoutURL = layoutURL.substring(i18nPath.length());
 		}
 
 		Layout layout = themeDisplay.getLayout();
 
-		if (isFriendlyURLResolver(layoutURL)) {
-			redirect = layoutURL;
+		if (isFriendlyURLResolver(layoutURL) || layout.isTypeControlPanel()) {
+			redirect = layoutURL + friendlyURLSeparatorPart;
 		}
 		else if (layoutURL.equals(StringPool.SLASH) ||
 				 isGroupFriendlyURL(
@@ -135,15 +139,14 @@ public class UpdateLanguageAction implements Action {
 			}
 
 			if (!redirect.endsWith(StringPool.SLASH) &&
-				!queryString.startsWith(StringPool.SLASH)) {
+				!friendlyURLSeparatorPart.startsWith(StringPool.SLASH)) {
 
 				redirect += StringPool.SLASH;
 			}
-		}
-		else if (layout.isTypeControlPanel() && themeDisplay.isI18n()) {
-			String i18nPath = themeDisplay.getI18nPath();
 
-			redirect = redirect.substring(i18nPath.length());
+			if (Validator.isNotNull(friendlyURLSeparatorPart)) {
+				redirect += friendlyURLSeparatorPart;
+			}
 		}
 		else {
 			if (PropsValues.LOCALE_PREPEND_FRIENDLY_URL_STYLE == 0) {
