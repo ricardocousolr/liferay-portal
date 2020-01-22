@@ -421,7 +421,7 @@ public class JournalArticleLocalServiceImpl
 		friendlyURLMap = _checkFriendlyURLMap(locale, friendlyURLMap, titleMap);
 
 		Map<String, String> urlTitleMap = _getURLTitleMap(
-			groupId, resourcePrimKey, friendlyURLMap, titleMap);
+			friendlyURLMap, titleMap);
 
 		String urlTitle = urlTitleMap.get(LocaleUtil.toLanguageId(locale));
 
@@ -5588,7 +5588,7 @@ public class JournalArticleLocalServiceImpl
 		Locale locale = getArticleDefaultLocale(content);
 
 		Map<String, String> urlTitleMap = _getURLTitleMap(
-			groupId, article.getResourcePrimKey(), friendlyURLMap, titleMap);
+			friendlyURLMap, titleMap);
 
 		String urlTitle = urlTitleMap.get(LocaleUtil.toLanguageId(locale));
 
@@ -8825,8 +8825,7 @@ public class JournalArticleLocalServiceImpl
 	}
 
 	private Map<String, String> _getURLTitleMap(
-		long groupId, long resourcePrimKey, Map<Locale, String> friendlyURLMap,
-		Map<Locale, String> titleMap) {
+		Map<Locale, String> friendlyURLMap, Map<Locale, String> titleMap) {
 
 		Map<String, String> urlTitleMap = new HashMap<>();
 
