@@ -5934,6 +5934,9 @@ public class JournalArticleLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
+		JournalArticle article = getLatestArticle(
+			groupId, articleId, WorkflowConstants.STATUS_ANY);
+
 		Map<Locale, String> friendlyURLMap = new HashMap<>();
 
 		for (Map.Entry<Locale, String> entry : titleMap.entrySet()) {
@@ -5943,7 +5946,12 @@ public class JournalArticleLocalServiceImpl
 				continue;
 			}
 
-			friendlyURLMap.put(entry.getKey(), title);
+			String urlTitle = friendlyURLEntryLocalService.getUniqueUrlTitle(
+				groupId,
+				classNameLocalService.getClassNameId(JournalArticle.class),
+				article.getResourcePrimKey(), title);
+
+			friendlyURLMap.put(entry.getKey(), urlTitle);
 		}
 
 		return journalArticleLocalService.updateArticle(
@@ -8841,8 +8849,12 @@ public class JournalArticleLocalServiceImpl
 				}
 			}
 
-			urlTitleMap.put(
-				LocaleUtil.toLanguageId(entry.getKey()), friendlyURL);
+			String urlTitle = friendlyURLEntryLocalService.getUniqueUrlTitle(
+				groupId,
+				classNameLocalService.getClassNameId(JournalArticle.class),
+				resourcePrimKey, friendlyURL);
+
+			urlTitleMap.put(LocaleUtil.toLanguageId(entry.getKey()), urlTitle);
 		}
 
 		return urlTitleMap;
