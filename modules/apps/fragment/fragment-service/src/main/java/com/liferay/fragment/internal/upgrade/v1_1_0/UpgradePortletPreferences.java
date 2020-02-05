@@ -23,7 +23,7 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
-import com.liferay.portal.kernel.service.PortletPreferencesLocalServiceUtil;
+import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 
 import java.sql.PreparedStatement;
@@ -38,6 +38,12 @@ import java.util.Map;
  * @author Ricardo Couso
  */
 public class UpgradePortletPreferences extends UpgradeProcess {
+
+	public UpgradePortletPreferences(
+		PortletPreferencesLocalService portletPreferencesLocalService) {
+
+		_portletPreferencesLocalService = portletPreferencesLocalService;
+	}
 
 	protected void deleteControlPanelLayouts() throws PortalException {
 		for (Long controlPanelLayoutPlid : _groupControlPanelPlids.values()) {
@@ -60,9 +66,9 @@ public class UpgradePortletPreferences extends UpgradeProcess {
 
 	protected void upgradePortletPreferences() throws Exception {
 		try (PreparedStatement ps = connection.prepareStatement(
-			"select classPK, companyId, groupId, namespace from " +
-				"FragmentEntryLink;");
-			 ResultSet rs = ps.executeQuery()) {
+				"select classPK, companyId, groupId, namespace from " +
+					"FragmentEntryLink;");
+			ResultSet rs = ps.executeQuery()) {
 
 			while (rs.next()) {
 				long classPK = rs.getLong("classPK");
@@ -95,10 +101,11 @@ public class UpgradePortletPreferences extends UpgradeProcess {
 		sb.append("';");
 
 		try (PreparedStatement ps = connection.prepareStatement(sb.toString());
-			 ResultSet rs = ps.executeQuery()) {
+			ResultSet rs = ps.executeQuery()) {
 
 			while (rs.next()) {
 				String groupKey = rs.getString("groupKey");
+
 				long plid = rs.getLong("plid");
 
 				Layout layout = LayoutLocalServiceUtil.getLayout(plid);
@@ -117,13 +124,13 @@ public class UpgradePortletPreferences extends UpgradeProcess {
 
 	private void _deleteIfNotNull(PortletPreferences portletPreferences) {
 		if (portletPreferences != null) {
-			PortletPreferencesLocalServiceUtil.deletePortletPreferences(
+			_portletPreferencesLocalService.deletePortletPreferences(
 				portletPreferences);
 		}
 	}
 
 	private List<PortletPreferences> _getPortletPreferencesList(
-		long companyId, long groupId, String namespace)
+			long companyId, long groupId, String namespace)
 		throws Exception {
 
 		List<PortletPreferences> portletPreferencesList = new ArrayList<>();
@@ -144,13 +151,13 @@ public class UpgradePortletPreferences extends UpgradeProcess {
 		sb.append(");");
 
 		try (PreparedStatement ps = connection.prepareStatement(sb.toString());
-			 ResultSet rs = ps.executeQuery()) {
+			ResultSet rs = ps.executeQuery()) {
 
 			while (rs.next()) {
 				long portletPreferencesId = rs.getLong("portletPreferencesId");
 
 				portletPreferencesList.add(
-					PortletPreferencesLocalServiceUtil.getPortletPreferences(
+					_portletPreferencesLocalService.getPortletPreferences(
 						portletPreferencesId));
 			}
 		}
@@ -202,7 +209,7 @@ public class UpgradePortletPreferences extends UpgradeProcess {
 	private void _updatePlid(PortletPreferences portletPreferences, long plid) {
 		portletPreferences.setPlid(plid);
 
-		PortletPreferencesLocalServiceUtil.updatePortletPreferences(
+		_portletPreferencesLocalService.updatePortletPreferences(
 			portletPreferences);
 	}
 
@@ -213,5 +220,8 @@ public class UpgradePortletPreferences extends UpgradeProcess {
 		new HashMap<>();
 	private static final Map<Long, Long> _groupControlPanelPlids =
 		new HashMap<>();
+
+	private final PortletPreferencesLocalService
+		_portletPreferencesLocalService;
 
 }
