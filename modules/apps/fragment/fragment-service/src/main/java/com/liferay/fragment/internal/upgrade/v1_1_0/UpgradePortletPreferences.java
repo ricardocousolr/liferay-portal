@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.PortletPreferences;
-import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 
@@ -40,14 +40,16 @@ import java.util.Map;
 public class UpgradePortletPreferences extends UpgradeProcess {
 
 	public UpgradePortletPreferences(
+		LayoutLocalService layoutLocalService,
 		PortletPreferencesLocalService portletPreferencesLocalService) {
 
+		_layoutLocalService = layoutLocalService;
 		_portletPreferencesLocalService = portletPreferencesLocalService;
 	}
 
 	protected void deleteControlPanelLayouts() throws PortalException {
 		for (Long controlPanelLayoutPlid : _groupControlPanelPlids.values()) {
-			LayoutLocalServiceUtil.deleteLayout(controlPanelLayoutPlid);
+			_layoutLocalService.deleteLayout(controlPanelLayoutPlid);
 		}
 	}
 
@@ -108,7 +110,7 @@ public class UpgradePortletPreferences extends UpgradeProcess {
 
 				long plid = rs.getLong("plid");
 
-				Layout layout = LayoutLocalServiceUtil.getLayout(plid);
+				Layout layout = _layoutLocalService.getLayout(plid);
 
 				if (groupKey.equals(GroupConstants.CONTROL_PANEL)) {
 					_companyControlPanelPlids.put(
@@ -221,6 +223,7 @@ public class UpgradePortletPreferences extends UpgradeProcess {
 	private static final Map<Long, Long> _groupControlPanelPlids =
 		new HashMap<>();
 
+	private final LayoutLocalService _layoutLocalService;
 	private final PortletPreferencesLocalService
 		_portletPreferencesLocalService;
 
