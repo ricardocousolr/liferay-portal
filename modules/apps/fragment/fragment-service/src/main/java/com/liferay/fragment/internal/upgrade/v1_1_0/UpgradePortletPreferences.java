@@ -113,12 +113,10 @@ public class UpgradePortletPreferences extends UpgradeProcess {
 				Layout layout = _layoutLocalService.getLayout(plid);
 
 				if (groupKey.equals(GroupConstants.CONTROL_PANEL)) {
-					_companyControlPanelPlids.put(
-						layout.getCompanyId(), layout.getPlid());
+					_companyControlPanelPlids.put(layout.getCompanyId(), plid);
 				}
 				else {
-					_groupControlPanelPlids.put(
-						layout.getGroupId(), layout.getPlid());
+					_groupControlPanelPlids.put(layout.getGroupId(), plid);
 				}
 			}
 		}
