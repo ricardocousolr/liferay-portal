@@ -47,9 +47,9 @@ public class UpgradePortletPreferences extends UpgradeProcess {
 		_portletPreferencesLocalService = portletPreferencesLocalService;
 	}
 
-	protected void deleteControlPanelLayouts() throws PortalException {
-		for (Long controlPanelLayoutPlid : _groupControlPanelPlids.values()) {
-			_layoutLocalService.deleteLayout(controlPanelLayoutPlid);
+	protected void deleteGroupControlPanelLayouts() throws PortalException {
+		for (Long groupControlPanelLayoutPlid : _groupControlPanelPlids.values()) {
+			_layoutLocalService.deleteLayout(groupControlPanelLayoutPlid);
 		}
 	}
 
@@ -63,7 +63,7 @@ public class UpgradePortletPreferences extends UpgradeProcess {
 
 		upgradePortletPreferences();
 
-		deleteControlPanelLayouts();
+		deleteGroupControlPanelLayouts();
 	}
 
 	protected void upgradePortletPreferences() throws Exception {
