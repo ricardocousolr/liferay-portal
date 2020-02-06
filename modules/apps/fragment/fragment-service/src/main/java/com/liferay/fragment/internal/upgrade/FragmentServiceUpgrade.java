@@ -20,6 +20,7 @@ import com.liferay.fragment.internal.upgrade.v2_0_0.util.FragmentEntryLinkTable;
 import com.liferay.fragment.internal.upgrade.v2_0_0.util.FragmentEntryTable;
 import com.liferay.fragment.internal.upgrade.v2_1_0.UpgradeSchema;
 import com.liferay.fragment.internal.upgrade.v2_2_1.UpgradeFragmentEntry;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.upgrade.BaseUpgradeSQLServerDatetime;
@@ -101,5 +102,12 @@ public class FragmentServiceUpgrade implements UpgradeStepRegistrator {
 
 	@Reference
 	private PortletPreferencesLocalService _portletPreferencesLocalService;
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.asset.service)(&(release.schema.version>=2.0.0)))",
+		unbind = "-"
+	)
+	protected void setRelease(Release release) {
+	}
 
 }
