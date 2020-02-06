@@ -14,6 +14,7 @@
 
 package com.liferay.fragment.internal.upgrade;
 
+import com.liferay.fragment.internal.upgrade.v1_1_0.UpgradePortletPreferences;
 import com.liferay.fragment.internal.upgrade.v2_0_0.util.FragmentCollectionTable;
 import com.liferay.fragment.internal.upgrade.v2_0_0.util.FragmentEntryLinkTable;
 import com.liferay.fragment.internal.upgrade.v2_0_0.util.FragmentEntryTable;
@@ -52,7 +53,12 @@ public class FragmentServiceUpgrade implements UpgradeStepRegistrator {
 		registry.register("1.0.1", "1.0.2", new DummyUpgradeStep());
 
 		registry.register(
-			"1.0.2", "2.0.0",
+			"1.0.2", "1.1.0",
+			new UpgradePortletPreferences(
+				_layoutLocalService, _portletPreferencesLocalService));
+
+		registry.register(
+			"1.1.0", "2.0.0",
 			new BaseUpgradeSQLServerDatetime(
 				new Class<?>[] {
 					FragmentCollectionTable.class, FragmentEntryLinkTable.class,
