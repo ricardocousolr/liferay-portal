@@ -198,11 +198,9 @@ public class UpgradePortletPreferences extends UpgradeProcess {
 			_deleteIfNotNull(layoutPortletPreferences);
 			_updatePlid(groupPortletPreferences, classPK);
 		}
-		else {
-			if (companyPortletPreferences != null) {
-				_deleteIfNotNull(layoutPortletPreferences);
-				_updatePlid(companyPortletPreferences, classPK);
-			}
+		else if (companyPortletPreferences != null) {
+			_deleteIfNotNull(layoutPortletPreferences);
+			_updatePlid(companyPortletPreferences, classPK);
 		}
 	}
 
