@@ -33,6 +33,8 @@ import org.osgi.service.component.annotations.Component;
 @Component(immediate = true, service = UpgradeStepRegistrator.class)
 public class FragmentServiceUpgrade implements UpgradeStepRegistrator {
 
+	// Comment
+
 	@Override
 	public void register(Registry registry) {
 		registry.register(
