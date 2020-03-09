@@ -15,6 +15,7 @@
 package com.liferay.journal.internal.validation;
 
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLinkLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.journal.exception.DuplicateFolderNameException;
 import com.liferay.journal.exception.InvalidDDMStructureException;
@@ -107,6 +108,14 @@ public class JournalFolderModelValidator
 		}
 
 		for (JournalFolder curFolder : folders) {
+			long count = _ddmStructureLinkLocalService.getStructureLinksCount(
+				_classNameLocalService.getClassNameId(JournalFolder.class),
+				curFolder.getFolderId());
+
+			if (count > 0) {
+				continue;
+			}
+
 			validateArticleDDMStructures(
 				curFolder.getFolderId(), ddmStructureIds);
 		}
@@ -245,6 +254,9 @@ public class JournalFolderModelValidator
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private DDMStructureLinkLocalService _ddmStructureLinkLocalService;
 
 	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;
