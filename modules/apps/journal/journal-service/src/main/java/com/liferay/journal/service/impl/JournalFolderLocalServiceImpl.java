@@ -44,6 +44,7 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.social.SocialActivityManagerUtil;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
@@ -74,6 +75,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -1045,6 +1047,31 @@ public class JournalFolderLocalServiceImpl
 					RESTRICTION_TYPE_DDM_STRUCTURES_AND_WORKFLOW) {
 
 			ddmStructureIds = new long[0];
+
+			JournalFolder ancestorFolder = getFolder(parentFolderId);
+
+			while (!ancestorFolder.isRoot() &&
+				   (ancestorFolder.getRestrictionType() !=
+					   JournalFolderConstants.
+						   RESTRICTION_TYPE_DDM_STRUCTURES_AND_WORKFLOW)) {
+
+				ancestorFolder = ancestorFolder.getParentFolder();
+			}
+
+			List<DDMStructureLink> ancestorDDMStructureLinks =
+				_ddmStructureLinkLocalService.getStructureLinks(
+					_classNameLocalService.getClassNameId(JournalFolder.class),
+					ancestorFolder.getFolderId());
+
+			Stream<DDMStructureLink> ancestorDDMStructureLinksStream =
+				ancestorDDMStructureLinks.stream();
+
+			long[] ancestorDDMStructureIds =
+				ancestorDDMStructureLinksStream.mapToLong(
+					DDMStructureLink::getStructureId
+				).toArray();
+
+			validateArticleDDMStructures(folderId, ancestorDDMStructureIds);
 		}
 
 		validateArticleDDMStructures(folderId, ddmStructureIds);
@@ -1477,6 +1504,9 @@ public class JournalFolderLocalServiceImpl
 
 		return (JournalFolderModelValidator)modelValidator;
 	}
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
 
 	@Reference
 	private DDMStructureLinkLocalService _ddmStructureLinkLocalService;
