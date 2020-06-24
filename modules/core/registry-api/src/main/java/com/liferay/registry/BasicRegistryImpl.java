@@ -65,7 +65,7 @@ public class BasicRegistryImpl implements Registry {
 		for (Map.Entry<ServiceReference<?>, Object> entry :
 				_services.entrySet()) {
 
-			if (filter.matches(entry.getKey())) {
+			if (!filter.matches(entry.getKey())) {
 				return function.apply((S)entry.getValue());
 			}
 		}
