@@ -52,12 +52,11 @@ public class DeleteArticleTranslationsMVCActionCommand
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		String articleId = ParamUtil.getString(actionRequest, "articleId");
+		long id = ParamUtil.getLong(actionRequest, "id");
 		String[] languageIds = ParamUtil.getStringValues(
 			actionRequest, "rowIds");
 
-		JournalArticle article = _journalArticleService.getArticle(
-			themeDisplay.getScopeGroupId(), articleId);
+		JournalArticle article = _journalArticleService.getArticle(id);
 
 		for (String languageId : languageIds) {
 			if (StringUtil.equalsIgnoreCase(
@@ -67,8 +66,8 @@ public class DeleteArticleTranslationsMVCActionCommand
 			}
 
 			_journalArticleService.removeArticleLocale(
-				article.getGroupId(), articleId, article.getVersion(),
-				languageId);
+				article.getGroupId(), article.getArticleId(),
+				article.getVersion(), languageId);
 		}
 	}
 
