@@ -117,4 +117,16 @@ public interface AssetPublisherPortletInstanceConfiguration {
 	)
 	public LocalizedValuesMap emailAssetEntryAddedBody();
 
+	/**
+	 * Set this to <code>true</code> to scroll to the asset publisher showing
+	 * the asset's content.
+	 *
+	 * @return <code>true</code> scroll to asset display is enabled.
+	 */
+	@Meta.AD(
+		deflt = "true", description = "scroll-to-asset-publisher-help",
+		name = "scroll-to-asset-publisher", required = false
+	)
+	public boolean scrollToAssetPublisher();
+
 }

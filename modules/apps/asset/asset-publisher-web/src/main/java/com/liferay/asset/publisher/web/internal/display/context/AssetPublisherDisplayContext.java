@@ -1496,6 +1496,22 @@ public class AssetPublisherDisplayContext {
 		return curPaginationType.equals(paginationType);
 	}
 
+	public boolean isScrollToAssetPublisher() {
+		if (_scrollToAssetPublisher != null) {
+			return _scrollToAssetPublisher;
+		}
+
+		String scrollToAssetPublisher = _portletPreferences.getValue(
+			"scrollToAssetPublisher", StringPool.BLANK);
+
+		if (Validator.isNotNull(scrollToAssetPublisher)) {
+			return GetterUtil.getBoolean(scrollToAssetPublisher);
+		}
+
+		return _assetPublisherPortletInstanceConfiguration.
+			scrollToAssetPublisher();
+	}
+
 	public boolean isSearchWithIndex() {
 		return _assetPublisherWebConfiguration.searchWithIndex();
 	}
@@ -2134,6 +2150,7 @@ public class AssetPublisherDisplayContext {
 	private String _rssDisplayStyle;
 	private String _rssFeedType;
 	private String _rssName;
+	private Boolean _scrollToAssetPublisher;
 	private SearchContainer<AssetEntry> _searchContainer;
 	private String _selectionStyle;
 	private Boolean _showAddContentButton;
