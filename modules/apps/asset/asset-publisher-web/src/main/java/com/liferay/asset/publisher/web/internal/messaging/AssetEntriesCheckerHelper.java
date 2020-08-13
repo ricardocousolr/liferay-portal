@@ -154,6 +154,10 @@ public class AssetEntriesCheckerHelper {
 					portletPreferencesModel.getPlid(),
 					portletPreferencesModel.getPortletId()));
 
+		if (newAssetEntries.isEmpty()) {
+			return;
+		}
+
 		_notifySubscribers(subscriptions, portletPreferences, newAssetEntries);
 
 		try {
