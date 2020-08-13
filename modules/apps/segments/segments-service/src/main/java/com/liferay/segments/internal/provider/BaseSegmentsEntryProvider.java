@@ -24,6 +24,8 @@ import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.segments.context.Context;
 import com.liferay.segments.criteria.Criteria;
@@ -37,9 +39,15 @@ import com.liferay.segments.provider.SegmentsEntryProvider;
 import com.liferay.segments.service.SegmentsEntryLocalService;
 import com.liferay.segments.service.SegmentsEntryRelLocalService;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
+
+import org.apache.commons.lang.time.StopWatch;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -138,18 +146,39 @@ public abstract class BaseSegmentsEntryProvider
 		long groupId, String className, long classPK, Context context,
 		long[] segmentsEntryIds) {
 
+		StopWatch stopWatch = new StopWatch();
+
+		stopWatch.start();
+
 		List<SegmentsEntry> segmentsEntries =
 			segmentsEntryLocalService.getSegmentsEntries(
 				groupId, true, getSource(), className, QueryUtil.ALL_POS,
 				QueryUtil.ALL_POS, null);
 
+		_log.fatal(
+			"Got " + segmentsEntries.size() +
+				" original segments from source " + getSource() + " in " +
+					stopWatch.getTime() + " ms.");
+
 		if (segmentsEntries.isEmpty()) {
 			return new long[0];
 		}
 
-		Stream<SegmentsEntry> stream = segmentsEntries.stream();
+		stopWatch.reset();
+		stopWatch.start();
 
-		return stream.filter(
+		Stream<SegmentsEntry> stream;
+
+		boolean useParallel = true;
+
+		if (useParallel) {
+			stream = segmentsEntries.parallelStream();
+		}
+		else {
+			stream = segmentsEntries.stream();
+		}
+
+		long[] filteredSegmentsEntryIds = stream.filter(
 			segmentsEntry -> isMember(
 				className, classPK, context, segmentsEntry, segmentsEntryIds)
 		).sorted(
@@ -161,6 +190,41 @@ public abstract class BaseSegmentsEntryProvider
 		).mapToLong(
 			SegmentsEntry::getSegmentsEntryId
 		).toArray();
+
+		long number = filteredSegmentsEntryIds.length;
+		long time = stopWatch.getTime();
+		float average = (float)time / number;
+
+		_log.fatal(
+			"Filtered " + number + " segments from " + getSource() + " in " +
+				time + " ms using " +
+					(useParallel ? "parallelStream()" : "stream()") +
+						" (Average = " + String.format("%.2f", average) +
+							" ms/segment)");
+
+		try {
+			File file = new File(
+				PropsUtil.get(PropsKeys.LIFERAY_HOME) +
+					"/segments-filtering-data.csv");
+
+			if (!file.exists()) {
+				file.createNewFile();
+			}
+
+			FileWriter fileWriter = new FileWriter(file, true);
+
+			fileWriter.write(
+				getSource() + "," +
+					(useParallel ? "parallelStream" : "stream") + "," + number +
+						"," + time + "," + String.format("%.2f", average) +
+							"\n");
+			fileWriter.close();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return filteredSegmentsEntryIds;
 	}
 
 	protected Criteria.Conjunction getConjunction(
