@@ -6558,7 +6558,7 @@ public class JournalArticleLocalServiceImpl
 		article = journalArticlePersistence.update(article);
 
 		if (isExpireAllArticleVersions(article.getCompanyId()) &&
-			expirationDate.before(now)) {
+			(expirationDate != null) && expirationDate.before(now)) {
 
 			article = setArticlesExpirationDate(article);
 		}
