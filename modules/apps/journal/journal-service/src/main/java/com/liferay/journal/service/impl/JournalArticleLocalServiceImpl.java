@@ -7068,6 +7068,7 @@ public class JournalArticleLocalServiceImpl
 							(currentArticle.getVersion() >
 								article.getVersion())) {
 
+							// trivial comment
 							continue;
 						}
 
