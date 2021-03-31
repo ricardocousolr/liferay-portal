@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
+import com.liferay.portal.kernel.search.filter.ExistsFilter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.search.filter.TermsFilter;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -67,6 +68,27 @@ public class LayoutModelPreFilterContributor
 				"privateLayout", privateLayout);
 
 			booleanFilter.add(privateLayoutTermFilter, BooleanClauseOccur.MUST);
+		}
+		else {
+			BooleanFilter publishedFilter = new BooleanFilter();
+
+			BooleanFilter publishedNotExistsBooleanFilter = new BooleanFilter();
+
+			publishedNotExistsBooleanFilter.add(
+				new ExistsFilter("published"), BooleanClauseOccur.MUST_NOT);
+
+			publishedFilter.add(
+				publishedNotExistsBooleanFilter, BooleanClauseOccur.SHOULD);
+
+			BooleanFilter publishedTrueBooleanFilter = new BooleanFilter();
+
+			publishedTrueBooleanFilter.add(
+				new TermFilter("published", "true"), BooleanClauseOccur.MUST);
+
+			publishedFilter.add(
+				publishedTrueBooleanFilter, BooleanClauseOccur.SHOULD);
+
+			booleanFilter.add(publishedFilter, BooleanClauseOccur.MUST);
 		}
 	}
 
