@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,6 +71,8 @@ public class LayoutFixture {
 			LayoutConstants.TYPE_CONTENT, null, false,
 			friendlyUrlMap.getValues(), serviceContext);
 
+		_publishLayout(layout);
+
 		_layouts.add(layout);
 
 		return layout;
@@ -90,6 +93,8 @@ public class LayoutFixture {
 			RandomTestUtil.randomString(), LayoutConstants.TYPE_CONTENT, false,
 			friendlyURL, serviceContext);
 
+		layout = _publishLayout(layout);
+
 		_layouts.add(layout);
 
 		return layout;
@@ -104,6 +109,17 @@ public class LayoutFixture {
 			_group.getGroupId(), null, locale);
 
 		_group.setModelAttributes(group.getModelAttributes());
+	}
+
+	private Layout _publishLayout(Layout layout) throws PortalException {
+		UnicodeProperties unicodeProperties =
+			layout.getTypeSettingsProperties();
+
+		unicodeProperties.setProperty("published", "true");
+
+		return LayoutLocalServiceUtil.updateLayout(
+			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
+			layout.getTypeSettings());
 	}
 
 	private final Group _group;
