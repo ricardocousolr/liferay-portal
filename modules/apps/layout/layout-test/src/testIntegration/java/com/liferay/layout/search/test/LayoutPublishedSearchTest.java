@@ -26,7 +26,6 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.test.rule.DataGuard;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -85,7 +84,6 @@ public class LayoutPublishedSearchTest extends BaseLayoutSearchTestCase {
 			Collections.singletonList(layout), fooSearchLayouts);
 	}
 
-	@DeleteAfterTestRun
 	private Group _group;
 
 	@Inject
