@@ -15,15 +15,16 @@
 package com.liferay.layout.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.layout.util.BaseLayoutSearchTestCase;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
-import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
-import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -35,8 +36,6 @@ import com.liferay.portal.search.test.util.FieldValuesAssert;
 import com.liferay.portal.search.test.util.IndexedFieldsFixture;
 import com.liferay.portal.search.test.util.IndexerFixture;
 import com.liferay.portal.test.rule.Inject;
-import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.users.admin.test.util.search.UserSearchFixture;
 
 import java.util.List;
@@ -45,8 +44,6 @@ import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -55,15 +52,7 @@ import org.junit.runner.RunWith;
  * @author Vagner B.C
  */
 @RunWith(Arquillian.class)
-public class LayoutIndexerIndexedFieldsTest {
-
-	@ClassRule
-	@Rule
-	public static final AggregateTestRule aggregateTestRule =
-		new AggregateTestRule(
-			new LiferayIntegrationTestRule(),
-			PermissionCheckerMethodTestRule.INSTANCE,
-			SynchronousDestinationTestRule.INSTANCE);
+public class LayoutIndexerIndexedFieldsTest extends BaseLayoutSearchTestCase {
 
 	@Before
 	public void setUp() throws Exception {
@@ -90,6 +79,12 @@ public class LayoutIndexerIndexedFieldsTest {
 		setTestLocale(locale);
 
 		Layout layout = layoutFixture.createLayout("新しい商品");
+
+		_layouts.remove(layout);
+
+		layout = publishLayout(layout);
+
+		_layouts.add(layout);
 
 		String searchTerm = "新しい";
 
@@ -191,6 +186,7 @@ public class LayoutIndexerIndexedFieldsTest {
 
 		_populateName(layout, map);
 		_populateDates(layout, map);
+		_populatePublished(layout, map);
 		_populateRoles(layout, map);
 
 		return map;
@@ -212,6 +208,18 @@ public class LayoutIndexerIndexedFieldsTest {
 			map.put(
 				LocalizationUtil.getLocalizedName(Field.NAME, languageId),
 				layout.getName(locale));
+		}
+	}
+
+	private void _populatePublished(Layout layout, Map<String, String> map) {
+		String type = layout.getType();
+
+		if (type.equals(LayoutConstants.TYPE_CONTENT)) {
+			map.put(
+				"published",
+				String.valueOf(
+					GetterUtil.getBoolean(
+						layout.getTypeSettingsProperty("published"))));
 		}
 	}
 
