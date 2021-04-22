@@ -15,19 +15,16 @@
 package com.liferay.layout.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.layout.util.BaseLayoutSearchTestCase;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
-import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.LayoutLocalService;
-import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
-import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -35,16 +32,12 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.test.rule.Inject;
-import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.util.Collections;
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -53,14 +46,7 @@ import org.junit.runner.RunWith;
  */
 @DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
-public class LayoutPublishedSearchTest {
-
-	@ClassRule
-	@Rule
-	public static final AggregateTestRule aggregateTestRule =
-		new AggregateTestRule(
-			new LiferayIntegrationTestRule(),
-			PermissionCheckerMethodTestRule.INSTANCE);
+public class LayoutPublishedSearchTest extends BaseLayoutSearchTestCase {
 
 	@Before
 	public void setUp() throws Exception {
@@ -88,7 +74,7 @@ public class LayoutPublishedSearchTest {
 
 		Assert.assertFalse(fooSearchLayouts.contains(layout));
 
-		layout = _publishLayout(layout);
+		layout = publishLayout(layout, _serviceContext);
 
 		fooSearchLayouts = _layoutLocalService.getLayouts(
 			_group.getGroupId(), "foo",
@@ -99,28 +85,11 @@ public class LayoutPublishedSearchTest {
 			Collections.singletonList(layout), fooSearchLayouts);
 	}
 
-	private Layout _publishLayout(Layout layout) throws PortalException {
-		ReflectionTestUtil.invoke(
-			_mvcActionCommand, "_publishLayout",
-			new Class<?>[] {
-				Layout.class, Layout.class, ServiceContext.class, long.class
-			},
-			layout.fetchDraftLayout(), layout, _serviceContext,
-			TestPropsValues.getUserId());
-
-		return LayoutLocalServiceUtil.fetchLayout(layout.getPlid());
-	}
-
 	@DeleteAfterTestRun
 	private Group _group;
 
 	@Inject
 	private LayoutLocalService _layoutLocalService;
-
-	@Inject(
-		filter = "mvc.command.name=/layout_content_page_editor/publish_layout"
-	)
-	private MVCActionCommand _mvcActionCommand;
 
 	private ServiceContext _serviceContext;
 
