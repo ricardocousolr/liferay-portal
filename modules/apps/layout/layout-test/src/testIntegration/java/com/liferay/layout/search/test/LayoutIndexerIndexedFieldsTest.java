@@ -16,6 +16,7 @@ package com.liferay.layout.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.layout.util.BaseLayoutSearchTestCase;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -41,6 +42,7 @@ import com.liferay.users.admin.test.util.search.UserSearchFixture;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
@@ -92,6 +94,8 @@ public class LayoutIndexerIndexedFieldsTest extends BaseLayoutSearchTestCase {
 			searchTerm, locale);
 
 		indexedFieldsFixture.postProcessDocument(document);
+
+		_removeContentFields(document);
 
 		FieldValuesAssert.assertFieldValues(
 			_expectedFieldValues(layout), document, searchTerm);
@@ -229,6 +233,15 @@ public class LayoutIndexerIndexedFieldsTest extends BaseLayoutSearchTestCase {
 		indexedFieldsFixture.populateRoleIdFields(
 			layout.getCompanyId(), Layout.class.getName(),
 			layout.getPrimaryKey(), layout.getGroupId(), null, map);
+	}
+
+	private void _removeContentFields(Document document) {
+		Set<Locale> locales = LanguageUtil.getAvailableLocales(
+			_group.getGroupId());
+
+		for (Locale locale : locales) {
+			document.remove(Field.getLocalizedName(locale, Field.CONTENT));
+		}
 	}
 
 	private Group _group;
