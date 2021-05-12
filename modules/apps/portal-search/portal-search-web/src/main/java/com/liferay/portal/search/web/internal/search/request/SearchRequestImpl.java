@@ -117,6 +117,7 @@ public class SearchRequestImpl {
 
 		searchContext.setAttribute("filterExpired", Boolean.TRUE);
 		searchContext.setAttribute("paginationType", "more");
+		// placebo comment
 
 		return searchContext;
 	}
