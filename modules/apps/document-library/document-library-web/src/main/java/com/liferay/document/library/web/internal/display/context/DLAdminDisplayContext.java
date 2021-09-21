@@ -48,6 +48,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
+import com.liferay.portal.kernel.repository.capabilities.TrashCapability;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.repository.model.RepositoryEntry;
@@ -163,6 +164,10 @@ public class DLAdminDisplayContext {
 
 	public long getFolderId() {
 		return _folderId;
+	}
+
+	public boolean getInTrash() {
+		return _inTrash;
 	}
 
 	public String getNavigation() {
@@ -334,6 +339,11 @@ public class DLAdminDisplayContext {
 			}
 			else {
 				_folderId = _folder.getFolderId();
+
+				TrashCapability trashCapability =
+					_folder.getRepositoryCapability(TrashCapability.class);
+
+				_inTrash = trashCapability.isInTrash(_folder);
 			}
 
 			_defaultFolderView = false;
@@ -785,6 +795,7 @@ public class DLAdminDisplayContext {
 	private Folder _folder;
 	private long _folderId;
 	private final HttpServletRequest _httpServletRequest;
+	private boolean _inTrash;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private String _navigation;
