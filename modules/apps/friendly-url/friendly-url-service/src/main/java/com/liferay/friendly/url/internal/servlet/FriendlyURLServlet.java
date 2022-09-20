@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.model.LayoutFriendlyURL;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.VirtualLayoutConstants;
 import com.liferay.portal.kernel.portlet.LayoutFriendlyURLSeparatorComposite;
+import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
@@ -50,6 +51,7 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
+import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.InactiveRequestHandler;
 import com.liferay.portal.kernel.servlet.PortalMessages;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
@@ -131,6 +133,8 @@ public class FriendlyURLServlet extends HttpServlet {
 
 		String layoutFriendlyURL = null;
 
+		Redirect skippedRedirect = null;
+
 		if ((pos != -1) && ((pos + 1) != path.length())) {
 			layoutFriendlyURL = path.substring(pos);
 
@@ -139,24 +143,14 @@ public class FriendlyURLServlet extends HttpServlet {
 					0, layoutFriendlyURL.length() - 1);
 			}
 
-			RedirectProvider currentRedirectProvider = redirectProvider;
+			skippedRedirect = _getRedirectProviderRedirect(
+				httpServletRequest, group.getGroupId(), layoutFriendlyURL,
+				redirectProvider);
 
-			if (currentRedirectProvider != null) {
-				HttpServletRequest originalHttpServletRequest =
-					portal.getOriginalServletRequest(httpServletRequest);
+			if ((skippedRedirect != null) &&
+				!_isSkipRedirect(httpServletRequest)) {
 
-				RedirectProvider.Redirect redirectProviderRedirect =
-					redirectProvider.getRedirect(
-						group.getGroupId(),
-						_normalizeFriendlyURL(layoutFriendlyURL),
-						_normalizeFriendlyURL(
-							originalHttpServletRequest.getRequestURI()));
-
-				if (redirectProviderRedirect != null) {
-					return new Redirect(
-						redirectProviderRedirect.getDestinationURL(), true,
-						redirectProviderRedirect.isPermanent());
-				}
+				return skippedRedirect;
 			}
 		}
 		else {
@@ -241,6 +235,13 @@ public class FriendlyURLServlet extends HttpServlet {
 					}
 
 					throw new LayoutPermissionException();
+				}
+
+				if ((skippedRedirect != null) &&
+					!LayoutPermissionUtil.containsLayoutUpdatePermission(
+						permissionChecker, layout)) {
+
+					return skippedRedirect;
 				}
 			}
 
@@ -807,6 +808,49 @@ public class FriendlyURLServlet extends HttpServlet {
 		return requestURI.substring(_pathInfoOffset, pos);
 	}
 
+	private Redirect _getRedirectProviderRedirect(
+		HttpServletRequest httpServletRequest, long groupId,
+		String layoutFriendlyURL, RedirectProvider redirectProvider) {
+
+		RedirectProvider currentRedirectProvider = redirectProvider;
+
+		if ((currentRedirectProvider != null) &&
+			!LiferayWindowState.isExclusive(httpServletRequest) &&
+			!LiferayWindowState.isPopUp(httpServletRequest)) {
+
+			HttpServletRequest originalHttpServletRequest =
+				portal.getOriginalServletRequest(httpServletRequest);
+
+			RedirectProvider.Redirect redirectProviderRedirect =
+				redirectProvider.getRedirect(
+					groupId, _normalizeFriendlyURL(layoutFriendlyURL),
+					_normalizeFriendlyURL(
+						originalHttpServletRequest.getRequestURI()));
+
+			if (redirectProviderRedirect != null) {
+				return new Redirect(
+					redirectProviderRedirect.getDestinationURL(), true,
+					redirectProviderRedirect.isPermanent());
+			}
+		}
+
+		return null;
+	}
+
+	private String _getRefererURL(HttpServletRequest httpServletRequest) {
+		String refererURL = httpServletRequest.getHeader(HttpHeaders.REFERER);
+
+		if (Validator.isNotNull(refererURL)) {
+			int questionPos = refererURL.indexOf(CharPool.QUESTION);
+
+			if (questionPos != -1) {
+				refererURL = refererURL.substring(0, questionPos);
+			}
+		}
+
+		return refererURL;
+	}
+
 	private ServiceContext _getServiceContext(
 			Group group, HttpServletRequest httpServletRequest)
 		throws PortalException {
@@ -867,6 +911,18 @@ public class FriendlyURLServlet extends HttpServlet {
 				"permanent")) {
 
 			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isSkipRedirect(HttpServletRequest httpServletRequest) {
+		String refererURL = _getRefererURL(httpServletRequest);
+
+		if (Validator.isNotNull(refererURL)) {
+			return refererURL.contains(
+				VirtualLayoutConstants.CANONICAL_URL_SEPARATOR +
+					GroupConstants.CONTROL_PANEL_FRIENDLY_URL);
 		}
 
 		return false;
