@@ -31,6 +31,15 @@ public class UserNotificationFeedEntry {
 		setLink(link);
 	}
 
+	public UserNotificationFeedEntry(
+		boolean actionable, String body, String link, boolean applicable,
+		boolean interactive) {
+
+		this(actionable, body, link, applicable);
+
+		setInteractive(interactive);
+	}
+
 	public String getBody() {
 		return _body;
 	}
@@ -51,6 +60,10 @@ public class UserNotificationFeedEntry {
 		return _applicable;
 	}
 
+	public boolean isInteractive() {
+		return _interactive;
+	}
+
 	public boolean isOpenDialog() {
 		return _openDialog;
 	}
@@ -65,6 +78,10 @@ public class UserNotificationFeedEntry {
 
 	public void setBody(String body) {
 		_body = GetterUtil.getString(body);
+	}
+
+	public void setInteractive(boolean interactive) {
+		_interactive = interactive;
 	}
 
 	public void setLink(String link) {
@@ -82,6 +99,7 @@ public class UserNotificationFeedEntry {
 	private boolean _actionable;
 	private boolean _applicable = true;
 	private String _body;
+	private boolean _interactive = true;
 	private String _link;
 	private boolean _openDialog;
 	private String _portletId = StringPool.BLANK;
