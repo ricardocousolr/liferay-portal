@@ -79,7 +79,7 @@ public abstract class BaseUserNotificationHandler
 					});
 
 				userNotificationFeedEntry = new UserNotificationFeedEntry(
-					false, body, StringPool.BLANK, false);
+					false, body, StringPool.BLANK, false, false);
 			}
 
 			return userNotificationFeedEntry;
