@@ -94,7 +94,7 @@ public class NotificationsManagementToolbarDisplayContext {
 		List<String> availableActions = new ArrayList<>();
 
 		if ((userNotificationFeedEntry == null) ||
-			!userNotificationFeedEntry.isApplicable()) {
+			!userNotificationFeedEntry.isInteractive()) {
 
 			return availableActions;
 		}
