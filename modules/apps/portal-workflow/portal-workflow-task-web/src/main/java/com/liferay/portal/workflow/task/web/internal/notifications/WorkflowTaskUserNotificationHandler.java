@@ -96,7 +96,7 @@ public class WorkflowTaskUserNotificationHandler
 						jsonObject.getString("entryType"), false),
 					_language.get(locale, "notification-no-longer-applies")
 				}),
-			StringPool.BLANK, false);
+			StringPool.BLANK, false, false);
 	}
 
 	@Override
