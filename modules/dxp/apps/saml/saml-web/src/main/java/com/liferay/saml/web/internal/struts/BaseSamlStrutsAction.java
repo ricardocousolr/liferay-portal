@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.struts.StrutsAction;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.saml.runtime.exception.StatusException;
+import com.liferay.saml.runtime.exception.SubjectException;
 import com.liferay.saml.util.JspUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -74,6 +75,14 @@ public abstract class BaseSamlStrutsAction implements StrutsAction {
 				SessionErrors.add(
 					httpServletRequest, "statusCodeURI",
 					statusException.getMessage());
+			}
+
+			if (exception instanceof SubjectException) {
+				Throwable causeThrowable = exception.getCause();
+
+				SessionErrors.add(
+					httpServletRequest, "subjectException",
+					causeThrowable.getMessage());
 			}
 
 			JspUtil.dispatch(

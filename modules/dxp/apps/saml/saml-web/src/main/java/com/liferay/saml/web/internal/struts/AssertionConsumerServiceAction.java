@@ -90,7 +90,7 @@ public class AssertionConsumerServiceAction extends BaseSamlStrutsAction {
 				error = ContactNameException.class.getSimpleName();
 			}
 			else if (causeThrowable instanceof SubjectException) {
-				error = SubjectException.class.getSimpleName();
+				throw new SubjectException(causeThrowable);
 			}
 			else if (causeThrowable instanceof UserEmailAddressException) {
 				if (causeThrowable instanceof MustNotUseCompanyMx) {

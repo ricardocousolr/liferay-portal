@@ -22,6 +22,27 @@
 			<liferay-ui:message key="authentication-failed" />
 		</h3>
 	</c:when>
+	<c:when test='<%= Objects.equals(SessionErrors.get(request, "subjectException"), "User is a stranger and company " + themeDisplay.getCompanyId() + " does not allow strangers to create accounts") %>'>
+
+		<%
+		HttpSession httpSession = request.getSession();
+
+		String samlSubjectScreenName = (String)httpSession.getAttribute("SAML_SUBJECT_NAME_ID");
+		%>
+
+		<aui:form action='<%= PortalUtil.getPortalURL(request) + "/c/portal/login" %>' method="post" name="fm">
+			<aui:input name="p_auth" type="hidden" value="<%= AuthTokenUtil.getToken(request) %>" />
+			<aui:input name="saveLastPath" type="hidden" value="<%= false %>" />
+			<aui:input name="forceAuthn" type="hidden" value="true" />
+			<aui:input name="idpEntityId" type="hidden" value='<%= (String)httpSession.getAttribute("SAML_SSO_ERROR_ENTITY_ID") %>' />
+
+			<h3 class="portlet-msg-error">
+				<liferay-ui:message key="only-known-users-are-allowed-to-sign-in-using-saml" />
+
+				<a onClick="this.closest('form').submit(); return false;"><liferay-ui:message arguments='<%= "<strong>" + HtmlUtil.escapeAttribute(samlSubjectScreenName) + "</strong>" %>' key="not-x" /></a>
+			</h3>
+		</aui:form>
+	</c:when>
 	<c:otherwise>
 		<h3 class="portlet-msg-error">
 			<liferay-ui:message key="unable-to-process-saml-request" />
