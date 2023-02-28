@@ -104,6 +104,12 @@ public class SamlBottomJSPDynamicInclude extends BaseJSPDynamicInclude {
 		httpServletRequest.setAttribute(
 			SamlWebKeys.SAML_SUBJECT_NAME_ID, samlSubjectNameId);
 
+		String redirect = (String)httpSession.getAttribute("redirect");
+
+		httpSession.removeAttribute("redirect");
+
+		httpServletRequest.setAttribute("redirect", redirect);
+
 		super.include(httpServletRequest, httpServletResponse, key);
 	}
 

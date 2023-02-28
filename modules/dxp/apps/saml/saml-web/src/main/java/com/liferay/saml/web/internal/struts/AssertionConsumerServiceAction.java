@@ -122,6 +122,8 @@ public class AssertionConsumerServiceAction extends BaseSamlStrutsAction {
 				redirect = _portal.getHomeURL(httpServletRequest);
 			}
 
+			httpSession.setAttribute("redirect", redirect);
+
 			try {
 				httpServletResponse.sendRedirect(redirect);
 

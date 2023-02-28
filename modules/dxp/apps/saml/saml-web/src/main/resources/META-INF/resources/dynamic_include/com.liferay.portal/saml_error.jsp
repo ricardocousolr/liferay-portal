@@ -29,6 +29,14 @@ String samlSubjectScreenName = (String)request.getAttribute(SamlWebKeys.SAML_SUB
 		<aui:input name="forceAuthn" type="hidden" value="true" />
 		<aui:input name="idpEntityId" type="hidden" value="<%= (String)request.getAttribute(com.liferay.saml.web.internal.constants.SamlWebKeys.SAML_SSO_ERROR_ENTITY_ID) %>" />
 
+		<%
+		String redirect = (String)request.getAttribute("redirect");
+		%>
+
+		<c:if test="<%= Validator.isNotNull(redirect) %>">
+			<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
+		</c:if>
+
 		<liferay-ui:message arguments='<%= "<strong>" + HtmlUtil.escape(samlSubjectScreenName) + "</strong>" %>' key="your-user-x-could-not-be-logged-in" />
 
 		<c:choose>
