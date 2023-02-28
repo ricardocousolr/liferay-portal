@@ -1144,9 +1144,13 @@ public class ServicePreAction extends Action {
 					   !_hasAccessPermission(
 						   permissionChecker, layout, false)))) {
 
+				boolean error = GetterUtil.getBoolean(
+					httpSession.getAttribute("SubjectExceptionError"));
+
 				if (!group.isUser() && user.isDefaultUser() &&
 					AuthLoginGroupSettingsUtil.isPromptEnabled(
-						group.getGroupId())) {
+						group.getGroupId()) &&
+					!error) {
 
 					throw new PrincipalException.MustBeAuthenticated(
 						user.getUserId());

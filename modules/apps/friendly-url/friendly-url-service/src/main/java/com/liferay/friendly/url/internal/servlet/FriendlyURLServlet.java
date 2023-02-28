@@ -226,6 +226,15 @@ public class FriendlyURLServlet extends HttpServlet {
 				if (!LayoutPermissionUtil.contains(
 						permissionChecker, layout, ActionKeys.VIEW)) {
 
+					HttpSession httpSession = httpServletRequest.getSession();
+
+					if (GetterUtil.getBoolean(
+							httpSession.getAttribute(
+								"SubjectExceptionError"))) {
+
+						throw new LayoutPermissionException();
+					}
+
 					if (AuthLoginGroupSettingsUtil.isPromptEnabled(
 							group.getGroupId())) {
 

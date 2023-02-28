@@ -91,6 +91,8 @@ public class AssertionConsumerServiceAction extends BaseSamlStrutsAction {
 			}
 			else if (causeThrowable instanceof SubjectException) {
 				error = SubjectException.class.getSimpleName();
+
+				httpSession.setAttribute("SubjectExceptionError", Boolean.TRUE);
 			}
 			else if (causeThrowable instanceof UserEmailAddressException) {
 				if (causeThrowable instanceof MustNotUseCompanyMx) {
