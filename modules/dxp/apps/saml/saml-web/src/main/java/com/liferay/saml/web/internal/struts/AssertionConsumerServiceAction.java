@@ -116,7 +116,9 @@ public class AssertionConsumerServiceAction extends BaseSamlStrutsAction {
 
 			redirect = _portal.escapeRedirect(redirect);
 
-			if (Validator.isNull(redirect)) {
+			if (Validator.isNull(redirect) ||
+				(causeThrowable instanceof SubjectException)) {
+
 				redirect = _portal.getHomeURL(httpServletRequest);
 			}
 
