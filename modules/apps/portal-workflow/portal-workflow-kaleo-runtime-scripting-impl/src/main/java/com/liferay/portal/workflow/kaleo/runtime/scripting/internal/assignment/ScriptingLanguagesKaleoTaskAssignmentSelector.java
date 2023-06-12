@@ -19,6 +19,7 @@ import com.liferay.portal.workflow.kaleo.model.KaleoTaskAssignment;
 import com.liferay.portal.workflow.kaleo.runtime.ExecutionContext;
 import com.liferay.portal.workflow.kaleo.runtime.assignment.BaseKaleoTaskAssignmentSelector;
 import com.liferay.portal.workflow.kaleo.runtime.assignment.KaleoTaskAssignmentSelector;
+import com.liferay.portal.workflow.kaleo.runtime.scripting.internal.util.KaleoScriptingCache;
 import com.liferay.portal.workflow.kaleo.runtime.scripting.internal.util.KaleoScriptingEvaluator;
 import com.liferay.portal.workflow.kaleo.runtime.util.WorkflowContextUtil;
 
@@ -51,6 +52,19 @@ public class ScriptingLanguagesKaleoTaskAssignmentSelector
 			ExecutionContext executionContext)
 		throws PortalException {
 
+		boolean assigneeScriptCacheable =
+			kaleoTaskAssignment.isAssigneeScriptCacheable();
+
+		if (assigneeScriptCacheable) {
+			Collection<KaleoTaskAssignment> kaleoTaskAssignments =
+				_kaleoScriptingCache.getKaleoTaskAssignments(
+					kaleoTaskAssignment.getKaleoTaskAssignmentId());
+
+			if (kaleoTaskAssignments != null) {
+				return kaleoTaskAssignments;
+			}
+		}
+
 		String assigneeScript = kaleoTaskAssignment.getAssigneeScript();
 
 		String assigneeScriptingLanguage =
@@ -60,13 +74,28 @@ public class ScriptingLanguagesKaleoTaskAssignmentSelector
 			executionContext, _outputNames, assigneeScriptingLanguage,
 			assigneeScript);
 
-		return getKaleoTaskAssignments(results);
+		Collection<KaleoTaskAssignment> kaleoTaskAssignments =
+			getKaleoTaskAssignments(results);
+
+		if (assigneeScriptCacheable &&
+			(kaleoTaskAssignment.getAssigneeScriptCacheDuration() > 0)) {
+
+			_kaleoScriptingCache.putKaleoTaskAssignments(
+				kaleoTaskAssignment.getKaleoTaskAssignmentId(),
+				kaleoTaskAssignments,
+				kaleoTaskAssignment.getAssigneeScriptCacheDuration() * 60);
+		}
+
+		return kaleoTaskAssignments;
 	}
 
 	private static final Set<String> _outputNames = new HashSet<>(
 		Arrays.asList(
 			ROLES_ASSIGNMENT, USER_ASSIGNMENT, USERS_ASSIGNMENT,
 			WorkflowContextUtil.WORKFLOW_CONTEXT_NAME));
+
+	@Reference
+	private KaleoScriptingCache _kaleoScriptingCache;
 
 	@Reference
 	private KaleoScriptingEvaluator _kaleoScriptingEvaluator;
