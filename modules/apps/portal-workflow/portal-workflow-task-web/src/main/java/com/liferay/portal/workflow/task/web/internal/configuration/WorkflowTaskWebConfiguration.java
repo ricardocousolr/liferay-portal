@@ -36,4 +36,9 @@ public interface WorkflowTaskWebConfiguration {
 	)
 	public String defaultDisplayView();
 
+	@Meta.AD(
+		deflt = "1", name = "Script Cache Duration", required = false
+	)
+	public int scriptCacheDuration();
+
 }
