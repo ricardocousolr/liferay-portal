@@ -6041,6 +6041,7 @@ public class JournalArticleLocalServiceImpl
 						if (currentArticle.getVersion() >=
 								article.getVersion()) {
 
+							// trivial comment
 							continue;
 						}
 
